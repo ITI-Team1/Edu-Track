@@ -18,3 +18,7 @@ class LectureSerializer(serializers.ModelSerializer):
         if Lecture.objects.filter(location=location, day=day, starttime__lt=end, endtime__gt=start).exclude(pk=pk).exists():
             raise serializers.ValidationError("Location is occupied at this time.")
         return data
+
+class EnrollStudentSerializer(serializers.Serializer):
+    studentid = serializers.IntegerField()
+    courseids = serializers.ListField(child=serializers.IntegerField(), allow_empty=False)
