@@ -1,16 +1,9 @@
 from rest_framework.serializers import ModelSerializer
 from .models import User
-from university.serializers import UniversitySerializer
-from faculty.serializers import FacultySerializer
-from program.serializers import ProgramSerializer
 from django.contrib.auth.models import Group
 from django.contrib.admin.models import LogEntry
 
 class UserSerializer(ModelSerializer):
-    university = UniversitySerializer(read_only=True)
-    faculty = FacultySerializer(read_only=True)
-    program = ProgramSerializer(read_only=True)
-
     class Meta:
         model = User
         fields = (
