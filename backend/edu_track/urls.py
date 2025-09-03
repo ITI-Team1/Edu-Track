@@ -29,5 +29,6 @@ urlpatterns = [
     path('program/', include('program.urls')),
     path('location/', include('location.urls')),
     path('course/', include('course.urls')),
-    path('lecture/', include('lecture.urls'))
+    path('lecture/', include('lecture.urls')),
+    path('attendance/', include('attendance.urls'))
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
