@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'location.apps.LocationConfig',
     'course.apps.CourseConfig',
     'lecture.apps.LectureConfig',
+    'attendance.apps.AttendanceConfig'
 ]
 
 MIDDLEWARE = [

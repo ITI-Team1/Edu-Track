@@ -1,0 +1,279 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import '../styles/enrollment.css';
+import api from '../services/api';
+import { fetchCourses } from '../services/courseApi';
+import { fetchFaculties } from '../services/facultyApi';
+import { fetchPrograms } from '../services/programApi';
+
+
+function Enrollment() {
+  const [courses, setCourses] = useState([]);
+  const [faculties, setFaculties] = useState([]);
+  const [programs, setPrograms] = useState([]);
+  const [selectedStudents, setSelectedStudents] = useState([]);
+  const [selectedCourses, setSelectedCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState('');
+
+
+  const [filterFaculty, setFilterFaculty] = useState('');
+  const [filterProgram, setFilterProgram] = useState('');
+  const [filterName, setFilterName] = useState('');
+  const [debouncedName, setDebouncedName] = useState('');
+
+
+  useEffect(() => {
+    const loadInitialData = async () => {
+      try {
+        setLoading(true);
+        const [coursesData, facultiesData, programsData] = await Promise.all([
+          fetchCourses(),
+          fetchFaculties(),
+          fetchPrograms(),
+        ]);
+        setCourses(coursesData);
+        setFaculties(facultiesData.results || facultiesData);
+        setPrograms(programsData.results || programsData);
+      } catch (err) {
+        setError(err.message || 'An error occurred');
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadInitialData();
+  }, []);
+
+
+  // Debounce name filter (0.5s)
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedName(filterName), 500);
+    return () => clearTimeout(t);
+  }, [filterName]);
+
+  // React Query: fetch and cache users
+  const fetchUsers = async () => {
+    const res = await fetch(`${api.baseURL}/auth/users/`, { headers: api.getAuthHeaders() });
+    if (!res.ok) throw new Error('Failed to load users');
+    return res.json();
+  };
+
+  const { data: usersData, isLoading: usersLoading, error: usersError } = useQuery({
+    queryKey: ['users'],
+    queryFn: fetchUsers,
+    staleTime: 1000 * 60, // 1 min
+    gcTime: 1000 * 60 * 5, // 5 min
+    refetchOnWindowFocus: false,
+  });
+
+  // Client-side filtered students based on selects and debounced name
+  const filteredStudents = useMemo(() => {
+    const src = usersData?.results || usersData || [];
+    return (Array.isArray(src) ? src : []).filter(u => {
+      const facOk = !filterFaculty || [u.faculty, u.faculty_id, u.faculty?.id].some(v => String(v) === String(filterFaculty));
+      const progOk = !filterProgram || [u.program, u.program_id, u.program?.id].some(v => String(v) === String(filterProgram));
+      const name = `${u.first_name || ''} ${u.last_name || ''} ${u.username || ''} ${u.email || ''}`.toLowerCase();
+      const nameOk = !debouncedName || name.includes(debouncedName.toLowerCase());
+      return facOk && progOk && nameOk;
+    });
+  }, [usersData, filterFaculty, filterProgram, debouncedName]);
+
+  // Programs filtered by selected faculty for the Program select
+  const filteredPrograms = useMemo(() => {
+    const list = programs || [];
+    if (!filterFaculty) return list;
+    return list.filter((pr) => [pr.faculty, pr.faculty_id, pr.faculty?.id].some((v) => String(v) === String(filterFaculty)));
+  }, [programs, filterFaculty]);
+
+  // If selected program doesn't belong to current faculty, clear it
+  useEffect(() => {
+    if (!filterProgram) return;
+    const exists = (filteredPrograms || []).some((pr) => String(pr.id) === String(filterProgram));
+    if (!exists) setFilterProgram('');
+  }, [filterFaculty, filteredPrograms, filterProgram]);
+
+
+  const handleEnroll = async (e) => {
+    e.preventDefault();
+    if (selectedStudents.length === 0 || selectedCourses.length === 0) {
+      setError('Please select at least one student and one course.');
+      return;
+    }
+    try {
+      setError(null);
+      setSuccess('');
+      // Backend endpoint accepts a SINGLE studentid and MULTIPLE courseids per request
+      // so we call it once per selected student.
+      const courseids = selectedCourses.map((id) => Number(id));
+      const results = await Promise.allSettled(
+        selectedStudents.map(async (sid) => {
+          const res = await fetch(`${api.baseURL}/lecture/enroll/`, {
+            method: 'POST',
+            headers: api.getAuthHeaders(),
+            body: JSON.stringify({ studentid: Number(sid), courseids }),
+          });
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            const msg = err?.detail || err?.message || 'Enrollment failed';
+            throw new Error(msg);
+          }
+          return res.json();
+        })
+      );
+
+      const failed = results.filter(r => r.status === 'rejected');
+      if (failed.length === 0) {
+        setSuccess('All selected students enrolled successfully!');
+      } else if (failed.length === results.length) {
+        throw new Error('Enrollment failed for all selected students');
+      } else {
+        setSuccess(`Some enrollments succeeded. Failed: ${failed.length}/${results.length}`);
+      }
+      setSelectedStudents([]);
+      setSelectedCourses([]);
+    } catch (err) {
+      setError(err.message || 'Enrollment failed');
+    }
+  };
+
+
+  const handleSelectAll = (checked) => {
+    if (checked) {
+      const allStudentIds = filteredStudents.map(student => String(student.id));
+      setSelectedStudents(allStudentIds);
+    } else {
+      setSelectedStudents([]);
+    }
+  };
+
+  // Fetch students with optional filters. If backend doesn't support filters, it will still return all users.
+  const fetchFilteredStudents = async ({ faculty, program, name }) => {
+    const params = new URLSearchParams();
+    if (faculty) params.append('faculty', faculty);
+    if (program) params.append('program', program);
+    if (name) params.append('name', name);
+    const url = `${api.baseURL}/auth/users/${params.toString() ? `?${params.toString()}` : ''}`;
+    const res = await fetch(url, { headers: api.getAuthHeaders() });
+    if (!res.ok) throw new Error('Failed to load users');
+    return res.json();
+  };
+
+  // Courses filtered by Program and Faculty using same selects
+  const filteredCourses = useMemo(() => {
+    let list = Array.isArray(courses) ? [...courses] : [];
+    const getProgId = (p) => (p && typeof p === 'object' ? p.id : p);
+    const courseProgramIds = (c) => Array.isArray(c?.programs) ? c.programs.map(getProgId) : [];
+
+    if (filterProgram) {
+      list = list.filter((c) => courseProgramIds(c).some((pid) => String(pid) === String(filterProgram)));
+    }
+
+    if (filterFaculty) {
+      const programIdsForFaculty = (Array.isArray(programs) ? programs : [])
+        .filter((pr) => [pr.faculty, pr.faculty_id, pr.faculty?.id].some((v) => String(v) === String(filterFaculty)))
+        .map((pr) => String(pr.id));
+      if (programIdsForFaculty.length) {
+        list = list.filter((c) => courseProgramIds(c).some((pid) => programIdsForFaculty.includes(String(pid))));
+      }
+    }
+    return list;
+  }, [courses, programs, filterFaculty, filterProgram]);
+
+
+  const combinedLoading = loading || usersLoading;
+  const combinedError = error || usersError?.message;
+
+  if (combinedLoading) return <div>Loading...</div>;
+  if (combinedError) return <div className="error-message">Error: {combinedError}</div>;
+
+
+  return (
+    <div className="enrollment-page">
+      <h1>Enroll Students in Courses</h1>
+      {success && <div className="success-message">{success}</div>}
+      
+      <div className="filters section-card">
+        <input type="text" placeholder="Filter by name" value={filterName} onChange={e => setFilterName(e.target.value)} />
+        <select value={filterFaculty} onChange={e => setFilterFaculty(e.target.value)}>
+          <option value="">All Faculties</option>
+          {faculties.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+        </select>
+        <select value={filterProgram} onChange={e => setFilterProgram(e.target.value)}>
+          <option value="">All Programs</option>
+          {filteredPrograms.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+        </select>
+      </div>
+
+
+      <form onSubmit={handleEnroll} className="enrollment-form two-col">
+        <div className="form-group section-card">
+          <div className="group-head">
+            <label>Select Students</label>
+            <div className="checkbox-item inline">
+              <input
+                type="checkbox"
+                id="students-select-all"
+                checked={selectedStudents.length > 0 && selectedStudents.length === filteredStudents.length}
+                onChange={(e) => handleSelectAll(e.target.checked)}
+              />
+              <label htmlFor="students-select-all">Select All</label>
+            </div>
+          </div>
+          <div className="scroll-area">
+            <div className="students-checkbox-group">
+              {filteredStudents.map((student) => {
+                const idStr = String(student.id);
+                const checked = selectedStudents.includes(idStr);
+                return (
+                  <div key={student.id} className="checkbox-item">
+                    <input
+                      type="checkbox"
+                      id={`student-${student.id}`}
+                      value={idStr}
+                      checked={checked}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        if (e.target.checked) {
+                          setSelectedStudents((prev) => (prev.includes(v) ? prev : [...prev, v]));
+                        } else {
+                          setSelectedStudents((prev) => prev.filter((id) => id !== v));
+                        }
+                      }}
+                    />
+                    <label htmlFor={`student-${student.id}`}>{student.username}</label>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+
+        <div className="form-group section-card">
+          <label>Select Courses</label>
+          <div className="scroll-area">
+            <div className="courses-checkbox-group">
+              {filteredCourses.map(course => (
+                <div key={course.id} className="checkbox-item">
+                  <input type="checkbox" id={`course-${course.id}`} value={course.id} checked={selectedCourses.includes(course.id)} onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedCourses((prev) => (prev.includes(course.id) ? prev : [...prev, course.id]));
+                    } else {
+                      setSelectedCourses((prev) => prev.filter(id => id !== course.id));
+                    }
+                  }} />
+                  <label htmlFor={`course-${course.id}`}>{course.title}</label>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        <button type="submit" className="btn btn-primary">Enroll</button>
+      </form>
+    </div>
+  );
+}
+
+
+export default Enrollment;

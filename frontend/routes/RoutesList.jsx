@@ -16,6 +16,7 @@ import ChangePassword from "../src/pages/ChangePassword/ChangePassword";
 import About from "../src/pages/About/About";
 import ResetPassword from "../src/pages/ResetPassword/ResetPassword";
 import Logs from "../src/pages/Logs/Logs";
+import Enrollment from "../src/components/Enrollment";
 
 // Small helper to set the page title per route
 const Page = ({ title, children }) => {
@@ -84,6 +85,14 @@ const RoutesList = () => {
         element={
           <ProtectedRoute>
             <Page title="السجلات"><Logs /></Page>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/enroll"
+        element={
+          <ProtectedRoute>
+            <Page title="تسجيل الطلاب"><Enrollment /></Page>
           </ProtectedRoute>
         }
       />

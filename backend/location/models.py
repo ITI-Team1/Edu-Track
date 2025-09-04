@@ -6,7 +6,8 @@ class Location(models.Model):
     name = models.CharField(max_length=50)
     slug = models.SlugField(unique=True)
     capacity = models.PositiveIntegerField(default=1)
-    faculty = models.ForeignKey(Faculty, on_delete=models.CASCADE, related_name='locations')
+    faculties = models.ManyToManyField(Faculty, related_name='locations')
 
     def __str__(self):
-        return f"{self.name} ({self.faculty.name} - {self.faculty.university.name})"
+        faculty_names = ", ".join([faculty.name for faculty in self.faculties.all()])
+        return f"{self.name} ({faculty_names})"
