@@ -9,6 +9,8 @@ import Department from '../Department/Department';
 import Hall from '../Hall/Hall';
 import CoursesMange from '../courseMange/CoursesMange';
 import Lecture from '../Lecture/Lecture';
+import UploadExcel from '../../components/UploadUsersData';
+import Enrollment from '../../components/Enrollment';
 
 function Dashboard() {
   const [activeTab, setActiveTab] = useState("overview");
@@ -152,6 +154,13 @@ function Dashboard() {
             <span className="tab-text">التسجيل الإكاديمي</span>
           </button>
           <button
+            className={`sidebar-tab ${activeTab === "enroll" ? "active" : ""}`}
+            onClick={() => setActiveTab("enroll")}
+          >
+            <span className="tab-icon">🧾</span>
+            <span className="tab-text">تسجيل الطلاب</span>
+          </button>
+          <button
             className={`sidebar-tab ${activeTab === "schedule" ? "active" : ""
               }`}
             onClick={() => setActiveTab("schedule")}
@@ -224,7 +233,6 @@ function Dashboard() {
       {/* Main Content */}
 
       <main className="dashboard-main">
-
         <div className="dashboard-content">
           {activeTab === "overview" && (
             <div className="calendar-overview" style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 16 }}>
@@ -285,9 +293,14 @@ function Dashboard() {
                   {now.toLocaleDateString("ar-EG", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
                 </p>
               </div>
+              
             </div>
           )}
-
+ {activeTab === "enroll" && (
+            <div>
+              <Enrollment />
+            </div>
+          )}
           {activeTab === "courses" && (
             <div>
               <Courses />

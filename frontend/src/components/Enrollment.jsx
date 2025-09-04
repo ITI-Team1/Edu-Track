@@ -5,6 +5,7 @@ import api from '../services/api';
 import { fetchCourses } from '../services/courseApi';
 import { fetchFaculties } from '../services/facultyApi';
 import { fetchPrograms } from '../services/programApi';
+import UploadExcel from './UploadUsersData';
 
 
 function Enrollment() {
@@ -37,7 +38,7 @@ function Enrollment() {
         setFaculties(facultiesData.results || facultiesData);
         setPrograms(programsData.results || programsData);
       } catch (err) {
-        setError(err.message || 'An error occurred');
+        setError(err.message || 'حدث خطأ غير متوقع');
       } finally {
         setLoading(false);
       }
@@ -55,7 +56,7 @@ function Enrollment() {
   // React Query: fetch and cache users
   const fetchUsers = async () => {
     const res = await fetch(`${api.baseURL}/auth/users/`, { headers: api.getAuthHeaders() });
-    if (!res.ok) throw new Error('Failed to load users');
+    if (!res.ok) throw new Error('فشل تحميل المستخدمين');
     return res.json();
   };
 
@@ -97,7 +98,7 @@ function Enrollment() {
   const handleEnroll = async (e) => {
     e.preventDefault();
     if (selectedStudents.length === 0 || selectedCourses.length === 0) {
-      setError('Please select at least one student and one course.');
+      setError('الرجاء اختيار طالب واحد على الأقل ومقرر واحد على الأقل.');
       return;
     }
     try {
@@ -115,7 +116,7 @@ function Enrollment() {
           });
           if (!res.ok) {
             const err = await res.json().catch(() => ({}));
-            const msg = err?.detail || err?.message || 'Enrollment failed';
+            const msg = err?.detail || err?.message || 'فشل التسجيل';
             throw new Error(msg);
           }
           return res.json();
@@ -124,16 +125,16 @@ function Enrollment() {
 
       const failed = results.filter(r => r.status === 'rejected');
       if (failed.length === 0) {
-        setSuccess('All selected students enrolled successfully!');
+        setSuccess('تم تسجيل جميع الطلاب بنجاح');
       } else if (failed.length === results.length) {
-        throw new Error('Enrollment failed for all selected students');
+        throw new Error('فشل التسجيل لجميع الطلاب المحددين');
       } else {
-        setSuccess(`Some enrollments succeeded. Failed: ${failed.length}/${results.length}`);
+        setSuccess(`تم بعض التسجيلات بنجاح. فشل: ${failed.length}/${results.length}`);
       }
       setSelectedStudents([]);
       setSelectedCourses([]);
     } catch (err) {
-      setError(err.message || 'Enrollment failed');
+      setError(err.message || 'فشل التسجيل');
     }
   };
 
@@ -184,23 +185,23 @@ function Enrollment() {
   const combinedLoading = loading || usersLoading;
   const combinedError = error || usersError?.message;
 
-  if (combinedLoading) return <div>Loading...</div>;
-  if (combinedError) return <div className="error-message">Error: {combinedError}</div>;
+  if (combinedLoading) return <div>جارٍ التحميل...</div>;
+  if (combinedError) return <div className="error-message">خطأ: {combinedError}</div>;
 
 
   return (
-    <div className="enrollment-page">
-      <h1>Enroll Students in Courses</h1>
+    <div className="enrollment-page" dir="rtl">
+      <h1>تسجيل الطلاب و المقررات</h1>
       {success && <div className="success-message">{success}</div>}
       
       <div className="filters section-card">
-        <input type="text" placeholder="Filter by name" value={filterName} onChange={e => setFilterName(e.target.value)} />
+        <input type="text" placeholder="فلترة حسب الاسم" value={filterName} onChange={e => setFilterName(e.target.value)} />
         <select value={filterFaculty} onChange={e => setFilterFaculty(e.target.value)}>
-          <option value="">All Faculties</option>
+          <option value="">كل الكليات</option>
           {faculties.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
         </select>
         <select value={filterProgram} onChange={e => setFilterProgram(e.target.value)}>
-          <option value="">All Programs</option>
+          <option value="">كل البرامج</option>
           {filteredPrograms.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>
       </div>
@@ -209,7 +210,7 @@ function Enrollment() {
       <form onSubmit={handleEnroll} className="enrollment-form two-col">
         <div className="form-group section-card">
           <div className="group-head">
-            <label>Select Students</label>
+            <label>اختر الطلاب</label>
             <div className="checkbox-item inline">
               <input
                 type="checkbox"
@@ -217,7 +218,7 @@ function Enrollment() {
                 checked={selectedStudents.length > 0 && selectedStudents.length === filteredStudents.length}
                 onChange={(e) => handleSelectAll(e.target.checked)}
               />
-              <label htmlFor="students-select-all">Select All</label>
+              <label htmlFor="students-select-all">تحديد الكل</label>
             </div>
           </div>
           <div className="scroll-area">
@@ -251,7 +252,7 @@ function Enrollment() {
 
 
         <div className="form-group section-card">
-          <label>Select Courses</label>
+          <label>اختر المقررات</label>
           <div className="scroll-area">
             <div className="courses-checkbox-group">
               {filteredCourses.map(course => (
@@ -269,7 +270,12 @@ function Enrollment() {
             </div>
           </div>
         </div>
-        <button type="submit" className="btn btn-primary">Enroll</button>
+        <div className="enroll-actions">
+          <div className="enroll-actions__inner enroll-card no-accent">
+            <button type="submit" className="btn btn-primary enroll-submit">تسجيل</button>
+            <UploadExcel />
+          </div>
+        </div>
       </form>
     </div>
   );
