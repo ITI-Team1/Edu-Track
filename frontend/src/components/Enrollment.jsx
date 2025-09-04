@@ -25,6 +25,23 @@ function Enrollment() {
   const [debouncedName, setDebouncedName] = useState('');
 
 
+  // Quick lookup maps for faculty/program names
+  const facultyNameMap = useMemo(() => {
+    const m = {};
+    (faculties || []).forEach((f) => {
+      m[String(f.id)] = f.name;
+    });
+    return m;
+  }, [faculties]);
+
+  const programNameMap = useMemo(() => {
+    const m = {};
+    (programs || []).forEach((p) => {
+      m[String(p.id)] = p.name;
+    });
+    return m;
+  }, [programs]);
+
   useEffect(() => {
     const loadInitialData = async () => {
       try {
@@ -242,7 +259,28 @@ function Enrollment() {
                         }
                       }}
                     />
-                    <label htmlFor={`student-${student.id}`}>{student.username}</label>
+                    <label htmlFor={`student-${student.id}`}>
+                      {(() => {
+                        const facId = String(
+                          (student.faculty && typeof student.faculty === 'object' ? student.faculty.id : student.faculty_id) ??
+                          student.faculty
+                        );
+                        const progId = String(
+                          (student.program && typeof student.program === 'object' ? student.program.id : student.program_id) ??
+                          student.program
+                        );
+                        const facName = (student.faculty && typeof student.faculty === 'object' && student.faculty.name) || facultyNameMap[facId] || 'كلية غير محددة';
+                        const progName = (student.program && typeof student.program === 'object' && student.program.name) || programNameMap[progId] || 'برنامج غير محدد';
+                        const displayName = student.username || `${student.first_name || ''} ${student.last_name || ''}`.trim();
+                        return (
+                          <>
+                            <span className="student-name">{displayName}</span>
+                            <br />
+                            <span className="student-meta">{facName} | {progName}</span>
+                          </>
+                        );
+                      })()}
+                    </label>
                   </div>
                 );
               })}

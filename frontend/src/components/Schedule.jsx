@@ -74,7 +74,7 @@ function Schedule() {
   };
 
   // Normalize Arabic day names to canonical forms (match backend choices)
-  const canonicalDays = ['السبت','الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة'];
+  const canonicalDays = ['السبت','الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس'];
   const dayMap = {
     'الاحد': 'الأحد', 'الأحد': 'الأحد', 'اﻷحد': 'الأحد',
     'السبت': 'السبت',
@@ -128,7 +128,7 @@ function Schedule() {
     const [hhStr, mmStr] = t.split(':');
     let hh = parseInt(hhStr, 10);
     const mm = (mmStr || '00').slice(0,2);
-    const suffix = hh >= 12 ? 'PM' : 'AM';
+    const suffix = hh >= 12 ? 'م' : 'ص';
     hh = hh % 12;
     if (hh === 0) hh = 12;
     return `${hh}:${mm} ${suffix}`;
