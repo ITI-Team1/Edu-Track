@@ -10,13 +10,16 @@ export const fetchLocations = async () => {
 };
 
 export const createLocation = async (formData) => {
-  // Expecting formData = { name, slug, capacity?, faculty }
+  // Expecting formData = { name, slug, capacity?, faculties: number[] } or legacy { faculty: number }
   if (!formData?.slug) throw new Error('المعرف (Slug) مطلوب');
+  const faculties = Array.isArray(formData?.faculties)
+    ? formData.faculties
+    : (formData?.faculty != null ? [formData.faculty] : []);
   const payload = {
     name: formData.name,
     slug: formData.slug,
     capacity: Number(formData.capacity ?? 1),
-    faculty: Number(formData.faculty),
+    faculties: faculties.map((f) => Number(f)).filter((n) => Number.isFinite(n)),
   };
   const res = await fetch(`${api.baseURL}/location/create/`, {
     method: "POST",
@@ -33,11 +36,14 @@ export const createLocation = async (formData) => {
 
 export const updateLocation = async (slug, formData) => {
   if (!formData?.slug) throw new Error('المعرف (Slug) مطلوب');
+  const faculties = Array.isArray(formData?.faculties)
+    ? formData.faculties
+    : (formData?.faculty != null ? [formData.faculty] : undefined);
   const payload = {
     name: formData.name,
     slug: formData.slug,
     capacity: formData.capacity != null ? Number(formData.capacity) : undefined,
-    faculty: formData.faculty != null ? Number(formData.faculty) : undefined,
+    faculties: faculties != null ? faculties.map((f) => Number(f)).filter((n) => Number.isFinite(n)) : undefined,
   };
   const res = await fetch(`${api.baseURL}/location/${slug}/update/`, {
     method: "PUT",

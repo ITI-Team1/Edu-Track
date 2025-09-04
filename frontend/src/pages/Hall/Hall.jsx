@@ -29,17 +29,34 @@ export default function Hall() {
   });
 
   // Helpers to work with both shapes coming from API:
-  // hall.faculty could be an object {id, name} (mock) OR just an ID (real API)
+  // hall.faculty could be an object {id, name} (mock) OR just an ID (older) OR hall.faculties could be [ids]
   const getFacultyId = (facultyValue) =>
     typeof facultyValue === "object" && facultyValue !== null
       ? facultyValue.id
       : Number(facultyValue);
 
-  const getFacultyName = (hall) => {
-    const fid = getFacultyId(hall?.faculty);
-    const fac = faculties.find((f) => f.id === fid);
-    // If backend returns nested object, fallback to it; otherwise use looked-up name
-    return fac?.name ?? (typeof hall?.faculty === "object" ? hall?.faculty?.name : "");
+  const getFacultyIds = (hall) => {
+    if (Array.isArray(hall?.faculties)) {
+      return hall.faculties.map((x) => Number(x)).filter((n) => Number.isFinite(n));
+    }
+    if (hall?.faculty != null) {
+      const id = getFacultyId(hall.faculty);
+      return Number.isFinite(id) ? [id] : [];
+    }
+    return [];
+  };
+
+  const getFacultyNames = (hall) => {
+    const ids = getFacultyIds(hall);
+    const names = ids
+      .map((fid) => faculties.find((f) => f.id === fid)?.name)
+      .filter(Boolean);
+    if (names.length) return names;
+    // Fallback for mock object shape
+    if (typeof hall?.faculty === "object" && hall?.faculty?.name) {
+      return [hall.faculty.name];
+    }
+    return [];
   };
 
   // MOCK DATA FOR DEMO/DEV - REMOVE THIS BLOCK FOR PRODUCTION
@@ -157,9 +174,10 @@ export default function Hall() {
   const handleUpdate = (hall) => {
     setModalType("update");
     setSelectedHall(hall);
+    const ids = getFacultyIds(hall);
     setForm({
       name: hall.name,
-      faculty: getFacultyId(hall.faculty),
+      faculty: ids.length ? ids[0] : "",
       slug: hall.slug,
       capacity: hall.capacity,
     });
@@ -295,7 +313,7 @@ export default function Hall() {
               {halls.map((hall) => (
                 <tr key={hall.slug} className="hall-row">
                   <td>{hall.name}</td>
-                  <td>{getFacultyName(hall)}</td>
+                  <td>{getFacultyNames(hall).join(', ')}</td>
                   <td>{hall.slug}</td>
                   <td>{hall.capacity}</td>
                   <td>
