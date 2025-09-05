@@ -24,12 +24,6 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# Database files
-*.sqlite3
-*.db
-db.sqlite3
-backend/db.sqlite3
-
 # Environment files
 .env
 .env.local
