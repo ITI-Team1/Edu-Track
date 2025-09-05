@@ -329,7 +329,7 @@ input, textarea, select, button {
 	flex-wrap: wrap;
 }
 
-.btn {
+.help-center-page .btn {
 	display: inline-block;
 	padding: 0.8rem 1.5rem;
 	border-radius: 25px;
@@ -341,130 +341,32 @@ input, textarea, select, button {
 	font-size: 1rem;
 }
 
-.btn-primary {
+.help-center-page .btn-primary {
 	background: linear-gradient(135deg, #667eea, #764ba2);
 	color: white;
 	box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
 }
 
-.btn-primary:hover {
+.help-center-page .btn-primary:hover {
 	transform: translateY(-2px);
 	box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
 	color: white;
 }
 
-.btn-secondary {
+.help-center-page .btn-secondary {
 	background: linear-gradient(135deg, #1e1e2e 0%, #282c4e 50%, #2d3748 100%);
 	color: white;
 	border: 2px solid rgba(255, 255, 255, 0.3);
 	backdrop-filter: blur(10px);
 }
 
-.btn-secondary:hover {
+.help-center-page .btn-secondary:hover {
 	background: linear-gradient(135deg, #282c4e 0%, #2d3748 50%, #1e1e2e 100%);
 	transform: translateY(-2px);
 	color: white;
 }
 
 
-
-/* Responsive Design */
-@media (max-width: 768px) {
-	.help-page {
-		padding: 1rem 0.5rem;
-	}
-
-	.help-header h1 {
-		font-size: 2rem;
-	}
-
-	.help-header p {
-		font-size: 1rem;
-	}
-
-	.search-input {
-		padding: 1rem 2.5rem 1rem 1rem;
-		font-size: 1rem;
-	}
-
-	.categories-grid {
-		grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-		gap: 0.8rem;
-	}
-
-	.category-card {
-		padding: 1rem 0.5rem;
-	}
-
-	.category-icon {
-		font-size: 1.5rem;
-	}
-
-	.category-name {
-		font-size: 0.8rem;
-	}
-
-	.results-grid {
-		grid-template-columns: 1fr;
-		gap: 1rem;
-	}
-
-	.quick-help-grid {
-		grid-template-columns: 1fr;
-		gap: 1rem;
-	}
-
-	.support-buttons {
-		flex-direction: column;
-		align-items: center;
-	}
-
-	.btn {
-		width: 100%;
-		max-width: 250px;
-		text-align: center;
-	}
-}
-
-@media (max-width: 480px) {
-	.help-header h1 {
-		font-size: 1.8rem;
-	}
-
-	.search-input-wrapper {
-		border-radius: 25px;
-	}
-
-	.search-input {
-		padding: 0.8rem 2rem 0.8rem 1rem;
-		font-size: 0.9rem;
-	}
-
-	.categories-grid {
-		grid-template-columns: repeat(2, 1fr);
-	}
-
-	.category-card {
-		padding: 0.8rem 0.3rem;
-	}
-
-	.category-icon {
-		font-size: 1.3rem;
-	}
-
-	.category-name {
-		font-size: 0.7rem;
-	}
-
-	.result-card,
-	.quick-help-card {
-		padding: 1rem;
-	}
-
-	.contact-support {
-		padding: 1.5rem;
-	}
-}
 
 /* Loading Animation */
 @keyframes pulse {
@@ -483,10 +385,8 @@ input, textarea, select, button {
 	animation: pulse 1s infinite;
 }
 
-/* Smooth transitions for all interactive elements */
-* {
-	transition: all 0.3s ease;
-}
+/* Smooth transitions (scoped to Help Center only to avoid navbar jitter) */
+.help-center-page * { transition: all 0.3s ease; }
 
 /* Focus states for accessibility */
 .search-input:focus {
@@ -620,12 +520,7 @@ input, textarea, select, button {
 @keyframes faqFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes faqFadeOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(10px); } }
 @keyframes cardIn { from { opacity: 0; transform: translateY(8px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
-@media (max-width: 900px) {
-  .faq-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-}
+/* Removed old max-width: 900px block in favor of unified min-width queries at bottom */
 
 .faq-item {
   background: linear-gradient(135deg, #1e1e2e 0%, #282c4e 50%, #2d3748 100%);
@@ -717,17 +612,9 @@ input, textarea, select, button {
   box-shadow: none;
 }
 
-/* Overrides for HelpCenter light theme */
-.help-center-page .faq-item {
-  background: #ffffff !important;
-  border: 1px solid #e5e7eb !important;
-  box-shadow: 0 20px 50px rgba(2, 6, 23, 0.06) !important;
-  padding: 1.25rem 1rem !important;
-  color: #0f172a !important;
-}
+/* Remove forced white card overrides so original card styles apply */
 .help-center-page {
-  color: #0f172a !important;
-  font-weight: 800 !important;
+  /* Do not force global color/weight here to avoid affecting layout */
   text-shadow: none !important;
 }
 .help-center-page .faq-item h3::after {
@@ -738,16 +625,14 @@ input, textarea, select, button {
   text-shadow: none !important;
 }
 
-/* Ensure section-level text isn't forced white inside HelpCenter */
+/* Ensure section-level text isn't forced globally; only scope within HelpCenter */
 .help-center-page .faq-section p {
   color: #334155 !important;
   text-shadow: none !important;
 }
-.help-center-page .faq-section h2,
-.help-center-page {
+.help-center-page .faq-section h2 {
   color: #0d3d6e;
   text-shadow: none !important;
- 
 }
 
 /* Neutralize dark gradient block inside HelpCenter */
@@ -756,16 +641,15 @@ input, textarea, select, button {
   border-color: #e5e7eb !important;
 }
 
+/* Revert helper card styling to transparent to match your base theme */
 .help-center-page .chatbot-side,
 .help-center-page .chatbot-container {
-  background: #ffffff !important;
-  border: 1px solid #e5e7eb !important;
-  box-shadow: 0 20px 50px rgba(2, 6, 23, 0.08) !important;
-  border-radius: 20px !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
 }
-.help-center-page* {
-  color: #0f172a;
-}
+/* Removed stray `.help-center-page*` selector */
 
 /* Optional: style common chatbot parts if present */
 .help-center-page .chatbot-container .chat-header {
@@ -801,6 +685,8 @@ input, textarea, select, button {
   gap: 1.25rem;
   padding: 2rem 1rem;
   align-items: start;
+  width: 100%;
+  margin: 0 auto;    /* keep centered if parent constrains */
 }
 @media (max-width: 1100px) {
   .help-main-grid {
@@ -842,11 +728,32 @@ input, textarea, select, button {
   opacity: 1;
 }
 
-/* Additional mobile tweaks */
-@media (max-width: 600px) {
-  .help-header { margin: 1.5rem 0.75rem; }
-  .faq-section h2, .chatbot-section h2 { font-size: 1.4rem; }
+/* Make Chatbot take full column width on Help Center */
+.help-center-page .chatbot-container { max-width: 100% !important; }
+.help-center-page .chatbot-container .chatbot { max-width: 100% !important; }
+
+/* Ensure grid items can shrink and do not force overflow */
+.help-center-page .faq-section,
+.help-center-page .chatbot-section,
+.help-center-page .faq-grid,
+.help-center-page .chatbot-container { min-width: 0; }
+
+/* Make any media inside Help Center fluid to avoid breaking width */
+.help-center-page .faq-item img,
+.help-center-page .faq-item video,
+.help-center-page .faq-item iframe,
+.help-center-page .chatbot-container img,
+.help-center-page .chatbot-container video,
+.help-center-page .chatbot-container iframe {
+  max-width: 100%;
+  height: auto;
+  display: block;
 }
+
+/* Safety: prevent horizontal scroll caused by any child */
+.help-center-page { overflow-x: hidden; }
+
+/* Removed old max-width: 600px tweaks in favor of unified min-width queries at bottom */
 
 /* Modern Category Pills */
 .helpcenter-category-row.modern {
@@ -1022,3 +929,41 @@ input, textarea, select, button {
 }
 .pagination-controls .page-nav.disabled,
 .pagination-controls .page-nav:disabled { pointer-events: none; }
+
+/* =========================
+   Mobile-first responsive overrides (300px and up)
+   These unify behavior and override older scattered max-width rules.
+   ========================= */
+/* Base: small devices (~300px+) already handled by non-media rules */
+
+@media (min-width: 300px) {
+  .help-center-page .chatbot-container .chatbot { max-width: 550px; }
+  .help-main-grid { grid-template-columns: 1fr; gap: 1rem; padding: 1rem; }
+  .faq-grid { grid-template-columns: 1fr; gap: 1rem; }
+  .category-pill { min-width: 70px; min-height: 70px; border-radius: 14px; }
+  .category-pill-icon { font-size: 24px; }
+  .category-pill-label { font-size: 11px; }
+}
+
+@media (min-width: 640px) {
+  .help-main-grid { grid-template-columns: 1fr 1fr; gap: 1.25rem; padding: 1.25rem; }
+  /* Keep FAQ as a single column until larger screens for better readability */
+  .faq-grid { grid-template-columns: 1fr; gap: 1.25rem; }
+  .category-pill { min-width: 80px; min-height: 80px; }
+  .category-pill-icon { font-size: 28px; }
+}
+
+@media (min-width: 1024px) {
+  .help-main-grid { grid-template-columns: 1fr 1fr; gap: 1.5rem; padding: 2rem 1rem; }
+  .faq-grid { grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+  .chatbot-container .chatbot { max-width: 700px; }
+}
+
+/* Small/medium screens: make FAQ cards white without touching other pages */
+@media (max-width: 900px) {
+  .help-center-page .faq-item {
+    background: #ffffff !important;
+    border: 1px solid #e5e7eb !important;
+    box-shadow: 0 8px 24px rgba(2, 6, 23, 0.06) !important;
+  }
+}
