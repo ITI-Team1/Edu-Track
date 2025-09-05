@@ -1,0 +1,3 @@
+@echo off
+echo Starting Django server on all interfaces...
+python manage.py runserver 0.0.0.0:8000

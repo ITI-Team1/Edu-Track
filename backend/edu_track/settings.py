@@ -27,7 +27,16 @@ SECRET_KEY = 'django-insecure-92(_qr_dpj84=19ady_i!h$%)df6uoa0d7yqh_6xy2^+d4lgd%
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+# Mobile testing changing depends on the ip of the pc
 ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+# if DEBUG:
+#     ALLOWED_HOSTS = ["*"]
+
+# # Configure Django to bind to all interfaces by default for development
+# import os
+# if DEBUG:
+#     # Override the default runserver command to bind to all interfaces
+#     os.environ.setdefault('DJANGO_SERVER_HOST', '0.0.0.0')
 
 
 # Application definition
@@ -184,11 +193,33 @@ DJOSER = {
     },
 }
 
+# Allow localhost and common LAN IP ranges for development preview
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "http://localhost:8000",
     "http://127.0.0.1:8000",
+    # Mobile testing changing depends on the ip of the pc
+    # "http://192.168.1.7:5173",
+    # "http://192.168.1.7:8000",
+]
+
+# During development, allow any origin from the local network when DEBUG
+if DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = True
+
+# Allow Authorization header without cookies; enable credentials only if needed
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
 ]
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'

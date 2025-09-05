@@ -9,7 +9,7 @@ import Department from '../Department/Department';
 import Hall from '../Hall/Hall';
 import CoursesMange from '../courseMange/CoursesMange';
 import Lecture from '../Lecture/Lecture';
-import UploadExcel from '../../components/UploadUsersData';
+import AttendancePage from '../Attendance/Attendance';
 import Enrollment from '../../components/Enrollment';
 
 function Dashboard() {
@@ -74,57 +74,7 @@ function Dashboard() {
     }
   }, [isAuthenticated, navigate]);
 
-  // Mock data - replace with real data from backend
-  const mockData = {
-    courses: [
-      {
-        id: 1,
-        name: "الرياضيات 101",
-        progress: 75,
-        nextClass: "2024-01-15 10:00",
-      },
-      {
-        id: 2,
-        name: "معمل الفيزياء",
-        progress: 60,
-        nextClass: "2024-01-16 14:00",
-      },
-      {
-        id: 3,
-        name: "الأدب الإنجليزي",
-        progress: 90,
-        nextClass: "2024-01-17 09:00",
-      },
-    ],
-    upcomingDeadlines: [
-      {
-        id: 1,
-        title: "واجب الرياضيات",
-        course: "الرياضيات 101",
-        dueDate: "2024-01-20",
-      },
-      {
-        id: 2,
-        title: "تقرير الفيزياء",
-        course: "معمل الفيزياء",
-        dueDate: "2024-01-22",
-      },
-    ],
-    recentActivity: [
-      {
-        id: 1,
-        action: "تم إكمال الواجب",
-        course: "الأدب الإنجليزي",
-        time: "قبل ساعتين",
-      },
-      {
-        id: 2,
-        action: "حضور المحاضرة",
-        course: "الرياضيات 101",
-        time: "قبل يوم واحد",
-      },
-    ],
-  };
+  // Removed unused mock data
 
   if (!isAuthenticated) {
     return null; // Don't render anything while redirecting
@@ -214,6 +164,13 @@ function Dashboard() {
           >
             <span className="tab-icon">📝</span>
             <span className="tab-text">المحاضرات</span>
+          </button>
+          <button
+            className={`sidebar-tab ${activeTab === "attendance" ? "active" : ""}`}
+            onClick={() => setActiveTab("attendance")}
+          >
+            <span className="tab-icon">✅</span>
+            <span className="tab-text">الحضور</span>
           </button>
         </nav>
         <div className="sidebar-header">
@@ -336,6 +293,9 @@ function Dashboard() {
               <Lecture />
             </div>
           )}
+          {activeTab === "attendance" && (
+            <AttendancePanel user={user} />
+          )}
 
           {activeTab === "progress" && (
             <div className="content-card progress-section-applying">
@@ -354,3 +314,40 @@ function Dashboard() {
 }
 
 export default Dashboard;
+
+// Simple attendance panel component appended below for clarity
+const AttendancePanel = () => {
+  const [attendanceIdInput, setAttendanceIdInput] = useState('');
+  const [currentAttendance, setCurrentAttendance] = useState(null);
+  const [error, setError] = useState(null);
+
+
+  const openAttendance = () => {
+    if(!attendanceIdInput) return;
+    setCurrentAttendance(attendanceIdInput.trim());
+    setError(null);
+  };
+
+
+  return (
+    <div className="content-card">
+      <h2>نظام الحضور</h2>
+      <h5>لا تشارك هذه الشاشة خارج القاعة.</h5>
+      {!currentAttendance && (
+        <div style={{display:'flex', gap:8, flexWrap:'wrap', marginBottom:16}}>
+          <input value={attendanceIdInput} onChange={e=>setAttendanceIdInput(e.target.value)} placeholder="رقم جلسة الحضور" style={{padding:8}} />
+          <button className="btn btn-secondary-attendance" onClick={openAttendance}>فتح</button>
+        </div>
+      )}
+      {currentAttendance && (
+        <div style={{marginTop:24}}>
+          <AttendancePage attendanceId={currentAttendance} />
+        </div>
+      )}
+      {error && <p style={{color:'red'}}>{error}</p>}
+      {!currentAttendance && (
+        <p style={{direction:'rtl'}}>أدخل رقم جلسة الحضور (أو رقم المحاضرة) لفتح لوحة الحضور.</p>
+      )}
+    </div>
+  );
+};

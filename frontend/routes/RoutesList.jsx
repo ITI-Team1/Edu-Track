@@ -17,6 +17,8 @@ import About from "../src/pages/About/About";
 import ResetPassword from "../src/pages/ResetPassword/ResetPassword";
 import Logs from "../src/pages/Logs/Logs";
 import Enrollment from "../src/components/Enrollment";
+import AttendancePage from "../src/pages/Attendance/Attendance";
+import JoinAttendance from "../src/pages/Attendance/JoinAttendance";
 
 // Small helper to set the page title per route
 const Page = ({ title, children }) => {
@@ -95,6 +97,18 @@ const RoutesList = () => {
             <Page title="تسجيل الطلاب"><Enrollment /></Page>
           </ProtectedRoute>
         }
+      />
+      <Route
+        path="/attendance/:attendanceId"
+        element={
+          <ProtectedRoute>
+            <Page title="الحضور"><AttendancePage /></Page>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/attendance/join"
+        element={<Page title="تسجيل الحضور"><JoinAttendance /></Page>}
       />
 
     </Routes>

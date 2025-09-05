@@ -1,0 +1,151 @@
+/* Layout: large QR left, table right */
+.attendance-wrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 2rem;
+  width: 100%;
+}
+
+.attendance-top-line {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.attendance-top-line h3 {
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+/* Allow wrapping on very small screens */
+@media (max-width: 900px) {
+  .attendance-wrapper {
+    flex-direction: column;
+  }
+  .qr-section,
+  .students-section {
+    width: 100%;
+  }
+}
+
+.qr-section {
+  flex: 1 1 45%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  order: 2; /* appear on right */
+}
+
+.qr-under-heading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-top: 12px;
+  gap: 6px;
+}
+.qr-inline-bar {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.qr-inline-heading {
+  margin: 0;
+  padding: 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+  text-align: center;
+}
+.attendance-countdown-large {
+  display: inline-block;
+  margin-inline-start: 8px;
+  font-size: 1.55rem;
+  font-weight: 700;
+  color: #1a4a7a;
+}
+
+.qr-box {
+  width: 100%;
+  max-width: 560px;
+  aspect-ratio: 1/1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0 px; /* tighter to header */
+}
+.qr-box svg {
+  width: 100%;
+  height: 100%;
+}
+
+.students-section {
+  flex: 1 1 55%;
+  max-width: 100%;
+  overflow: auto;
+  order: 1; /* appear on left */
+  padding-right: 16px; /* space away from vertical scrollbar */
+}
+.students-section table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 480px;
+  background: #ffffff;
+  color: #000;
+}
+.students-section th,
+.students-section td {
+  border: 1px solid #dadada;
+  padding: 8px 12px;
+  text-align: center;
+  background: #fff;
+  font-weight: 500;
+}
+.students-section th:first-child,
+.students-section td:first-child {
+  width: 90px;
+}
+
+.students-section th:last-child,
+.students-section td:last-child {
+  width: 190px;
+}
+.students-section th {
+  background: #2c3649;
+  color: #fff;
+  position: sticky;
+  top: 0;
+}
+
+/* Status cell coloring only */
+.students-section td.status {
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  user-select: none;
+}
+.students-section td.status.present {
+  background: #16a34a;
+}
+.students-section td.status.absent {
+  background: #dc2626;
+}
+
+/* Optional focus/hover effects */
+.students-section tbody tr:hover td:not(.status) {
+  background: #f8fafc;
+}
+.btn.btn-secondary-attendance {
+  background: linear-gradient(90deg, #3182ce 0%, #2c5282 100%) !important;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+  border-radius: 5px;
+}

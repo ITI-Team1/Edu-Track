@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import './login.css';
 import image2 from '../../assets/login.jpeg';
@@ -15,6 +15,9 @@ function Login() {
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const { login } = useAuth();
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const next = params.get('next');
 
   // Image is loaded for the split layout
 
@@ -32,7 +35,11 @@ function Login() {
     
     try {
       await login(formData);
-      navigate('/');
+      if (next) {
+        navigate(next, { replace: true });
+      } else {
+        navigate('/');
+      }
     } catch (error) {
       setError(error.message);
     } finally {
