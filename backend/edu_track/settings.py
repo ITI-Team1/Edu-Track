@@ -175,6 +175,7 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_LIFETIME": timedelta(days=10),
 }
 
+# DJOSER Configuration - Fixed for proper password reset links
 DJOSER = {
     'LOGIN_FIELD': 'username',
     'USER_CREATE_PASSWORD_RETYPE': True,
@@ -186,12 +187,25 @@ DJOSER = {
     'PASSWORD_CHANGED_EMAIL_CONFIRMATION': True, 
     'PASSWORD_RESET_CONFIRM_URL': 'resetpassword/{uid}-{token}', 
     'PASSWORD_RESET_SHOW_EMAIL_NOT_FOUND': True, 
-    'PASSWORD_RESET_CONFIRM_RETYPE': True, 
+    'PASSWORD_RESET_CONFIRM_RETYPE': True,
+    # Fix for proper domain in emails
+    'DOMAIN': 'localhost:5173',  # Your frontend domain
+    'SITE_NAME': 'EduTrack',
+    'PROTOCOL': 'http',  # Change to 'https' in production
     'SERIALIZERS': {
         "user": "user.serializers.UserSerializer",
         "current_user": "user.serializers.UserSerializer",
     },
+    'EMAIL': {
+        'password_reset': 'djoser.email.PasswordResetEmail',
+        'password_changed_confirmation': 'djoser.email.PasswordChangedConfirmationEmail',
+        'activation': 'djoser.email.ActivationEmail',
+    },
 }
+
+# Django Sites Framework - IMPORTANT: This controls the domain in emails
+# Note: You need to update the Site domain manually using Django shell or management command
+# See instructions below the settings file
 
 # Allow localhost and common LAN IP ranges for development preview
 CORS_ALLOWED_ORIGINS = [
@@ -222,14 +236,11 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 
+# Email Configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'alaaelgharably1@gmail.com'
-EMAIL_HOST_PASSWORD = 'lmos nsjm fbau yfsn'  
+EMAIL_HOST_PASSWORD = 'lmos nsjm fbau yfsn'  # Consider using environment variables
 DEFAULT_FROM_EMAIL = 'admin@edutrack.com'
-
-    	
-     
-     

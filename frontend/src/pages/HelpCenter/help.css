@@ -730,7 +730,7 @@ input, textarea, select, button {
 
 /* Make Chatbot take full column width on Help Center */
 .help-center-page .chatbot-container { max-width: 100% !important; }
-.help-center-page .chatbot-container .chatbot { max-width: 100% !important; }
+.help-center-page .chatbot-container .chatbot { max-width: 100% !important; height: clamp(360px, 54vh, 600px) !important; }
 
 /* Ensure grid items can shrink and do not force overflow */
 .help-center-page .faq-section,
