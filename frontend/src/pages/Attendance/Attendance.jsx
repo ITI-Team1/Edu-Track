@@ -106,8 +106,8 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
         <div className='attendance-wrapper'>
             <div className='qr-section'>
                 <div className='qr-inline-bar'>
-                    <h3 className='qr-inline-heading' style={{margin:0}}><span className='attendance-countdown-large'>يتجدد خلال {secondsLeft} ث</span></h3>
-                    <button className='btn btn-secondary-attendance' onClick={rotateNow} style={{padding:'6px 18px'}}>تحديث فوري</button>
+                    <h3 className='qr-inline-heading' style={{marginRight: 40}}><span className='attendance-countdown-large'>يتجدد خلال {secondsLeft} ث</span></h3>
+                    <button className='btn btn-secondary-attendance' onClick={rotateNow} style={{padding:'10px 20px'}}>تحديث فوري</button>
                 </div>
                 {!attendanceId && <p>لم يتم تحديد جلسة حضور.</p>}
                 {attendanceId && (qrSvg ? <div className='qr-box' dangerouslySetInnerHTML={{ __html: qrSvg }} /> : <p>جاري التحميل...</p>)}

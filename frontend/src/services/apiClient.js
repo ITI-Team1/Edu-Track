@@ -8,12 +8,12 @@ if (!baseURL) {
   if (fb) {
     try {
       const u = new URL(fb);
-      u.port = u.port === '3000' ? '8000' : (u.port || '8000');
+      u.port = u.port === '5173' ? '8000' : (u.port || '8000');
       baseURL = u.origin + '/';
     } catch { /* ignore */ }
   }
 }
-if (!baseURL) baseURL = 'http://192.168.1.7:8000/';
+if (!baseURL) baseURL = 'http://localhost:8000/';
 
 export const apiClient = axios.create({
   baseURL,
