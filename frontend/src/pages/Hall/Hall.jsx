@@ -23,7 +23,7 @@ export default function Hall() {
   const [selectedHall, setSelectedHall] = useState(null);
   const [form, setForm] = useState({
     name: "",
-    faculty: "",
+    faculties: [],
     slug: "",
     capacity: "",
   });
@@ -177,7 +177,7 @@ export default function Hall() {
     const ids = getFacultyIds(hall);
     setForm({
       name: hall.name,
-      faculty: ids.length ? ids[0] : "",
+      faculties: ids,
       slug: hall.slug,
       capacity: hall.capacity,
     });
@@ -187,7 +187,7 @@ export default function Hall() {
   const handleCreate = () => {
     setModalType("create");
     setSelectedHall(null);
-    setForm({ name: "", faculty: "", slug: "", capacity: "" });
+    setForm({ name: "", faculties: [], slug: "", capacity: "" });
     setShowModal(true);
   };
 
@@ -216,9 +216,9 @@ export default function Hall() {
       );
       return;
     }
-    const facultyId = Number(form.faculty);
-    if (!facultyId) {
-      setError("يجب اختيار الكلية");
+    const selectedFacultyIds = Array.isArray(form.faculties) ? form.faculties.map(Number).filter(Number.isFinite) : [];
+    if (selectedFacultyIds.length === 0) {
+      setError("يجب اختيار كلية واحدة على الأقل");
       return;
     }
     const cap = Number(form.capacity ?? 1);
@@ -233,14 +233,14 @@ export default function Hall() {
           name: form.name.trim(),
           slug: form.slug?.trim(),
           capacity: cap,
-          faculty: facultyId,
+          faculties: selectedFacultyIds,
         });
       } else {
         await updateLocation(selectedHall.slug, {
           name: form.name.trim(),
           slug: form.slug?.trim(),
           capacity: cap,
-          faculty: facultyId,
+          faculties: selectedFacultyIds,
         });
       }
       setShowModal(false);
@@ -381,24 +381,36 @@ export default function Hall() {
                 required
               />
             </label>
-            <label>
-              اسم الكلية:
-              <select
-                name="faculty"
-                value={form.faculty}
-                onChange={(e) => setForm({ ...form, faculty: e.target.value })}
-                required
-                disabled={!facultiesLoaded}
-              >
-                <option value="">اختر الكلية</option>
-                {facultiesLoaded &&
-                  faculties.map((fac) => (
-                    <option key={fac.id} value={fac.id}>
-                      {fac.name}
-                    </option>
-                  ))}
-              </select>
-            </label>
+            <fieldset className="faculty-multi">
+              <legend>اختر الكليات المرتبطة (متعدد):</legend>
+              <div className="faculty-multi-grid">
+                {facultiesLoaded && faculties.map((fac) => {
+                  const checked = form.faculties.includes(fac.id);
+                  return (
+                    <label key={fac.id} className={`faculty-pill ${checked ? 'checked' : ''}`}>
+                      <input
+                        type="checkbox"
+                        value={fac.id}
+                        checked={checked}
+                        onChange={(e) => {
+                          const id = Number(fac.id);
+                          setForm((prev) => {
+                            const set = new Set(prev.faculties);
+                            if (set.has(id)) set.delete(id); else set.add(id);
+                            return { ...prev, faculties: Array.from(set) };
+                          });
+                        }}
+                        disabled={!facultiesLoaded}
+                      />
+                      <span className="label-text">{fac.name}</span>
+                    </label>
+                  );
+                })}
+                {!facultiesLoaded && (
+                  <div className="faculty-multi-empty">لا يمكن تحميل الكليات الآن</div>
+                )}
+              </div>
+            </fieldset>
             <label>
               slug:
               <input
