@@ -6,6 +6,8 @@ from program.models import Program
 
 # Create your models here.
 class User(AbstractUser):
+    # Ensure a single account per email
+    email = models.EmailField(unique=True)
     englishfullname = models.CharField(max_length=50, blank=True, null=True)
     address = models.CharField(max_length=200, blank=True, null=True)
     picture = models.ImageField(upload_to="pictures", blank=True, null=True)
