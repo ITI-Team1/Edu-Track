@@ -9,8 +9,7 @@ import Department from '../Department/Department';
 import Hall from '../Hall/Hall';
 import CoursesMange from '../courseMange/CoursesMange';
 import Lecture from '../Lecture/Lecture';
-import AttendancePage from '../Attendance/Attendance';
-import Enrollment from '../../components/Enrollment';
+import UploadExcel from '../../components/UploadUsersData';
 
 function Dashboard() {
   const [activeTab, setActiveTab] = useState("overview");
@@ -190,6 +189,7 @@ function Dashboard() {
       {/* Main Content */}
 
       <main className="dashboard-main">
+        <UploadExcel />
         <div className="dashboard-content">
           {activeTab === "overview" && (
             <div className="calendar-overview" style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 16 }}>
@@ -251,11 +251,6 @@ function Dashboard() {
                 </p>
               </div>
               
-            </div>
-          )}
- {activeTab === "enroll" && (
-            <div>
-              <Enrollment />
             </div>
           )}
           {activeTab === "courses" && (

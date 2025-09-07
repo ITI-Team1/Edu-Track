@@ -1,83 +1,44 @@
-// UploadUsersData.jsx
-import React, { useState, useCallback } from "react";
-import api from "../services/api";
+// UploadExcel.js
+import React, { useState } from "react";
 
 export default function UploadExcel() {
   const [file, setFile] = useState(null);
-  const [status, setStatus] = useState("");
-  const [uploading, setUploading] = useState(false);
 
-  const onFilePicked = useCallback((f) => {
-    if (!f) return;
-    setFile(f);
-    setStatus("");
-  }, []);
-
-  const handleFileChange = (e) => onFilePicked(e.target.files?.[0]);
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    const f = e.dataTransfer.files?.[0];
-    onFilePicked(f);
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0]);
   };
-  const prevent = (e) => e.preventDefault();
 
   const handleUpload = async () => {
     if (!file) {
-      setStatus("الرجاء اختيار ملف Excel أولاً");
+      alert("Please select a file");
       return;
     }
+
     const formData = new FormData();
     formData.append("file", file);
+
     try {
-      setUploading(true);
-      setStatus("");
-      // Build auth header without Content-Type so browser sets multipart boundary
-      const token = localStorage.getItem('access_token');
-      const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
-      const res = await fetch(`${api.baseURL}/upload-excel/`, {
+      const res = await fetch("http://127.0.0.1:8000/upload-excel/", {
         method: "POST",
-        headers,
         body: formData,
       });
-      const data = await res.json().catch(() => ({}));
+
+      const data = await res.json(); // ✅ parse JSON
       if (res.ok) {
-        setStatus(data.success || "تم رفع الملف بنجاح");
-        setFile(null);
+        alert(data.success || "Upload successful");
       } else {
-        setStatus("فشل الرفع: " + (data.error || res.statusText));
+        alert("Upload failed: " + (data.error || res.statusText));
       }
     } catch (err) {
-      setStatus("فشل الرفع: " + (err?.message || "خطأ غير معلوم"));
-    } finally {
-      setUploading(false);
+      alert("Upload failed: " + err.message);
     }
   };
 
   return (
-    <div className="enroll-upload">
-      <div
-        className="enroll-upload__drop"
-        onDragOver={prevent}
-        onDragEnter={prevent}
-        onDrop={handleDrop}
-      >
-        <input id="excel-input" type="file" accept=".xlsx,.xls,.csv" onChange={handleFileChange} hidden />
-        <label htmlFor="excel-input" className="btn btn-primary-outline">
-          اختر ملف Excel
-        </label>
-        <div className="enroll-upload__meta">
-          {file ? (
-            <span className="enroll-upload__file-name">{file.name}</span>
-          ) : (
-            <span className="enroll-upload__file-hint">يمكنك السحب والإفلات هنا</span>
-          )}
-        </div>
-      </div>
-      <button className="btn btn-primary" onClick={handleUpload} disabled={uploading}>
-        {uploading ? "جارٍ الرفع..." : "رفع"}
-      </button>
-      {status && <div className="enroll-upload__status">{status}</div>}
+    <div>
+      <h2>Upload Students Excel</h2>
+      <input type="file" onChange={handleFileChange} />
+      <button onClick={handleUpload}>Upload</button>
     </div>
   );
 }

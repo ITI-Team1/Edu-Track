@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import StudentAttendance, Attendance, AttendanceQRSession
+from .models import StudentAttendance, Attendance
 
 class AttendanceSerializer(serializers.ModelSerializer):
     class Meta:
@@ -10,11 +10,5 @@ class AttendanceSerializer(serializers.ModelSerializer):
 class StudentAttendanceSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudentAttendance
-        fields = ["id", "attendance", "student", "present", "ip", "device_fingerprint", "location_lat", "location_lon", "scan_time"]
-        read_only_fields = ["attendance", "student", "ip", "scan_time"]
-
-class AttendanceQRSessionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = AttendanceQRSession
-        fields = ["id", "attendance", "token", "created_at", "expires_at"]
-        read_only_fields = ["id", "token", "created_at", "expires_at"]
+        fields = ["id", "attendance", "student", "present"]
+        read_only_fields = ["attendance", "student"]
