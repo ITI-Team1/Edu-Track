@@ -19,6 +19,20 @@ class ApiService {
     return true;
   }
 
+  // Activate account (Djoser)
+  async activateAccount({ uid, token }) {
+    const resp = await fetch(`${this.baseURL}/auth/users/activation/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ uid, token })
+    });
+    if (!resp.ok) {
+      const data = await resp.json().catch(() => ({}));
+      throw new Error(this.translateError(data?.detail || data?.token || 'تعذر تفعيل الحساب'));
+    }
+    return true;
+  }
+
   // Confirm password reset
   async confirmPasswordReset({ uid, token, new_password, re_new_password }) {
     const resp = await fetch(`${this.baseURL}/auth/users/reset_password_confirm/`, {
@@ -76,8 +90,7 @@ class ApiService {
 
   // Register user
   async register(userData) {
-    try {
-      console.log('Sending registration data:', userData);
+  try {
       const response = await fetch(`${this.baseURL}/auth/users/`, {
         method: 'POST',
         headers: {

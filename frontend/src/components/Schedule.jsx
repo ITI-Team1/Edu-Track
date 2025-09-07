@@ -261,6 +261,13 @@ function Schedule() {
                 </div>
                 <div className="class-actions">
                   <Link to={`/course/${class_.id}`} className="btn btn-outline">تفاصيل المقرر</Link>
+                  <Link
+                    to={`/attendance/${class_.id}`}
+                    className="btn"
+                    title="عرض الحضور لهذه المحاضرة"
+                  >
+                    الحضور
+                  </Link>
                 </div>
               </div>
             ))}

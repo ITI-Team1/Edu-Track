@@ -19,6 +19,7 @@ import Logs from "../src/pages/Logs/Logs";
 import Enrollment from "../src/components/Enrollment";
 import AttendancePage from "../src/pages/Attendance/Attendance";
 import JoinAttendance from "../src/pages/Attendance/JoinAttendance";
+import Activation from "../src/pages/Activation/Activation";
 
 // Small helper to set the page title per route
 const Page = ({ title, children }) => {
@@ -43,6 +44,10 @@ const RoutesList = () => {
   <Route path="/resetpassword/:uid-:token" element={<Page title="إعادة تعيين كلمة المرور"><ResetPassword /></Page>} />
   {/* Fallback matcher to capture any dash pattern, e.g., :combo = "<uid>-<token>" */}
   <Route path="/resetpassword/:combo" element={<Page title="إعادة تعيين كلمة المرور"><ResetPassword /></Page>} />
+  {/* Account activation from Djoser emails */}
+  <Route path="/activation/:uid-:token" element={<Page title="تفعيل الحساب"><Activation /></Page>} />
+  {/* Fallback with single param */}
+  <Route path="/activation/:combo" element={<Page title="تفعيل الحساب"><Activation /></Page>} />
   <Route path="/register" element={<Page title="إنشاء حساب"><Register /></Page>} />
       <Route
         path="/dashboard"

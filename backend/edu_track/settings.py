@@ -27,7 +27,16 @@ SECRET_KEY = 'django-insecure-92(_qr_dpj84=19ady_i!h$%)df6uoa0d7yqh_6xy2^+d4lgd%
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+# Mobile testing changing depends on the ip of the pc
 ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+# if DEBUG:
+#     ALLOWED_HOSTS = ["*"]
+
+# # Configure Django to bind to all interfaces by default for development
+# import os
+# if DEBUG:
+#     # Override the default runserver command to bind to all interfaces
+#     os.environ.setdefault('DJANGO_SERVER_HOST', '0.0.0.0')
 
 
 # Application definition
@@ -166,6 +175,7 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_LIFETIME": timedelta(days=10),
 }
 
+# DJOSER Configuration - Fixed for proper password reset links
 DJOSER = {
     'LOGIN_FIELD': 'username',
     'USER_CREATE_PASSWORD_RETYPE': True,
@@ -177,28 +187,60 @@ DJOSER = {
     'PASSWORD_CHANGED_EMAIL_CONFIRMATION': True, 
     'PASSWORD_RESET_CONFIRM_URL': 'resetpassword/{uid}-{token}', 
     'PASSWORD_RESET_SHOW_EMAIL_NOT_FOUND': True, 
-    'PASSWORD_RESET_CONFIRM_RETYPE': True, 
+    'PASSWORD_RESET_CONFIRM_RETYPE': True,
+    # Fix for proper domain in emails
+    'DOMAIN': 'localhost:5173',  # Your frontend domain
+    'SITE_NAME': 'EduTrack',
+    'PROTOCOL': 'http',  # Change to 'https' in production
     'SERIALIZERS': {
         "user": "user.serializers.UserSerializer",
         "current_user": "user.serializers.UserSerializer",
     },
+    'EMAIL': {
+        'password_reset': 'djoser.email.PasswordResetEmail',
+        'password_changed_confirmation': 'djoser.email.PasswordChangedConfirmationEmail',
+        'activation': 'djoser.email.ActivationEmail',
+    },
 }
 
+# Django Sites Framework - IMPORTANT: This controls the domain in emails
+# Note: You need to update the Site domain manually using Django shell or management command
+# See instructions below the settings file
+
+# Allow localhost and common LAN IP ranges for development preview
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "http://localhost:8000",
     "http://127.0.0.1:8000",
+    # Mobile testing changing depends on the ip of the pc
+    # "http://192.168.1.7:5173",
+    # "http://192.168.1.7:8000",
 ]
 
+# During development, allow any origin from the local network when DEBUG
+if DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = True
+
+# Allow Authorization header without cookies; enable credentials only if needed
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
+# Email Configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'alaaelgharably1@gmail.com'
-EMAIL_HOST_PASSWORD = 'lmos nsjm fbau yfsn'  
+EMAIL_HOST_PASSWORD = 'lmos nsjm fbau yfsn'  # Consider using environment variables
 DEFAULT_FROM_EMAIL = 'admin@edutrack.com'
-
-    	
-     
-     
