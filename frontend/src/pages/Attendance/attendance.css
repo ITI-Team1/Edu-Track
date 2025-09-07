@@ -79,6 +79,37 @@
   }
 }
 
+/* Medium screens: tighten layout and scale QR */
+@media (max-width: 1200px) {
+  .attendance-wrapper {
+    gap: 1.25rem;
+  }
+  .qr-inline-bar {
+    right: 0; /* cancel manual shift */
+  }
+  .qr-box {
+    max-width: 420px;
+    margin-top: 0;
+  }
+  .students-section h3 {
+    margin-left: 0 !important; /* avoid large offset on medium widths */
+  }
+  .students-section table {
+    min-width: 100%;
+  }
+}
+
+/* Small phones: scale typography/buttons a bit */
+@media (max-width: 600px) {
+  .attendance-countdown-large {
+    font-size: 1.2rem;
+  }
+  .btn.btn-secondary-attendance {
+    padding: 8px 14px;
+    font-size: 14px;
+  }
+}
+
 .qr-section {
   flex: 1 1 45%;
   display: flex;
@@ -115,7 +146,7 @@
   margin-inline-start: 8px;
   font-size: 1.55rem;
   font-weight: 700;
-  color: #1a4a7a;
+  color: #2c3649;
 }
 
 .qr-box {
@@ -200,4 +231,30 @@
   margin: 4px 2px;
   cursor: pointer;
   border-radius: 5px;
+}
+
+/* Toolbar above the students table (title + PDF button) */
+.students-toolbar {
+  display: flex;
+  justify-content: space-between; /* h3 at start, button at end */
+  align-items: center;
+  width: 100%;
+  gap: 1rem;
+  margin-bottom: 8px;
+  flex-wrap: nowrap;
+}
+
+@media (max-width: 1200px) {
+  .students-toolbar {
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .students-toolbar {
+    justify-content: space-between; /* keep edges on phones too */
+    gap: 0.5rem !important; /* tighter on phones */
+    flex-wrap: nowrap;
+  }
 }

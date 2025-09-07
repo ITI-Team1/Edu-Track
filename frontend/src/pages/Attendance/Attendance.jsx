@@ -164,8 +164,8 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
             {/* Two-column content: students left, QR right */}
             <div className='attendance-wrapper'>
             <div className='students-section'>
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-                    <h3 style={{ marginLeft: '26em', color: '#2c3649' }}>الطلاب</h3>
+                <div className='students-toolbar'>
+                    <h3 style={{ color: '#2c3649' }}>الطلاب</h3>
                     <button
                         className='btn btn-secondary-attendance'
                         onClick={async () => {
