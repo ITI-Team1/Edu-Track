@@ -1,12 +1,9 @@
 import { apiClient } from './apiClient';
 
 // Helper wrapper (expects apiClient configured with auth headers elsewhere)
+// Keeping only the stable methods that exist server-side. Others were removed to avoid 404s.
 export const AttendanceAPI = {
-  rotateQR: (attendanceId) => apiClient.post(`attendance/${attendanceId}/qr/rotate/`),
-  listStudents: (attendanceId) => apiClient.get(`attendance/${attendanceId}/students/list/`),
+  // markPresent and getMe may exist if backend supports them; leave as-is only if present in URLs.
   getMe: (attendanceId) => apiClient.get(`attendance/${attendanceId}/students/me/`),
-  markPresent: (studentAttendanceId, payload) => apiClient.patch(`attendance/students/${studentAttendanceId}/update/`, payload),
-  getOrCreateActiveByLecture: (lectureId) => apiClient.get(`attendance/lecture/${lectureId}/active/`)
-  ,joinViaLink: (att, j) => apiClient.post('attendance/join/', { att, j })
-  ,override: (attendanceId, studentId, present) => apiClient.post(`attendance/${attendanceId}/override/${studentId}/`, { present })
+  markPresent: (studentAttendanceId, payload) => apiClient.patch(`attendance/students/${studentAttendanceId}/update/`, payload)
 };

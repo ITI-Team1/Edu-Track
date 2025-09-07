@@ -1,87 +1,119 @@
 import React, { useEffect, useState, useCallback } from 'react';
-// NOTE: Now generating downloadable PDF (no print dialog) using jsPDF + embedded simple Arabic text.
 import PropTypes from 'prop-types';
 import { useParams } from 'react-router-dom';
 import QRCode from 'qrcode';
-// Import raw SVG so we can embed it directly inside the print window (works in Vite via ?raw)
 import logoRaw from '../../assets/psu-logo.svg?raw';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { AttendanceAPI } from '../../services/attendanceApi';
-// Removed camera scanner: QR now encodes a deep link URL; student device opens it -> login -> auto mark.
+import { getLecture } from '../../services/lectureApi';
+import { fetchCourses } from '../../services/courseApi';
+import { fetchUsers } from '../../services/userApi';
 import './attendance.css';
 
-// Simplified unified instructor view only (QR + students table)
-// Accepts either an attendance id or a lecture id (auto-resolves / creates active attendance session)
+// Instructor view (QR + students). Frontend-only QR rotation; no DB storage.
+// Treat route param as lectureId. Optional prop to override.
 const AttendancePage = ({ attendanceId: propAttendanceId }) => {
     const params = useParams();
-    const routeId = propAttendanceId || params.attendanceId; // could be attendance id or lecture id
-    const [attendanceId, setAttendanceId] = useState(null);
+    const lectureId = propAttendanceId || params.attendanceId;
     const [qrToken, setQrToken] = useState(null);
     const [qrSvg, setQrSvg] = useState('');
     const [joinLink, setJoinLink] = useState(null);
     const [students, setStudents] = useState([]);
     const [secondsLeft, setSecondsLeft] = useState(10);
+    const [headingText, setHeadingText] = useState('');
 
-    // Resolve route id -> real attendance id (treat route id first as attendance id; if 404 fallback to lecture active)
-    useEffect(() => {
-        if (!routeId) return;
-        // First optimistic assumption: routeId IS an attendance id; set directly and later calls may 404 -> handled in fetch functions
-        setAttendanceId(routeId);
-    }, [routeId]);
-
-    const generateQR = useCallback(async () => {
+    // Build present set from localStorage (same-origin, cross-tab)
+    const readPresentSet = useCallback(() => {
         try {
-            if (!attendanceId) return;
-            const { data } = await AttendanceAPI.rotateQR(attendanceId);
-            setQrToken(data.token);
-            if (data.join_link) setJoinLink(data.join_link);
-        } catch (e) {
-            if (e?.response?.status === 404 && routeId) {
-                // Treat original id as lecture id; fetch/create active attendance then retry
-                try {
-                    const { data: attData } = await AttendanceAPI.getOrCreateActiveByLecture(routeId);
-                    setAttendanceId(attData.id);
-                } catch {/* ignore */ }
-            }
+            const raw = localStorage.getItem(`attend:lec:${lectureId}`);
+            const arr = raw ? JSON.parse(raw) : [];
+            return new Set(arr.map(Number));
+        } catch {
+            return new Set();
         }
-    }, [attendanceId, routeId]);
+    }, [lectureId]);
+
+    // Frontend-only QR rotation: random token + deep link to /attendance/join
+    const generateQR = useCallback(async () => {
+        if (!lectureId) return;
+        const rand = crypto?.getRandomValues
+            ? Array.from(crypto.getRandomValues(new Uint8Array(12)))
+                    .map((b) => b.toString(16).padStart(2, '0'))
+                    .join('')
+            : Math.random().toString(36).slice(2);
+        setQrToken(rand);
+        const base = (import.meta.env.VITE_PUBLIC_BASE_URL || window.location.origin).replace(/\/$/, '');
+        setJoinLink(`${base}/attendance/join?lec=${encodeURIComponent(lectureId)}&j=${rand}`);
+    }, [lectureId]);
 
     const fetchStudents = useCallback(async () => {
+        if (!lectureId) return;
         try {
-            if (!attendanceId) return;
-            const { data } = await AttendanceAPI.listStudents(attendanceId);
-            setStudents(data.students || []);
-        } catch (e) {
-            if (e?.response?.status === 404 && routeId) {
-                try {
-                    const { data: attData } = await AttendanceAPI.getOrCreateActiveByLecture(routeId);
-                    setAttendanceId(attData.id);
-                } catch {/* ignore */ }
+            const lec = await getLecture(lectureId);
+            const raw = Array.isArray(lec?.students) ? lec.students : [];
+            // Preload course title to display as heading (fallback to lecture id)
+            try {
+                const courses = await fetchCourses();
+                const courseTitle = courses.find((c) => Number(c.id) === Number(lec.course))?.title;
+                setHeadingText(courseTitle ? `المحاضرة: ${courseTitle}` : `المحاضرة رقم ${lectureId}`);
+            } catch {
+                setHeadingText(`المحاضرة رقم ${lectureId}`);
             }
+            // Fetch users to resolve first/last names when students are IDs
+            let usersMap = {};
+            try {
+                const users = await fetchUsers();
+                usersMap = Object.fromEntries(users.map((u) => [Number(u.id), u]));
+            } catch {
+                // ignore, will fallback
+            }
+            const presentSet = readPresentSet();
+            const mapped = raw.map((s) => {
+                const obj = typeof s === 'object' && s ? s : { id: Number(s), username: String(s) };
+                const u = usersMap[Number(obj.id)] || obj;
+                const first = u.first_name || u.firstname || '';
+                const last = u.last_name || u.lastname || '';
+                const name = first && last ? `${first} ${last}` : first || u.username || u.englishfullname || u.name || `مستخدم ${obj.id}`;
+                return {
+                    id: Number(obj.id),
+                    student_id: Number(obj.id),
+                    username: name,
+                    present: presentSet.has(Number(obj.id)),
+                };
+            });
+            setStudents(mapped);
+        } catch {
+            setStudents([]);
         }
-    }, [attendanceId, routeId]);
+    }, [lectureId, readPresentSet]);
 
-    const toggleStudent = useCallback(async (studentId, present) => {
-        if (!attendanceId) return;
-        try {
-            await AttendanceAPI.override(attendanceId, studentId, !present);
+    const toggleStudent = useCallback(
+        (studentId) => {
+            const set = readPresentSet();
+            if (set.has(Number(studentId))) set.delete(Number(studentId));
+            else set.add(Number(studentId));
+            localStorage.setItem(`attend:lec:${lectureId}`, JSON.stringify(Array.from(set)));
             fetchStudents();
-        } catch {/* noop */ }
-    }, [attendanceId, fetchStudents]);
+        },
+        [lectureId, readPresentSet, fetchStudents]
+    );
 
     // Initial load
-    useEffect(() => { fetchStudents(); }, [attendanceId, fetchStudents]);
+    useEffect(() => {
+        fetchStudents();
+    }, [lectureId, fetchStudents]);
+
     // Rotation timer (one interval every second; when counter hits 0 rotate & reset)
     const rotateNow = useCallback(async () => {
         await generateQR();
         setSecondsLeft(10);
     }, [generateQR]);
+
     useEffect(() => {
-        if (!attendanceId) return; // wait until we have an id
+        if (!lectureId) return;
         rotateNow();
         const intv = setInterval(() => {
-            setSecondsLeft(prev => {
+            setSecondsLeft((prev) => {
                 if (prev <= 1) {
                     // Trigger rotation
                     rotateNow();
@@ -91,32 +123,49 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
             });
         }, 1000);
         return () => clearInterval(intv);
-    }, [attendanceId, rotateNow]);
+    }, [lectureId, rotateNow]);
+
     useEffect(() => {
         if (qrToken) {
-            // Use configurable public base (for LAN access) else current origin
-            const publicBase = import.meta.env.VITE_PUBLIC_BASE_URL || window.location.origin;
-            const payload = joinLink ? (publicBase.replace(/\/$/, '') + joinLink) : JSON.stringify({ token: qrToken, attendanceId });
-            QRCode.toString(payload, { type: 'svg', width: 260 }, (err, str) => { if (!err) setQrSvg(str); });
+            const payload = joinLink || JSON.stringify({ token: qrToken, lectureId });
+            QRCode.toString(payload, { type: 'svg', width: 260 }, (err, str) => {
+                if (!err) setQrSvg(str);
+            });
         }
-    }, [qrToken, attendanceId, joinLink]);
-    useEffect(() => { const intv = setInterval(fetchStudents, 5000); return () => clearInterval(intv); }, [fetchStudents]);
+    }, [qrToken, lectureId, joinLink]);
+
+    // Sync across tabs on same device
+    useEffect(() => {
+        const onStorage = (e) => {
+            if (e.key === `attend:lec:${lectureId}`) fetchStudents();
+        };
+        window.addEventListener('storage', onStorage);
+        const intv = setInterval(fetchStudents, 5000);
+        return () => {
+            window.removeEventListener('storage', onStorage);
+            clearInterval(intv);
+        };
+    }, [lectureId, fetchStudents]);
 
     return (
-        <div className='attendance-wrapper'>
-            <div className='qr-section'>
-                <div className='qr-inline-bar'>
-                    <h3 className='qr-inline-heading' style={{marginRight: 40}}><span className='attendance-countdown-large'>يتجدد خلال {secondsLeft} ث</span></h3>
-                    <button className='btn btn-secondary-attendance' onClick={rotateNow} style={{padding:'10px 20px'}}>تحديث فوري</button>
+        <div className='attendance-page'>
+            {/* Header with title and safety alert under it */}
+            <div className='attendance-header'>
+                <h2 className='attendance-title'>
+                    {headingText || `المحاضرة رقم ${lectureId}`}
+                </h2>
+                <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+                    <div className='safety-alert'>
+                        تنبيه: يُمنع مشاركة هذه الشاشة أو رمز الاستجابة السريعة خارج قاعة المحاضرة. هذا الرمز مُخصص فقط للحضور الفعلي داخل القاعة.
+                    </div>
                 </div>
-                {!attendanceId && <p>لم يتم تحديد جلسة حضور.</p>}
-                {attendanceId && (qrSvg ? <div className='qr-box' dangerouslySetInnerHTML={{ __html: qrSvg }} /> : <p>جاري التحميل...</p>)}
-                {joinLink && <div style={{ marginTop: 8, direction: 'ltr', fontSize: 12, textAlign: 'center', width: '100%' }}>Join: {joinLink}</div>}
-
             </div>
+
+            {/* Two-column content: students left, QR right */}
+            <div className='attendance-wrapper'>
             <div className='students-section'>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                    <h3 style={{ margin: 0 }}>الطلاب</h3>
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                    <h3 style={{ marginLeft: '26em', color: '#2c3649' }}>الطلاب</h3>
                     <button
                         className='btn btn-secondary-attendance'
                         onClick={async () => {
@@ -131,7 +180,7 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
                                     <div style="width:74px;height:74px;">${logoRaw}</div>
                                     <div>
                                         <div style="font-size:26px;font-weight:700;color:#2c3649;">جامعة بورسعيد</div>
-                                        <div style="font-size:18px;margin-top:4px;color:#2c3649;">تقرير حضور الجلسة رقم ${attendanceId}</div>
+                                        <div style="font-size:18px;margin-top:4px;color:#2c3649;">${headingText || `تقرير حضور المحاضرة رقم ${lectureId}`}</div>
                                         <div style="font-size:12px;color:#555;margin-top:4px;">تاريخ التوليد: ${new Date().toLocaleString('ar-EG')}</div>
                                     </div>
                                 </div>
@@ -145,44 +194,57 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        ${students.map((s,i)=>`<tr ${i%2?"style='background:#f5f5f5;'":""}>
-                                            <td style='border:1px solid #fff;padding:6px 8px;text-align:center; color: #2c3649;'>${i+1}</td>
-                                            <td style='border:1px solid #fff;padding:6px 8px;text-align:center; color: #2c3649;'>${s.student_id}</td>
-                                            <td style='border:1px solid #fff;padding:6px 8px;text-align:center; color: #2c3649;'>${s.username}</td>
-                                            <td style='border:1px solid #fff;padding:6px 8px;text-align:center;font-weight:600;color:#fff;background:${s.present?'#16a34a':'#dc2626'}'>${s.present? 'حضور':'غياب'}</td>
-                                        </tr>`).join('')}
+                                        ${students
+                                            .map(
+                                                (s, i) => `<tr ${i % 2 ? "style='background:#f5f5f5;'" : ''}>
+                                                    <td style='border:1px solid #fff;padding:6px 8px;text-align:center; color: #2c3649;'>${i + 1}</td>
+                                                    <td style='border:1px solid #fff;padding:6px 8px;text-align:center; color: #2c3649;'>${s.student_id}</td>
+                                                    <td style='border:1px solid #fff;padding:6px 8px;text-align:center; color: #2c3649;'>${s.username}</td>
+                                                    <td style='border:1px solid #fff;padding:6px 8px;text-align:center;font-weight:600;color:#fff;background:${s.present ? '#16a34a' : '#dc2626'}'>${
+                                                        s.present ? 'حضور' : 'غياب'
+                                                    }</td>
+                                                </tr>`
+                                            )
+                                            .join('')}
                                     </tbody>
                                 </table>`;
                             document.body.appendChild(container);
                             try {
                                 const canvas = await html2canvas(container, { scale: 2, useCORS: true });
                                 const imgData = canvas.toDataURL('image/png');
-                                const pdf = new jsPDF('p','pt','a4');
+                                const pdf = new jsPDF('p', 'pt', 'a4');
                                 const pageWidth = pdf.internal.pageSize.getWidth();
                                 const pageHeight = pdf.internal.pageSize.getHeight();
-                                // Fit image proportionally
                                 const imgWidth = pageWidth - 40; // margins
                                 const ratio = canvas.height / canvas.width;
                                 const imgHeight = imgWidth * ratio;
-                                pdf.addImage(imgData, 'PNG', 20, 20, imgWidth, Math.min(imgHeight, pageHeight-40));
-                                pdf.save(`attendance_${attendanceId}.pdf`);
+                                pdf.addImage(imgData, 'PNG', 20, 20, imgWidth, Math.min(imgHeight, pageHeight - 40));
+                                pdf.save(`attendance_${lectureId}.pdf`);
                             } finally {
                                 document.body.removeChild(container);
                             }
                         }}
-                    >تنزيل PDF</button>
+                    >
+                        تنزيل PDF
+                    </button>
                 </div>
                 <table>
-                    <thead><tr><th>الكود</th><th>الاسم</th><th>الحالة</th></tr></thead>
+                    <thead>
+                        <tr>
+                            <th>الكود</th>
+                            <th>الاسم</th>
+                            <th>الحالة</th>
+                        </tr>
+                    </thead>
                     <tbody>
-                        {students.map(s => (
+                        {students.map((s) => (
                             <tr key={s.id}>
                                 <td>{s.student_id}</td>
                                 <td>{s.username}</td>
                                 <td
                                     className={`status ${s.present ? 'present' : 'absent'}`}
-                                    onClick={() => toggleStudent(s.student_id, s.present)}
-                                    title="تبديل الحالة يدويًا"
+                                    onClick={() => toggleStudent(s.student_id)}
+                                    title="تبديل الحالة (محلي فقط)"
                                 >
                                     {s.present ? 'حضور' : 'غياب'}
                                 </td>
@@ -191,6 +253,22 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
                     </tbody>
                 </table>
             </div>
+            <div className='qr-section'>
+                <div className='qr-inline-bar'>
+                    <h3 className='qr-inline-heading'>
+                        <span className='attendance-countdown-large'>يتجدد خلال {secondsLeft} ث</span>
+                    </h3>
+                    <button className='btn btn-secondary-attendance' onClick={rotateNow}>
+                        تحديث فوري
+                    </button>
+                </div>
+                {!lectureId && <p>لم يتم تحديد محاضرة.</p>}
+                {lectureId && (qrSvg ? <div className='qr-box' dangerouslySetInnerHTML={{ __html: qrSvg }} /> : <p>جاري التحميل...</p>)}
+                {joinLink && (
+                    <div style={{ marginTop: 8, direction: 'ltr', fontSize: 12, textAlign: 'center', width: '100%' }}>Join: {joinLink}</div>
+                )}
+            </div>
+            </div>
         </div>
     );
 };
@@ -198,5 +276,5 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
 export default AttendancePage;
 
 AttendancePage.propTypes = {
-    attendanceId: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+    attendanceId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
 };

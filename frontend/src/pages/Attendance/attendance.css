@@ -1,4 +1,35 @@
-/* Layout: large QR left, table right */
+/* Page structure */
+.attendance-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.attendance-header {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.attendance-title {
+  margin: 20px 0 8px 0;
+  color: #2c3649;
+  text-align: center;
+  font-weight: 700;
+}
+
+.safety-alert {
+  background: #fff3cd;
+  color: #664d03;
+  border: 1px solid #ffecb5;
+  padding: 10px 12px;
+  margin: 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  display: inline-block;
+}
+
+/* Layout: students left, QR right */
 .attendance-wrapper {
   display: flex;
   flex-direction: row;
@@ -22,10 +53,29 @@
 @media (max-width: 900px) {
   .attendance-wrapper {
     flex-direction: column;
+    gap: 1rem;
   }
   .qr-section,
   .students-section {
     width: 100%;
+  }
+  /* Center mobile layout and neutralize desktop offsets */
+  .qr-section {
+    align-items: center;
+  }
+  .qr-inline-bar {
+    right: 0;
+    justify-content: center;
+  }
+  .students-section {
+    padding-right: 0;
+  }
+  .students-section h3 {
+    margin-left: 0 !important; /* override inline margin-left for mobile */
+    text-align: center;
+  }
+  .students-section table {
+    min-width: 100%;
   }
 }
 
@@ -51,6 +101,7 @@
   position: relative;
   align-items: center;
   gap: 12px;
+  right: 38px;
 }
 .qr-inline-heading {
   margin: 0;
