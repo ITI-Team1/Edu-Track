@@ -85,9 +85,7 @@
   margin: 0;
 }
 
-.form-group {
-  margin-bottom: 1rem;
-}
+
 
 .themed-label {
   display: block;
@@ -98,7 +96,7 @@
 }
 
 .file-input {
-  padding: 0.5rem !important;
+  padding: 0.6rem !important;
   border: 2px dashed #e2e8f0 !important;
   cursor: pointer;
 }
@@ -344,9 +342,10 @@
   height: 100vh;
   background: rgba(0, 0, 0, 0.4);
   display: flex;
-  align-items: center; /* center vertically like second modal */
+  align-items: center; /* keep away from navbar */
   justify-content: center;
-  padding-top: 40px; /* small breathing room from navbar */
+  padding-top: 90px; /* consistent with other pages */
+  padding-bottom: 40px;
   overflow-y: auto;
   z-index: 1000;
 }
@@ -358,8 +357,8 @@
   padding: 1.25rem 1.5rem; /* match the airy spacing of second modal */
   min-width: 320px;
   max-width: 420px;
-  max-height: 600px; /* allow slightly taller content but keep compact */
-   /* allow internal scroll if needed */
+  max-height: calc(100vh - 140px); /* responsive height like other pages */
+  overflow-y: auto; /* allow internal scroll if needed */
   box-shadow: 0 12px 30px rgba(2, 6, 23, 0.12);
   display: flex;
   flex-direction: column;
@@ -374,6 +373,32 @@
   color: #3182ce;
   margin-bottom: 0.8rem;
   font-size: 1.15rem;
+}
+
+/* Make inputs larger and consistent inside the faculty modal */
+.faculty-modal label {
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+  color: #374151;
+}
+
+.faculty-modal input,
+.faculty-modal select {
+  width: 100%;
+  padding: 0.65rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid rgba(100,108,255,0.3);
+  background: #fff;
+  color: #1f2937;
+  font-size: 1rem;
+}
+
+.faculty-modal input:focus,
+.faculty-modal select:focus {
+  outline: none;
+  border-color: #3182ce;
+  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+  caret-color: #3182ce;
 }
 
 /* Action buttons container inside modal */

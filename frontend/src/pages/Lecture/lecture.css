@@ -123,7 +123,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding-top: 40px;
+    padding-top: 80px;
+    padding-bottom: 80px;
     overflow-y: auto;
     z-index: 1000;
   }
@@ -131,13 +132,15 @@
     background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
     border: 1px solid rgba(100, 108, 255, 0.1);
     border-radius: 16px;
-    padding: 2rem;
+    padding: 1.25rem; /* more compact */
     min-width: 320px;
     max-width: 480px;
+    max-height: calc(100vh - 220px);
+    overflow: hidden;
     box-shadow: 0 4px 20px rgba(0,0,0,0.08);
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.5rem; /* tighter spacing between fields */
     position: relative;
     color: #1f2937;
     font-family: 'Cairo', sans-serif;
@@ -145,31 +148,36 @@
   .lecture-modal h3 {
     text-align: center;
     color: #3182ce;
-    margin-bottom: 1rem;
-    font-size: 1.3rem;
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem; /* smaller title */
   }
   .lecture-modal label {
-    font-size: 1rem;
-    margin-bottom: 0.2rem;
+    font-size: 0.9rem; /* smaller labels */
+    margin-bottom: 0.1rem;
     color: #374151;
   }
   .lecture-modal input,
   .lecture-modal select {
     width: 100%;
-    padding: 0.5rem;
-    border-radius: 8px;
+    padding: 0.4rem; /* tighter input padding */
+    border-radius: 6px;
     border: 1px solid rgba(100,108,255,0.3);
     margin-top: 0.3rem;
     background: #ffffff;
     color: #1f2937;
-    font-size: 1rem;
+    font-size: 0.95rem; /* slightly smaller text */
   }
   .lecture-modal input:focus,
   .lecture-modal select:focus {
     outline: none;
     border-color: #535bf2;
   }
-  .lecture-modal .btn { margin-top: 0.5rem; width: 100%; }
+  .lecture-modal .btn {
+    margin-top: 0.35rem;
+    width: 100%;
+    padding: 0.5rem 0.75rem; /* smaller button height */
+    font-size: 0.95rem;
+  }
   .lecture-modal .close-btn {
     position: absolute;
     top: 1rem;
@@ -179,4 +187,15 @@
     font-size: 1.5rem;
     color: #3182ce;
     cursor: pointer;
+  }
+  /* time row: keep compact side-by-side on wide screens, stack on small */
+  .lecture-modal .time-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+  @media (max-width: 420px) {
+    .lecture-modal .time-row {
+      grid-template-columns: 1fr;
+    }
   }

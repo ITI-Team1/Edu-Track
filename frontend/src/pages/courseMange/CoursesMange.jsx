@@ -205,7 +205,18 @@ export default function CoursesMange() {
           onClick={handleCreate}
           disabled={!programsLoaded}
         >
-          اضافة مقرر جديد
+          <span
+            style={{
+              fontSize: "1.5rem",
+              marginBottom: 0,
+              marginLeft: "0.5rem",
+            }}
+          >
+            +
+          </span>
+          <span style={{ fontWeight: "bold", fontSize: "1rem" }}>
+            اضافة مقرر جديد
+          </span>
         </Button>
       </div>
       {error && (

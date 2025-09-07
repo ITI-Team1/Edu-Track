@@ -56,7 +56,7 @@ const AddEditForm = memo(
           <h3>{editSlug ? "تعديل كلية" : "إضافة كلية"}</h3>
 
           <form onSubmit={onSubmit} dir="rtl" autoComplete="off">
-            <div className="form-group">
+            <div >
               <label htmlFor="faculty-name" className="themed-label">
                 اسم الكلية
               </label>
@@ -74,7 +74,7 @@ const AddEditForm = memo(
               <small className="input-helper">{form.name.length}/30</small>
             </div>
 
-            <div className="form-group">
+            <div >
               <label htmlFor="faculty-slug" className="themed-label">
                 الرابط المختصر
               </label>
@@ -95,7 +95,7 @@ const AddEditForm = memo(
               </small>
             </div>
 
-            <div className="form-group">
+            <div >
               <label htmlFor="faculty-logo" className="themed-label">
                 شعار الكلية
               </label>
@@ -174,7 +174,18 @@ const FacultyList = memo(
         <div className="header-actions">
           <h1>إدارة الكليات</h1>
           <Button onClick={onAdd} className="add-button">
-            إضافة كلية
+            <span
+              style={{
+                fontSize: "1.5rem",
+                marginBottom: 0,
+                marginLeft: "0.5rem",
+              }}
+            >
+              +
+            </span>
+            <span style={{ fontWeight: "bold", fontSize: "1rem" }}>
+              إضافة كلية
+            </span>
           </Button>
         </div>
         {isLoading ? (
