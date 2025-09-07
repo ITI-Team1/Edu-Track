@@ -205,9 +205,9 @@ function Courses() {
             </div>
             <div className="course-modal-body">
               <div className="course-modal-meta">
-                <span className="badge">ساعات معتمدة: {modalCourse.credits}</span>
+                <span className="courses-badge">ساعات معتمدة: {modalCourse.credits}</span>
                 {Array.isArray(modalCourse.programs) && modalCourse.programs.length > 0 && (
-                  <span className="badge alt">البرامج المرتبطة: {modalCourse.programs.length}</span>
+                  <span className="courses-badge alt">البرامج المرتبطة: {modalCourse.programs.length}</span>
                 )}
               </div>
               <div className="course-modal-section">

@@ -70,7 +70,7 @@
     margin-bottom: 0.75rem;
   }
 
-  .badge {
+  .courses-badge {
     display: inline-block;
     padding: 0.25rem 0.5rem;
     border-radius: 999px;
@@ -81,7 +81,7 @@
     font-size: 0.8rem;
   }
 
-  .badge.alt {
+  .courses-badge.alt {
     background: rgba(49, 130, 206, 0.12);
     border-color: rgba(49, 130, 206, 0.25);
   }
