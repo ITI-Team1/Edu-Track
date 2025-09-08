@@ -46,10 +46,15 @@ export default function UploadExcel() {
         setFile(null);
       } else {
         setStatus("فشل الرفع: " + (data.error || res.statusText));
+        console.log(data);
+        console.log(formData);
+        
       }
     } catch (err) {
       setStatus("فشل الرفع: " + (err?.message || "خطأ غير معلوم"));
     } finally {
+      
+      
       setUploading(false);
     }
   };

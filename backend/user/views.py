@@ -51,6 +51,7 @@ class UploadExcelView(APIView):
 
             university = University.objects.first()  # optional, can be None
             for _, row in df.iterrows():
+                
                 english_name = row.get("الاسم بالانجليزي", "")
                 national_id = str(row.get("الرقم القومي", ""))
 
@@ -113,6 +114,9 @@ class UploadExcelView(APIView):
                 user, created = User.objects.update_or_create(
                     nationalid=national_id,
                     defaults={
+                        "first_name": first_name,
+                        "last_name": last_name,
+                        "email": national_id,
                         "username": username,
                         "englishfullname": english_name or None,
                         "address": row.get("العنوان") or None,
