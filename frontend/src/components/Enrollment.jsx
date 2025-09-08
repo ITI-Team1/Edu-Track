@@ -272,16 +272,27 @@ function Enrollment() {
                         const facName = (student.faculty && typeof student.faculty === 'object' && student.faculty.name) || facultyNameMap[facId] || 'كلية غير محددة';
                         const progName = (student.program && typeof student.program === 'object' && student.program.name) || programNameMap[progId] || 'برنامج غير محدد';
                         const displayName = `${student.first_name || ''} ${student.last_name || ''}`.trim();
-                        return displayName ? (
-                          <>
-                            <span className="student-name">{displayName}</span>{' '}
-                            {student.username ? (
-                              <span className="student-username">({student.username})</span>
-                            ) : null}
-                            <br />
-                            <span className="student-meta">{facName} | {progName}</span>
-                          </>
-                        ) : null;
+                        if (displayName) {
+                          return (
+                            <>
+                              <span className="student-name">{displayName}</span>{' '}
+                              {student.username ? (
+                                <span className="student-username">({student.username})</span>
+                              ) : null}
+                              <br />
+                              <span className="student-meta">{facName} | {progName}</span>
+                            </>
+                          );
+                        } else if (student.username) {
+                          return (
+                            <>
+                              <span className="student-name">{student.username}</span>
+                              <br />
+                              <span className="student-meta">{facName} | {progName}</span>
+                            </>
+                          );
+                        }
+                        return null;
                       })()}
                     </label>
                   </div>
