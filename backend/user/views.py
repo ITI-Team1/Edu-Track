@@ -1,3 +1,4 @@
+import os   
 from rest_framework import generics
 from django.contrib.auth.models import Group
 from .serializers import GroupSerializer, LogSerializer
@@ -8,12 +9,12 @@ from django.core.files.storage import default_storage
 from user.models import User
 from rest_framework import permissions
 from rest_framework.views import APIView
-from university.models import University
-from faculty.models import Faculty
-from program.models import Program
-import os   
 import pandas as pd
 from django.conf import settings
+from django.core.files.storage import default_storage
+from .models import User, Faculty, Program, University
+
+
 
 # Create your views here.
 class GroupList(generics.ListAPIView):
@@ -24,15 +25,7 @@ class LogList(generics.ListAPIView):
     queryset = LogEntry.objects.all().order_by("-action_time")
     serializer_class = LogSerializer
 
-import os
-import random
-import pandas as pd
-from django.conf import settings
-from django.core.files.storage import default_storage
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from .models import User, Faculty, Program, University
+
 
 
 class UploadExcelView(APIView):
