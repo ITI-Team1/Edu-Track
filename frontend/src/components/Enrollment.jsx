@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import '../styles/enrollment.css';
 import api from '../services/api';
@@ -24,6 +24,13 @@ function Enrollment() {
   const [filterLevel, setFilterLevel] = useState('');
   const [filterName, setFilterName] = useState('');
   const [debouncedName, setDebouncedName] = useState('');
+
+  // Virtualization state for students list (inside component)
+  const scrollRef = useRef(null);
+  const [scrollTop, setScrollTop] = useState(0);
+  const [containerHeight, setContainerHeight] = useState(380); // default equals CSS max-height
+  const ITEM_HEIGHT = 80; // px, increased to allow comfortable spacing
+  const OVERSCAN = 6; // extra items above/below viewport
 
 
   // Quick lookup maps for faculty/program names
@@ -98,6 +105,26 @@ function Enrollment() {
       return facOk && progOk && levelOk && nameOk;
     });
   }, [usersData, filterFaculty, filterProgram, filterLevel, debouncedName]);
+
+  // Measure container height once mounted and on resize
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const measure = () => setContainerHeight(el.clientHeight || 380);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  // Virtual window calculations
+  const totalCount = filteredStudents.length;
+  const visibleCount = Math.ceil(containerHeight / ITEM_HEIGHT) + OVERSCAN * 2;
+  const startIndex = Math.max(0, Math.floor(scrollTop / ITEM_HEIGHT) - OVERSCAN);
+  const endIndex = Math.min(totalCount, startIndex + visibleCount);
+  const topSpacer = startIndex * ITEM_HEIGHT;
+  const bottomSpacer = (totalCount - endIndex) * ITEM_HEIGHT;
+  const visibleStudents = filteredStudents.slice(startIndex, endIndex);
 
   // Programs filtered by selected faculty for the Program select
   const filteredPrograms = useMemo(() => {
@@ -205,13 +232,14 @@ function Enrollment() {
   const combinedError = error || usersError?.message;
 
   if (combinedLoading) return <div>جارٍ التحميل...</div>;
-  if (combinedError) return <div className="error-message">خطأ: {combinedError}</div>;
+  // لا نعيد توجيه الصفحة عند الخطأ؛ سنعرضه كإشعار داخل الصفحة
 
 
   return (
     <div className="enrollment-page" dir="rtl">
       <h1>تسجيل الطلاب و المقررات</h1>
       {success && <div className="success-message">{success}</div>}
+      {combinedError && <div className="error-message">خطأ: {combinedError}</div>}
       
       <div className="filters section-card">
         <input type="text" placeholder="فلترة حسب الاسم" value={filterName} onChange={e => setFilterName(e.target.value)} />
@@ -250,13 +278,18 @@ function Enrollment() {
               <label htmlFor="students-select-all">تحديد الكل</label>
             </div>
           </div>
-          <div className="scroll-area">
-            <div className="students-checkbox-group">
-              {filteredStudents.map((student) => {
+          <div
+            className="scroll-area"
+            ref={scrollRef}
+            onScroll={(e) => setScrollTop(e.currentTarget.scrollTop)}
+          >
+            <div style={{ paddingTop: topSpacer, paddingBottom: bottomSpacer }}>
+              <div className="students-checkbox-group">
+              {visibleStudents.map((student) => {
                 const idStr = String(student.id);
                 const checked = selectedStudents.includes(idStr);
                 return (
-                  <div key={student.id} className="checkbox-item">
+                  <div key={student.id} className="checkbox-item" style={{ height: ITEM_HEIGHT }}>
                     <input
                       type="checkbox"
                       id={`student-${student.id}`}
@@ -311,6 +344,7 @@ function Enrollment() {
                   </div>
                 );
               })}
+              </div>
             </div>
           </div>
         </div>
