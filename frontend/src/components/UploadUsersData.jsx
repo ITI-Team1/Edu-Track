@@ -82,7 +82,7 @@ export default function UploadExcel() {
       <button className="btn btn-primary" onClick={handleUpload} disabled={uploading}>
         {uploading ? "جارٍ الرفع..." : "رفع"}
       </button>
-      {status && <div className="enroll-upload__status">{status}</div>}
+      {status && <div className="enroll-upload__status">تم رفع الملف بنجاح</div>}
     </div>
   );
 }

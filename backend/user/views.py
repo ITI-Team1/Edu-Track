@@ -50,6 +50,11 @@ class UploadExcelView(APIView):
             df = pd.read_excel(full_path, sheet_name="Sheet1")
 
             university = University.objects.first()  # optional, can be None
+            unmatched_faculties = set()
+            unmatched_programs = set()
+            processed_count = 0
+            created_count = 0
+            
             for _, row in df.iterrows():
                 
                 english_name = row.get("الاسم بالانجليزي", "")
@@ -72,23 +77,49 @@ class UploadExcelView(APIView):
                 maritalstatus = "متزوج" if row.get("الحالة الاجتماعية", "") == "1" else "أعزب"
                 gender = "ذكر" if row.get("النوع", "") == "1" else "أنثى"
 
-                # Faculty
+                # Faculty - improved matching with case-insensitive search
                 faculty = None
                 faculty_name = row.get("الكلية")
                 if faculty_name and university:
+                    faculty_name = str(faculty_name).strip()
                     try:
+                        # Try exact match first
                         faculty = Faculty.objects.get(name=faculty_name, university=university)
                     except Faculty.DoesNotExist:
-                        faculty = None
+                        try:
+                            # Try case-insensitive match
+                            faculty = Faculty.objects.get(name__iexact=faculty_name, university=university)
+                        except Faculty.DoesNotExist:
+                            try:
+                                # Try partial match (contains)
+                                faculty = Faculty.objects.filter(name__icontains=faculty_name, university=university).first()
+                            except:
+                                faculty = None
+                                if university:
+                                    unmatched_faculties.add(faculty_name)
+                                    print(f"Warning: Faculty '{faculty_name}' not found for university '{university.name}'")
 
-                # Program
+                # Program - improved matching with case-insensitive search
                 program = None
                 program_name = row.get("القسم")
                 if program_name and faculty:
+                    program_name = str(program_name).strip()
                     try:
+                        # Try exact match first
                         program = Program.objects.get(name=program_name, faculty=faculty)
                     except Program.DoesNotExist:
-                        program = None
+                        try:
+                            # Try case-insensitive match
+                            program = Program.objects.get(name__iexact=program_name, faculty=faculty)
+                        except Program.DoesNotExist:
+                            try:
+                                # Try partial match (contains)
+                                program = Program.objects.filter(name__icontains=program_name, faculty=faculty).first()
+                            except:
+                                program = None
+                                if faculty:
+                                    unmatched_programs.add(program_name)
+                                    print(f"Warning: Program '{program_name}' not found for faculty '{faculty.name}'")
 
                 # Level (optional): read and normalize to allowed choices
                 level_raw = row.get("المستوى") or row.get("المستوي") or row.get("level") or row.get("Level")
@@ -135,8 +166,31 @@ class UploadExcelView(APIView):
                 )
                 user.set_password(password)
                 user.save()
+                
+                processed_count += 1
+                if created:
+                    created_count += 1
 
-            return Response({"success": "Users imported successfully"}, status=status.HTTP_201_CREATED)
+            # Prepare response with detailed statistics
+            response_data = {
+                "success": "Users imported successfully",
+                "processed": processed_count,
+                "created": created_count,
+                "updated": processed_count - created_count
+            }
+            
+            if unmatched_faculties:
+                response_data["unmatched_faculties"] = list(unmatched_faculties)
+                response_data["warnings"] = f"Found {len(unmatched_faculties)} unmatched faculty names"
+                
+            if unmatched_programs:
+                response_data["unmatched_programs"] = list(unmatched_programs)
+                if "warnings" in response_data:
+                    response_data["warnings"] += f" and {len(unmatched_programs)} unmatched program names"
+                else:
+                    response_data["warnings"] = f"Found {len(unmatched_programs)} unmatched program names"
+
+            return Response(response_data, status=status.HTTP_201_CREATED)
 
         finally:
             # Always delete the file after processing
