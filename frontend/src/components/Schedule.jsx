@@ -194,6 +194,54 @@ function Schedule() {
     return cards;
   }, [userLectures, courses, locations]);
 
+  // Export weekly schedule to Excel (xlsx if available, otherwise CSV fallback)
+  const handleExportWeekExcel = async () => {
+    // Build tabular data: header + rows
+    const header = ['اليوم', 'الوقت', 'المقرر', 'القاعة'];
+    const rows = [];
+    weekCards.forEach(card => {
+      if (!card.classes || card.classes.length === 0) {
+        // Skip empty days to keep the sheet concise
+        return;
+      }
+      card.classes.forEach(cls => {
+        rows.push([card.day, cls.time12, cls.course, cls.room]);
+      });
+    });
+    const data = [header, ...rows];
+
+    try {
+      const XLSX = (await import('xlsx')).default || (await import('xlsx'));
+      const ws = XLSX.utils.aoa_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'الجدول');
+      XLSX.writeFile(wb, 'جدول-الأسبوع.xlsx');
+    } catch (e) {
+      // Fallback: CSV download (Excel-compatible)
+      const csv = data
+        .map(row => row
+          .map(cell => {
+            const s = String(cell ?? '');
+            if (s.includes(',') || s.includes('\n') || s.includes('"')) {
+              return '"' + s.replace(/"/g, '""') + '"';
+            }
+            return s;
+          })
+          .join(',')
+        )
+        .join('\n');
+      const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'جدول-الأسبوع.csv';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+  };
+
   if (!isAuthenticated) {
     return null; // Don't render anything while redirecting
   }
@@ -260,7 +308,6 @@ function Schedule() {
                   <span className="class-type">{class_.type}</span>
                 </div>
                 <div className="class-actions">
-                  <Link to={`/course/${class_.id}`} className="btn btn-outline">تفاصيل المقرر</Link>
                   <Link
                     to={`/attendance/${class_.id}`}
                     className="btn"
@@ -291,6 +338,11 @@ function Schedule() {
                 </div>
               </div>
             ))}
+          </div>
+          <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'flex-end' }}>
+            <button className="btn" onClick={handleExportWeekExcel}>
+              تصدير جدول الأسبوع إلى Excel
+            </button>
           </div>
         </section>
       </main>
