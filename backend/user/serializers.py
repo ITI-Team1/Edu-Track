@@ -9,7 +9,7 @@ class UserSerializer(ModelSerializer):
         fields = (
             "id", "username", "first_name", "last_name", "email", "englishfullname", "address", "religion", "picture", 
             "phonenumber", "birthday", "placeofbirth", "nationalid", "nationality", "zipcode", 
-            "gender", "maritalstatus", "groups", "program", "faculty", "university", "lectures_attended"
+            "gender", "maritalstatus", "level", "groups", "program", "faculty", "university", "lectures_attended"
         )
 
 

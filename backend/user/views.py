@@ -89,6 +89,26 @@ class UploadExcelView(APIView):
                     except Program.DoesNotExist:
                         program = None
 
+                # Level (optional): read and normalize to allowed choices
+                level_raw = row.get("المستوى") or row.get("المستوي") or row.get("level") or row.get("Level")
+                level = None
+                if level_raw is not None:
+                    val = str(level_raw).strip()
+                    level_map = {
+                        "1": "المستوى الأول",
+                        "2": "المستوى الثاني",
+                        "3": "المستوى الثالث",
+                        "4": "المستوى الرابع",
+                        "5": "المستوى الخامس",
+                        "6": "المستوى السادس",
+                        "7": "المستوى السابع",
+                        
+                    }
+                    if val in level_map:
+                        level = level_map[val]
+                    elif val in level_map.values():
+                        level = val
+
                 # Create / update user
                 user, created = User.objects.update_or_create(
                     nationalid=national_id,
@@ -103,6 +123,7 @@ class UploadExcelView(APIView):
                         "gender": gender,
                         "maritalstatus": maritalstatus,
                         "religion": religion,
+                        "level": level,
                         "faculty": faculty,
                         "program": program,
                         "university": university,
@@ -114,6 +135,6 @@ class UploadExcelView(APIView):
             return Response({"success": "Users imported successfully"}, status=status.HTTP_201_CREATED)
 
         finally:
-            # ✅ Always delete the file after processing
+            # Always delete the file after processing
             if os.path.exists(full_path):
                 os.remove(full_path)

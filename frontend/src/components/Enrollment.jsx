@@ -21,6 +21,7 @@ function Enrollment() {
 
   const [filterFaculty, setFilterFaculty] = useState('');
   const [filterProgram, setFilterProgram] = useState('');
+  const [filterLevel, setFilterLevel] = useState('');
   const [filterName, setFilterName] = useState('');
   const [debouncedName, setDebouncedName] = useState('');
 
@@ -91,11 +92,12 @@ function Enrollment() {
     return (Array.isArray(src) ? src : []).filter(u => {
       const facOk = !filterFaculty || [u.faculty, u.faculty_id, u.faculty?.id].some(v => String(v) === String(filterFaculty));
       const progOk = !filterProgram || [u.program, u.program_id, u.program?.id].some(v => String(v) === String(filterProgram));
+      const levelOk = !filterLevel || String(u.level || '') === String(filterLevel);
       const name = `${u.first_name || ''} ${u.last_name || ''} ${u.username || ''} ${u.email || ''}`.toLowerCase();
       const nameOk = !debouncedName || name.includes(debouncedName.toLowerCase());
-      return facOk && progOk && nameOk;
+      return facOk && progOk && levelOk && nameOk;
     });
-  }, [usersData, filterFaculty, filterProgram, debouncedName]);
+  }, [usersData, filterFaculty, filterProgram, filterLevel, debouncedName]);
 
   // Programs filtered by selected faculty for the Program select
   const filteredPrograms = useMemo(() => {
@@ -221,6 +223,16 @@ function Enrollment() {
           <option value="">كل البرامج</option>
           {filteredPrograms.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>
+        <select value={filterLevel} onChange={e => setFilterLevel(e.target.value)}>
+          <option value="">كل المستويات</option>
+          <option value="المستوى الأول">المستوى الأول</option>
+          <option value="المستوى الثاني">المستوى الثاني</option>
+          <option value="المستوى الثالث">المستوى الثالث</option>
+          <option value="المستوى الرابع">المستوى الرابع</option>
+          <option value="المستوى الخامس">المستوى الخامس</option>
+          <option value="المستوى السادس">المستوى السادس</option>
+          <option value="المستوى السابع">المستوى السابع</option>
+        </select>
       </div>
 
 
@@ -271,6 +283,7 @@ function Enrollment() {
                         );
                         const facName = (student.faculty && typeof student.faculty === 'object' && student.faculty.name) || facultyNameMap[facId] || 'كلية غير محددة';
                         const progName = (student.program && typeof student.program === 'object' && student.program.name) || programNameMap[progId] || 'برنامج غير محدد';
+                        const levelName = student.level || 'مستوى غير محدد';
                         const displayName = `${student.first_name || ''} ${student.last_name || ''}`.trim();
                         if (displayName) {
                           return (
@@ -280,7 +293,7 @@ function Enrollment() {
                                 <span className="student-username">({student.username})</span>
                               ) : null}
                               <br />
-                              <span className="student-meta">{facName} | {progName}</span>
+                              <span className="student-meta">{facName} | {progName} | {levelName}</span>
                             </>
                           );
                         } else if (student.username) {
@@ -288,7 +301,7 @@ function Enrollment() {
                             <>
                               <span className="student-name">{student.username}</span>
                               <br />
-                              <span className="student-meta">{facName} | {progName}</span>
+                              <span className="student-meta">{facName} | {progName} | {levelName}</span>
                             </>
                           );
                         }
