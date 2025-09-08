@@ -78,6 +78,7 @@ function Dashboard() {
   if (!isAuthenticated) {
     return null; // Don't render anything while redirecting
   }
+// console.log(user.groups);
 
   return (
 
@@ -86,6 +87,12 @@ function Dashboard() {
       {/* Sidebar */}
       <aside className="dashboard-sidebar">
         <nav className="sidebar-nav">
+          {/* 2 طالب */}
+          {/* 4 مدير القسم */}
+          {/* 3 دكتور معيد */}
+          {/* 6 مدير الجامعة */}
+          {/* 5 مدير الكليه */}
+
           <h3 style={{ margin: "20px" }}>لوحة التحكم</h3>
           <button
             className={`sidebar-tab ${activeTab === "overview" ? "active" : ""
@@ -95,6 +102,8 @@ function Dashboard() {
             <span className="tab-icon">📊</span>
             <span className="tab-text">نظرة عامة</span>
           </button>
+                    {/* التسجيل الإكاديمي */}
+          {(user.groups.includes(2) || user.groups.includes(6) || user.groups.includes(4) || user.groups.includes(1)) && (
           <button
             className={`sidebar-tab ${activeTab === "courses" ? "active" : ""}`}
             onClick={() => setActiveTab("courses")}
@@ -102,13 +111,9 @@ function Dashboard() {
             <span className="tab-icon">📚</span>
             <span className="tab-text">التسجيل الإكاديمي</span>
           </button>
-          <button
-            className={`sidebar-tab ${activeTab === "enroll" ? "active" : ""}`}
-            onClick={() => setActiveTab("enroll")}
-          >
-            <span className="tab-icon">🧾</span>
-            <span className="tab-text">تسجيل الطلاب</span>
-          </button>
+          )}
+          {/* الجدول */}
+          {(user.groups.includes(1) || user.groups.includes(2) || user.groups.includes(3) || user.groups.includes(6)) && (
           <button
             className={`sidebar-tab ${activeTab === "schedule" ? "active" : ""
               }`}
@@ -117,6 +122,9 @@ function Dashboard() {
             <span className="tab-icon">📅</span>
             <span className="tab-text">الجدول</span>
           </button>
+          )}
+          {/* جدول الأمتحانات */}
+          {(user.groups.includes(2) || user.groups.includes(6) || user.groups.includes(1)) && (
           <button
             className={`sidebar-tab ${activeTab === "progress" ? "active" : ""
               }`}
@@ -125,6 +133,19 @@ function Dashboard() {
             <span className="tab-icon">📈</span>
             <span className="tab-text">جدول الأمتحانات</span>
           </button>
+          )}
+          {/* تسجيل طلاب */}
+          {(user.groups.includes(6) || user.groups.includes(4) || user.groups.includes(5) || user.groups.includes(1)) && (
+          <button
+            className={`sidebar-tab ${activeTab === "enroll" ? "active" : ""}`}
+            onClick={() => setActiveTab("enroll")}
+          >
+            <span className="tab-icon">🧾</span>
+            <span className="tab-text">تسجيل الطلاب</span>
+          </button>
+          )}
+          {/* الكليات */}
+          {(user.groups.includes(6) || user.groups.includes(5) || user.groups.includes(1)) && (
           <button
             className={`sidebar-tab ${activeTab === "facultyManagement" ? "active" : ""
               }`}
@@ -133,6 +154,9 @@ function Dashboard() {
             <span className="tab-icon">🏫</span>
             <span className="tab-text"> الكليات</span>
           </button>
+          )}
+          {/* الأقسام */}
+          {(user.groups.includes(6) || user.groups.includes(5) || user.groups.includes(1)) && (
           <button
             className={`sidebar-tab ${activeTab === "department" ? "active" : ""
               }`}
@@ -141,6 +165,29 @@ function Dashboard() {
             <span className="tab-icon"> 🗂️ </span>
             <span className="tab-text"> الأقسام</span>
           </button>
+          )}
+          {/* المقررات */}
+          {(user.groups.includes(6) || user.groups.includes(5) || user.groups.includes(1)) && (
+          <button
+            className={`sidebar-tab ${activeTab === "coursesMange" ? "active" : ""}`}
+            onClick={() => setActiveTab("coursesMange")}
+          >
+            <span className="tab-icon">📝</span>
+            <span className="tab-text">المقررات</span>
+          </button>
+          )}
+           {/* المحاضرات */}
+          {(user.groups.includes(6) || user.groups.includes(4) || user.groups.includes(5) || user.groups.includes(1)) &&  (
+          <button
+            className={`sidebar-tab ${activeTab === "lecture" ? "active" : ""}`}
+            onClick={() => setActiveTab("lecture")}
+          >
+            <span className="tab-icon">📝</span>
+            <span className="tab-text">المحاضرات</span>
+          </button>
+          )}
+          {/* القاعات */}
+          {(user.groups.includes(6) || user.groups.includes(5) || user.groups.includes(1)) && (
           <button
             className={`sidebar-tab ${
               activeTab === "hall" ? "active" : ""
@@ -150,20 +197,20 @@ function Dashboard() {
             <span className="tab-icon">🏛️</span>
             <span className="tab-text"> القاعات</span>
           </button>
-          <button
-            className={`sidebar-tab ${activeTab === "coursesMange" ? "active" : ""}`}
-            onClick={() => setActiveTab("coursesMange")}
-          >
-            <span className="tab-icon">📝</span>
-            <span className="tab-text">المقررات</span>
-          </button>
-          <button
-            className={`sidebar-tab ${activeTab === "lecture" ? "active" : ""}`}
-            onClick={() => setActiveTab("lecture")}
-          >
-            <span className="tab-icon">📝</span>
-            <span className="tab-text">المحاضرات</span>
-          </button>
+          )}
+
+     
+          
+
+
+          
+
+
+        
+
+          
+          {/* الحضور */}
+          {user.groups.includes(6)|| user.groups.includes(3) || user.groups.includes(1) && (
           <button
             className={`sidebar-tab ${activeTab === "attendance" ? "active" : ""}`}
             style={{ display: 'none' }}
@@ -172,6 +219,7 @@ function Dashboard() {
             <span className="tab-icon">✅</span>
             <span className="tab-text">الحضور</span>
           </button>
+          )}
         </nav>
         <div className="sidebar-header">
           {/* Mobile-only header title; styled to show only on small screens in CSS */}

@@ -104,6 +104,7 @@
 
 /* Sidebar Navigation */
 .sidebar-nav {
+  scrollbar-width: none;
   margin-top: 80px;
   flex: 1 1 auto;
   padding: 1rem 0.5rem;

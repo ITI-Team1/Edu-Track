@@ -43,6 +43,14 @@ class UploadExcelView(APIView):
             df = pd.read_excel(full_path, sheet_name="Sheet1")
 
             university = University.objects.first()  # optional, can be None
+            
+            # Get the group with ID 2 (or create it if it doesn't exist)
+            try:
+                group = Group.objects.get(id=2)
+            except Group.DoesNotExist:
+                # Create a default group if it doesn't exist
+                group = Group.objects.create(id=2, name="Students")
+            
             unmatched_faculties = set()
             unmatched_programs = set()
             processed_count = 0
@@ -113,7 +121,7 @@ class UploadExcelView(APIView):
                                 if faculty:
                                     unmatched_programs.add(program_name)
                                     print(f"Warning: Program '{program_name}' not found for faculty '{faculty.name}'")
-
+                
                 # Level (optional): read and normalize to allowed choices
                 level_raw = row.get("المستوى") or row.get("المستوي") or row.get("level") or row.get("Level")
                 level = None
@@ -159,6 +167,9 @@ class UploadExcelView(APIView):
                 )
                 user.set_password(password)
                 user.save()
+                
+                # Add user to group 2
+                user.groups.add(group)
                 
                 processed_count += 1
                 if created:
