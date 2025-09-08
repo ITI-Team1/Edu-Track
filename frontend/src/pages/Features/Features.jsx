@@ -1,7 +1,6 @@
 import React from "react";
-import { Link } from "react-router-dom";
 import "./features.css";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import psu2 from "../../assets/psu2.jpg";
 import aboutImg from "../../assets/login.jpeg";
@@ -185,46 +184,7 @@ function SplitCard({ dirFlip = false, title, points, variant = "charts", imageSr
   );
 }
 
-function Timeline({ data }) {
-  const railRef = useRef(null);
-  const containerRef = useRef(null);
-  const [height, setHeight] = useState(0);
-
-  useEffect(() => {
-    if (railRef.current) {
-      const rect = railRef.current.getBoundingClientRect();
-      setHeight(rect.height);
-    }
-  }, [railRef]);
-
-  const { scrollYProgress } = useScroll({ target: containerRef, offset: ["start 10%", "end 50%"] });
-  const heightTransform = useTransform(scrollYProgress, [0, 1], [0, height]);
-  const opacityTransform = useTransform(scrollYProgress, [0, 0.1], [0, 1]);
-
-  return (
-    <div className={cn("tl-root")} ref={containerRef}>
-      <div className="tl-inner" ref={railRef}>
-        {data.map((item, idx) => (
-          <div key={idx} className="tl-item">
-            <div className="tl-sticky">
-              <div className="tl-dot">
-                <div className="tl-dot-inner" />
-              </div>
-              <h3 className="tl-title tl-title--desktop">{item.title}</h3>
-            </div>
-            <div className="tl-content">
-              <h3 className="tl-title tl-title--mobile">{item.title}</h3>
-              {item.content}
-            </div>
-          </div>
-        ))}
-        <div className="tl-rail" style={{ height: height + "px" }}>
-          <motion.div style={{ height: heightTransform, opacity: opacityTransform }} className="tl-progress" />
-        </div>
-      </div>
-    </div>
-  );
-}
+// Timeline removed
 
 function Features() {
   const [modalOpen, setModalOpen] = useState(false);
@@ -266,57 +226,7 @@ function Features() {
     { icon: "📈", title: "المراقبة" },
   ];
 
-  const timelineData = [
-    {
-      title: " المميزات الرئيسية",
-      content: (
-        <section className="ft-section">
-          <ul>
-            <li><span className="feature-icon">🏛️</span>إدارة شاملة لبيانات الجامعات والكليات والبرامج الدراسية</li>
-            <li><span className="feature-icon">📅</span>تنظيم وجدولة المحاضرات والمعامل بشكل تلقائي</li>
-            <li><span className="feature-icon">🔄</span>نظام ذكي لمعالجة التعارضات في الجداول الدراسية</li>
-          </ul>
-        </section>
-      ),
-    },
-    {
-      title: " واجهة الطالب",
-      content: (
-        <section className="ft-section">
-          <ul>
-            <li><span className="feature-icon">📊</span>عرض الجدول الدراسي وتفاصيل المقررات المسجلة</li>
-            <li><span className="feature-icon">📱</span>تسجيل الحضور بسهولة عبر رموز QR</li>
-            <li><span className="feature-icon">📈</span>متابعة الحضور والغياب والأداء الأكاديمي</li>
-          </ul>
-        </section>
-      ),
-    },
-    {
-      title: "منصة الأساتذة",
-      content: (
-        <section className="ft-section">
-          <ul>
-            <li><span className="feature-icon">📚</span>إدارة المحاضرات والأنشطة التعليمية</li>
-            <li><span className="feature-icon">🔲</span>توليد وإدارة رموز QR للحضور</li>
-            <li><span className="feature-icon">🗓️</span>مزامنة الجداول مع التقويم الشخصي</li>
-          </ul>
-        </section>
-      ),
-    },
-    {
-      title: " إدارة النظام",
-      content: (
-        <section className="ft-section">
-          <ul>
-            <li><span className="feature-icon">👥</span>تحكم كامل في صلاحيات المستخدمين والأدوار</li>
-            <li><span className="feature-icon">🎯</span>إدارة القاعات وتوزيع الموارد بكفاءة</li>
-            <li><span className="feature-icon">📊</span>تقارير تفصيلية وإحصائيات شاملة</li>
-            <li><span className="feature-icon">🔒</span>واجهة سهلة الاستخدام مع أمان عالي للبيانات</li>
-          </ul>
-        </section>
-      ),
-    },
-  ];
+  // Timeline data removed
 
   return (
     <div className="ft-page" dir="rtl">
@@ -394,6 +304,8 @@ function Features() {
         variant="grid"
         imageSrc={aboutImg}
       />
+
+      {/* Timeline removed */}
 
       <FeatureDetailsModal open={modalOpen} onClose={() => setModalOpen(false)} variant={activeVariant} />
     </div>

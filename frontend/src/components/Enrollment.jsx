@@ -166,7 +166,7 @@ function Enrollment() {
   };
 
   // Fetch students with optional filters. If backend doesn't support filters, it will still return all users.
-  const fetchFilteredStudents = async ({ faculty, program, name }) => {
+  const _fetchFilteredStudents = async ({ faculty, program, name }) => {
     const params = new URLSearchParams();
     if (faculty) params.append('faculty', faculty);
     if (program) params.append('program', program);

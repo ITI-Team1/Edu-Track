@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -57,25 +57,25 @@ function Schedule() {
   }, [isAuthenticated]);
 
   // Helpers to resolve display names
-  const getCourseTitle = (lec) => {
+  const getCourseTitle = useCallback((lec) => {
     if (lec.course && typeof lec.course === 'object') return lec.course.title;
     const c = courses.find(c => c.id === lec.course);
     return c ? c.title : lec.course;
-  };
-  const getInstructorName = (lec) => {
+  }, [courses]);
+  const getInstructorName = useCallback((lec) => {
     if (lec.instructor && typeof lec.instructor === 'object') return `${lec.instructor.first_name} ${lec.instructor.last_name}`;
     const u = users.find(u => u.id === lec.instructor);
     return u ? `${u.first_name} ${u.last_name}` : lec.instructor;
-  };
-  const getRoomName = (lec) => {
+  }, [users]);
+  const getRoomName = useCallback((lec) => {
     if (lec.location && typeof lec.location === 'object') return lec.location.name || lec.location.title || lec.location.slug;
     const l = locations.find(l => l.id === lec.location || l.slug === lec.location);
     return l ? l.name : lec.location;
-  };
+  }, [locations]);
 
   // Normalize Arabic day names to canonical forms (match backend choices)
   const canonicalDays = ['السبت','الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس'];
-  const dayMap = {
+  const dayMap = useMemo(() => ({
     'الاحد': 'الأحد', 'الأحد': 'الأحد', 'اﻷحد': 'الأحد',
     'السبت': 'السبت',
     'الاثنين': 'الإثنين', 'الإثنين': 'الإثنين',
@@ -83,8 +83,8 @@ function Schedule() {
     'الاربعاء': 'الأربعاء', 'الأربعاء': 'الأربعاء',
     'الخميس': 'الخميس',
     'الجمعة': 'الجمعة',
-  };
-  const normalizeDay = (d) => dayMap[(d || '').trim()] || d;
+  }), []);
+  const normalizeDay = useCallback((d) => dayMap[(d || '').trim()] || d, [dayMap]);
 
   // Filter lectures for current user (by enrolled courses) and selected course
   const userLectures = useMemo(() => {
@@ -153,7 +153,7 @@ function Schedule() {
         type: 'محاضرة',
       }));
     return list;
-  }, [userLectures, todayName, courses, users, locations]);
+  }, [userLectures, todayName, getCourseTitle, getInstructorName, getRoomName, normalizeDay]);
 
   const weekCards = useMemo(() => {
     // First, collect day -> class entries
@@ -192,7 +192,7 @@ function Schedule() {
       }
     });
     return cards;
-  }, [userLectures, courses, locations]);
+  }, [userLectures, normalizeDay, getCourseTitle, getRoomName, daysOrder]);
 
   // Export weekly schedule to Excel (xlsx if available, otherwise CSV fallback)
   const handleExportWeekExcel = async () => {
@@ -216,7 +216,7 @@ function Schedule() {
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'الجدول');
       XLSX.writeFile(wb, 'جدول-الأسبوع.xlsx');
-    } catch (e) {
+    } catch {
       // Fallback: CSV download (Excel-compatible)
       const csv = data
         .map(row => row
@@ -248,6 +248,12 @@ function Schedule() {
 
   return (
     <div className="schedule-page">
+        {loading && (
+          <div className="content-card" style={{ marginBottom: '12px' }}>جارٍ التحميل...</div>
+        )}
+        {!!error && (
+          <div className="content-card" style={{ marginBottom: '12px', color: 'red' }}>خطأ: {error}</div>
+        )}
         <header className='schedule-head'>
           <h1>جدول المحاضرات</h1>
           {/* Course filter (optional) */}

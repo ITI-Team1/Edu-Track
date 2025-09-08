@@ -1,6 +1,5 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import '../styles/courses.css';
 import { fetchLectures } from '../services/lectureApi';
@@ -49,16 +48,16 @@ function Courses() {
   });
 
   // Helpers copied from Schedule.jsx for names
-  const getInstructorName = (lec) => {
+  const getInstructorName = useCallback((lec) => {
     if (lec.instructor && typeof lec.instructor === 'object') return `${lec.instructor.first_name} ${lec.instructor.last_name}`;
     const u = users.find(u => u.id === lec.instructor);
     return u ? `${u.first_name} ${u.last_name}` : lec.instructor;
-  };
-  const getRoomName = (lec) => {
+  }, [users]);
+  const getRoomName = useCallback((lec) => {
     if (lec.location && typeof lec.location === 'object') return lec.location.name || lec.location.title || lec.location.slug;
     const l = locations.find(l => l.id === lec.location || l.slug === lec.location);
     return l ? l.name : lec.location;
-  };
+  }, [locations]);
 
   // Determine enrolled course IDs from lectures that include current user
   const enrolledCourseIds = React.useMemo(() => {
@@ -94,7 +93,7 @@ function Courses() {
         nextClass,
       };
     });
-  }, [allCourses, lectures, enrolledCourseIds, users, locations]);
+  }, [allCourses, lectures, enrolledCourseIds, getInstructorName, getRoomName]);
 
   const combinedLoading = lecLoading || crsLoading || locLoading || usrLoading;
   const combinedError = lecError?.message || crsError?.message || locError?.message || usrError?.message || '';
@@ -127,7 +126,7 @@ function Courses() {
       programs: Array.isArray(course.programs) ? course.programs : [],
       lectures: relatedLectures.map(mapLecture),
     };
-  }, [modalCourseId, allCourses, lectures, users, locations]);
+  }, [modalCourseId, allCourses, lectures, getInstructorName, getRoomName]);
 
   // ESC key closes modal
   useEffect(() => {

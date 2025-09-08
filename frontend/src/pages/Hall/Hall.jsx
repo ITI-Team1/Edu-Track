@@ -392,7 +392,7 @@ export default function Hall() {
                         type="checkbox"
                         value={fac.id}
                         checked={checked}
-                        onChange={(e) => {
+                        onChange={() => {
                           const id = Number(fac.id);
                           setForm((prev) => {
                             const set = new Set(prev.faculties);

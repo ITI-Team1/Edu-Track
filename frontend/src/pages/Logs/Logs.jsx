@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { FiUsers, FiUser, FiEdit, FiPlus, FiTrash2, FiBarChart2, FiGrid, FiActivity, FiAlertCircle, FiArrowUp, FiArrowDown, FiClock } from 'react-icons/fi';
 import CountUp from 'react-countup';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import api from "../../services/api";
 import "./Logs.css";
 import { useAuth } from "../../context/AuthContext";
-import ErrorBoundary from '../../components/ErrorBoundary';
 import LogsHero from '../../components/LogsHero';
 
 // Helper Functions
@@ -51,7 +50,7 @@ const StatCard = ({ icon, title, value, children, className = '' }) => (
   </div>
 );
 
-const ProgressRing = ({ percent, color = '#0284C7', strokeWidth = 4 }) => {
+const _ProgressRing = ({ percent, color = '#0284C7', strokeWidth = 4 }) => {
   const radius = 20;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (percent / 100) * circumference;
@@ -65,7 +64,7 @@ const ProgressRing = ({ percent, color = '#0284C7', strokeWidth = 4 }) => {
 };
 
 // Page-Specific Components
-const AnimatedHeader = () => (
+const _AnimatedHeader = () => (
   <div className="logs-header minimal">
     <h1>لوحة تحكم السجلات</h1>
   </div>

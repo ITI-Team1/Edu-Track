@@ -33,7 +33,7 @@ function ForgotPassword() {
           const data = await response.json();
           if (data?.email) msg = Array.isArray(data.email) ? data.email[0] : data.email;
           else if (data?.detail) msg = data.detail;
-        } catch (_) {}
+        } catch {}
         throw new Error(msg);
       }
 

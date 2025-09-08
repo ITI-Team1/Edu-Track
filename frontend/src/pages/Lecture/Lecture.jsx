@@ -189,7 +189,6 @@ export default function Lecture() {
       };
 
       if (modalType === "create") {
-        console.log("send is ok")
         await createLecture(payload);
       } else if (modalType === "update" && selectedLecture) {
         await updateLecture(selectedLecture.id, payload);
@@ -227,6 +226,21 @@ export default function Lecture() {
       return `${lec.instructor.first_name} ${lec.instructor.last_name}`;
     const user = users.find((u) => u.id === lec.instructor);
     return user ? `${user.first_name} ${user.last_name}` : lec.instructor;
+  };
+
+  // Format time (HH:MM or HH:MM:SS) into Arabic 12-hour with suffixes: ص for AM, م for PM
+  const formatTimeArabic = (t) => {
+    if (!t || typeof t !== "string") return t || "";
+    const [hhRaw, mmRaw] = t.split(":");
+    let hh = Number(hhRaw);
+    const mm = Number(mmRaw);
+    if (!Number.isFinite(hh) || !Number.isFinite(mm)) return (t || "").slice(0,5);
+    const isPM = hh >= 12;
+    const suffix = isPM ? "م" : "ص";
+    let hour12 = hh % 12;
+    if (hour12 === 0) hour12 = 12;
+    const minutes = String(mm).padStart(2, "0");
+    return `${hour12}:${minutes} ${suffix}`;
   };
 
   return (
@@ -297,8 +311,7 @@ export default function Lecture() {
                   <td>{getLocationName(lec)}</td>
                   <td>{lec.day}</td>
                   <td>
-                    {(lec.starttime || "").slice(0, 5)} -{" "}
-                    {(lec.endtime || "").slice(0, 5)}
+                    {formatTimeArabic(lec.starttime)} - {formatTimeArabic(lec.endtime)}
                   </td>
                   <td>
                     <Button

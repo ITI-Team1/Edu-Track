@@ -357,12 +357,6 @@
     animation-name: scaleIn;
 }
 
-/* Add different delays for each card */
-.tl-item:nth-child(1) .ft-section { animation-delay: 0.1s; }
-.tl-item:nth-child(2) .ft-section { animation-delay: 0.3s; }
-.tl-item:nth-child(3) .ft-section { animation-delay: 0.5s; }
-.tl-item:nth-child(4) .ft-section { animation-delay: 0.7s; }
-
 /* Add a nice transform effect for the icons */
 .feature-icon {
     display: inline-block;
@@ -453,145 +447,6 @@
 }
 .ft-section:nth-child(6) {
 	animation-delay: 0.6s;
-}
-
-/* Timeline (Aceternity-style) */
-.timeline-wrapper {
-	margin-top: 2rem;
-}
-
-.tl-root {
-	width: 100%;
-	background: transparent;
-}
-
-.tl-inner {
-	position: relative;
-	max-width: 1200px;
-	margin: 0 auto 2rem;
-	padding-bottom: 4rem;
-}
-
-.tl-item {
-	display: flex;
-	justify-content: flex-start;
-	gap: 1rem;
-	padding-top: 4rem;
-}
-
-@media (min-width: 768px) {
-	.tl-item {
-		padding-top: 10rem;
-		gap: 2.5rem;
-	}
-}
-
-.tl-sticky {
-	position: sticky;
-	top: 10rem;
-	align-self: flex-start;
-	display: flex;
-	flex-direction: column;
-	gap: 0.75rem;
-	z-index: 3;
-	min-width: 240px;
-}
-
-@media (min-width: 768px) {
-	.tl-sticky {
-		flex-direction: row;
-		align-items: center;
-	}
-}
-
-.tl-dot {
-	position: absolute;
-	inset-inline-start: 0.75rem; /* works for RTL/LTR */
-	width: 2rem;
-	height: 2rem;
-	border-radius: 9999px;
-	background: linear-gradient(90deg, #3182ce, #667eea, #764ba2);;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-}
-
-body.dark .tl-dot, .ft-page.dark .tl-dot {
-	background: #000000;
-}
-
-.tl-dot-inner {
-	width: 1rem;
-	height: 1rem;
-	border-radius: 9999px;
-	background: #e5e7eb; /* neutral-200 */
-	border: 1px solid #d1d5db; /* neutral-300 */
-}
-
-body.dark .tl-dot-inner, .ft-page.dark .tl-dot-inner {
-	background: #1f2937; /* neutral-800 */
-	border-color: #374151; /* neutral-700 */
-}
-
-.tl-title {
-	font-weight: 800;
-	color: #667eea;
-	font-size: 2.2rem !important ; /* neutral-500 */
-}
-
-.tl-title--desktop {
-	display: none;
-	font-size: 2rem;
-	padding-inline-start: 5rem; /* accounts for dot area */
-}
-
-.tl-title--mobile {
-	display: block;
-	font-size: 1.5rem;
-	margin-bottom: 1rem;
-}
-
-@media (min-width: 768px) {
-	.tl-title--desktop { display: block; }
-	.tl-title--mobile { display: none; }
-}
-
-.tl-content {
-	position: relative;
-	padding-inline-start: 5rem;
-	padding-inline-end: 1rem;
-	width: 100%;
-}
-
-@media (min-width: 768px) {
-	.tl-content { padding-inline-start: 1rem; }
-}
-
-.tl-rail {
-	position: absolute;
-	inset-inline-start: 2rem; /* place under the dot */
-	top: 0;
-	width: 4px;
-	background: linear-gradient(to bottom, transparent 0%, #cbd5e1 10%, #cbd5e1 90%, transparent 99%);
-	/* Soft mask to fade ends */
-	-webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%);
-	mask-image: linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%);
-	overflow: hidden;
-	z-index: 1;
-}
-
-body.dark .tl-rail, .ft-page.dark .tl-rail {
-	background: linear-gradient(to bottom, transparent 0%, #475569 10%, #475569 90%, transparent 99%);
-}
-
-.tl-progress {
-	position: absolute;
-	inset-inline: 0;
-	top: 0;
-	width: 2px;
-	background: linear-gradient(to top, #7c3aed 0%, #3b82f6 10%, transparent 100%);
-	border-radius: 9999px;
-	z-index: 2;
 }
 
 /* ==========================
@@ -1136,8 +991,7 @@ body.dark .tl-rail, .ft-page.dark .tl-rail {
 /* Hide any extra tiles if present */
 .media-rows .tile:nth-child(n+6) { display: none; }
 
-/* Hide deprecated timeline section */
-.timeline-wrapper { display: none !important; }
+/* Timeline removed */
 
 /* Variant-specific layouts removed to enforce a single unified 3-row layout across all cards */
 

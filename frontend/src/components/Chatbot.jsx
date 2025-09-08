@@ -61,7 +61,7 @@ function Chatbot() {
         ...prev,
         { role: 'assistant', content: reply },
       ]);
-    } catch (err) {
+    } catch (_err) {
       setError('عذراً، حدث خطأ أثناء الاتصال بمساعد Together API.');
       setMessages(prev => [
         ...prev,
@@ -117,6 +117,12 @@ function Chatbot() {
           <div className="chat-message-wrapper bot bot-thinking">
             <img className="avatar avatar-img" src={logo} alt="Bot" />
             <div className="chat-message thinking-bubble">...يفكر</div>
+          </div>
+        )}
+        {error && (
+          <div className="chat-message-wrapper bot">
+            <img className="avatar avatar-img" src={logo} alt="Bot" />
+            <div className="chat-message error-bubble">{String(error)}</div>
           </div>
         )}
       </div>

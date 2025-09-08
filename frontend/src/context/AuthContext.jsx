@@ -1,3 +1,4 @@
+/* eslint react-refresh/only-export-components: off */
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import apiService from '../services/api';
 
@@ -34,14 +35,10 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = async (credentials) => {
-    try {
-      const data = await apiService.login(credentials);
-      const userData = await apiService.getCurrentUser();
-      setUser(userData);
-      return data;
-    } catch (error) {
-      throw error;
-    }
+    const data = await apiService.login(credentials);
+    const userData = await apiService.getCurrentUser();
+    setUser(userData);
+    return data;
   };
 
   const refreshUser = async () => {
@@ -50,18 +47,14 @@ export const AuthProvider = ({ children }) => {
         const userData = await apiService.getCurrentUser();
         setUser(userData);
       }
-    } catch (error) {
+    } catch {
       // silent
     }
   };
 
   const register = async (userData) => {
-    try {
-      const data = await apiService.register(userData);
-      return data;
-    } catch (error) {
-      throw error;
-    }
+    const data = await apiService.register(userData);
+    return data;
   };
 
   const logout = () => {

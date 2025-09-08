@@ -5,7 +5,7 @@ import QRCode from 'qrcode';
 import logoRaw from '../../assets/psu-logo.svg?raw';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { getLecture } from '../../services/lectureApi';
+import { getLecture, fetchLectures } from '../../services/lectureApi';
 import { fetchCourses } from '../../services/courseApi';
 import { fetchUsers } from '../../services/userApi';
 import './attendance.css';
@@ -49,12 +49,46 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
     const fetchStudents = useCallback(async () => {
         if (!lectureId) return;
         try {
-            const lec = await getLecture(lectureId);
-            const raw = Array.isArray(lec?.students) ? lec.students : [];
+            // Small retry to handle eventual consistency right after lecture creation
+            let lec = await getLecture(lectureId);
+            const pickStudents = (lecture) => {
+                const cands = [
+                    Array.isArray(lecture?.students) ? lecture.students : null,
+                    Array.isArray(lecture?.students?.results) ? lecture.students.results : null,
+                    Array.isArray(lecture?.students?.items) ? lecture.students.items : null,
+                    Array.isArray(lecture?.students_list) ? lecture.students_list : null,
+                    Array.isArray(lecture?.studentsIds) ? lecture.studentsIds : null,
+                    Array.isArray(lecture?.students_ids) ? lecture.students_ids : null,
+                    Array.isArray(lecture?.enrolled_students) ? lecture.enrolled_students : null,
+                    Array.isArray(lecture?.enrolled_students_ids) ? lecture.enrolled_students_ids : null,
+                ];
+                return cands.find((arr) => Array.isArray(arr)) || [];
+            };
+            let raw = pickStudents(lec);
+            if (!raw.length) {
+                // retry up to 2 times with a small delay
+                for (let i = 0; i < 2 && raw.length === 0; i++) {
+                    await new Promise((r) => setTimeout(r, 300));
+                    lec = await getLecture(lectureId);
+                    raw = pickStudents(lec);
+                }
+            }
+            if (!raw.length) {
+                // Final fallback: fetch list and read the same lecture by id
+                try {
+                    const list = await fetchLectures();
+                    const target = (Array.isArray(list) ? list : []).find((l) => Number(l.id) === Number(lectureId));
+                    if (target) {
+                        raw = pickStudents(target);
+                    }
+                } catch {}
+            }
+            // raw now contains the best-effort students array from lecture payload
             // Preload course title to display as heading (fallback to lecture id)
             try {
                 const courses = await fetchCourses();
-                const courseTitle = courses.find((c) => Number(c.id) === Number(lec.course))?.title;
+                const courseId = (typeof lec?.course === 'object' && lec?.course !== null) ? lec.course.id : lec?.course;
+                const courseTitle = courses.find((c) => Number(c.id) === Number(courseId))?.title;
                 setHeadingText(courseTitle ? `المحاضرة: ${courseTitle}` : `المحاضرة رقم ${lectureId}`);
             } catch {
                 setHeadingText(`المحاضرة رقم ${lectureId}`);
@@ -69,16 +103,31 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
             }
             const presentSet = readPresentSet();
             const mapped = raw.map((s) => {
-                const obj = typeof s === 'object' && s ? s : { id: Number(s), username: String(s) };
-                const u = usersMap[Number(obj.id)] || obj;
-                const first = u.first_name || u.firstname || '';
-                const last = u.last_name || u.lastname || '';
-                const name = first && last ? `${first} ${last}` : first || u.username || u.englishfullname || u.name || `مستخدم ${obj.id}`;
+                // Extract a student id from multiple possible shapes
+                let sid = null;
+                if (typeof s === 'object' && s !== null) {
+                    // common direct id
+                    sid = s.id ?? s.student_id ?? s.user_id ?? s.pk ?? null;
+                    // nested under student or user
+                    if (sid == null) sid = s.student?.id ?? s.user?.id ?? s.student?.pk ?? s.user?.pk ?? null;
+                    if (sid == null) sid = (typeof s.student === 'number' ? s.student : null) ?? (typeof s.user === 'number' ? s.user : null);
+                } else {
+                    sid = Number(s);
+                }
+                sid = Number(sid);
+                // Try to build a display object using users map or nested object
+                const fromUsers = Number.isFinite(sid) ? usersMap[sid] : undefined;
+                const cand = fromUsers || (typeof s === 'object' ? (s.student || s.user || s) : {});
+                const first = cand?.first_name || cand?.firstname || '';
+                const last = cand?.last_name || cand?.lastname || '';
+                const uname = first && last
+                    ? `${first} ${last}`
+                    : (first || cand?.username || cand?.englishfullname || cand?.name || (Number.isFinite(sid) ? `مستخدم ${sid}` : 'مستخدم'));
                 return {
-                    id: Number(obj.id),
-                    student_id: Number(obj.id),
-                    username: name,
-                    present: presentSet.has(Number(obj.id)),
+                    id: sid,
+                    student_id: sid,
+                    username: uname,
+                    present: Number.isFinite(sid) ? presentSet.has(sid) : false,
                 };
             });
             setStudents(mapped);
