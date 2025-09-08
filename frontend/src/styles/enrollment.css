@@ -61,7 +61,7 @@
   /* Filters */
   .filters {
     display: grid;
-    grid-template-columns: 1fr repeat(2, minmax(180px, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: var(--gap);
     background: #fff; /* match Logs cards */
     padding: 12px;
