@@ -343,7 +343,7 @@ function Enrollment() {
           <div className="group-head">
             <label>
               اختر الطلاب
-              <span className="badge">{selectedStudents.length}/{filteredStudents.length}</span>
+              <span className="enr-badge">{selectedStudents.length}/{filteredStudents.length}</span>
             </label>
             <div className="checkbox-item inline">
               <input
@@ -431,7 +431,7 @@ function Enrollment() {
           <div className="group-head">
             <label>
               اختر المقررات
-              <span className="badge">{selectedCourses.length}/{filteredCourses.length}</span>
+              <span className="enr-badge">{selectedCourses.length}/{filteredCourses.length}</span>
             </label>
             <div className="checkbox-item inline">
               <input
