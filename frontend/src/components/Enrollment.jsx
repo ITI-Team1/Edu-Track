@@ -6,6 +6,7 @@ import { fetchCourses } from '../services/courseApi';
 import { fetchFaculties } from '../services/facultyApi';
 import { fetchPrograms } from '../services/programApi';
 import UploadExcel from './UploadUsersData';
+import { useLocation } from 'react-router-dom';
 
 
 function Enrollment() {
@@ -17,6 +18,7 @@ function Enrollment() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
 
   const [filterFaculty, setFilterFaculty] = useState('');
@@ -85,13 +87,32 @@ function Enrollment() {
     return res.json();
   };
 
-  const { data: usersData, isLoading: usersLoading, error: usersError } = useQuery({
+  const { data: usersData, isLoading: usersLoading, error: usersError, refetch: refetchUsers } = useQuery({
     queryKey: ['users'],
     queryFn: fetchUsers,
     staleTime: 1000 * 60, // 1 min
     gcTime: 1000 * 60 * 5, // 5 min
     refetchOnWindowFocus: false,
   });
+
+  // Rerender users list when UploadUsersData signals or when navigated with refresh param
+  const location = useLocation();
+  useEffect(() => {
+    const onRefresh = () => {
+      refetchUsers();
+    };
+    window.addEventListener('enrollment-refresh', onRefresh);
+    return () => window.removeEventListener('enrollment-refresh', onRefresh);
+  }, [refetchUsers]);
+
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(location.search);
+      if (params.has('refresh')) {
+        refetchUsers();
+      }
+    } catch {}
+  }, [location.search, refetchUsers]);
 
   // Client-side filtered students based on selects and debounced name
   const filteredStudents = useMemo(() => {
@@ -150,6 +171,7 @@ function Enrollment() {
     try {
       setError(null);
       setSuccess('');
+      setSubmitting(true);
       // Backend endpoint accepts a SINGLE studentid and MULTIPLE courseids per request
       // so we call it once per selected student.
       const courseids = selectedCourses.map((id) => Number(id));
@@ -180,7 +202,10 @@ function Enrollment() {
       setSelectedStudents([]);
       setSelectedCourses([]);
     } catch (err) {
-      setError(err.message || 'فشل التسجيل');
+      setError(translateToArabic(err.message) || 'فشل التسجيل');
+    }
+    finally {
+      setSubmitting(false);
     }
   };
 
@@ -191,6 +216,15 @@ function Enrollment() {
       setSelectedStudents(allStudentIds);
     } else {
       setSelectedStudents([]);
+    }
+  };
+
+  const handleSelectAllCourses = (checked) => {
+    if (checked) {
+      const allCourseIds = filteredCourses.map(c => c.id);
+      setSelectedCourses(allCourseIds);
+    } else {
+      setSelectedCourses([]);
     }
   };
 
@@ -231,6 +265,36 @@ function Enrollment() {
   const combinedLoading = loading || usersLoading;
   const combinedError = error || usersError?.message;
 
+  // Translate common backend messages to Arabic for display
+  const translateToArabic = (msg) => {
+    if (!msg) return '';
+    const m = String(msg);
+    const map = {
+      'No lectures found for the given courses.': 'لا توجد محاضرات مسجلة لهذه المقررات.',
+      'Failed to load users': 'فشل تحميل المستخدمين',
+      'Failed to enroll': 'فشل التسجيل',
+      'NetworkError': 'خطأ في الشبكة',
+      'Unauthorized': 'غير مصرح بالدخول',
+      'Forbidden': 'غير مسموح لك بتنفيذ هذه العملية',
+      'Not Found': 'غير موجود',
+    };
+    if (map[m]) return map[m];
+    // Partial contains
+    if (m.includes('No lectures found')) return 'لا توجد محاضرات مسجلة لهذه المقررات.';
+    if (m.includes('detail') && m.includes('Not Found')) return 'غير موجود';
+    return m;
+  };
+
+  // Auto-dismiss success/error after a short delay
+  useEffect(() => {
+    if (!success && !combinedError) return;
+    const t = setTimeout(() => {
+      setSuccess('');
+      setError(null);
+    }, 4000);
+    return () => clearTimeout(t);
+  }, [success, combinedError]);
+
   if (combinedLoading) return <div>جارٍ التحميل...</div>;
   // لا نعيد توجيه الصفحة عند الخطأ؛ سنعرضه كإشعار داخل الصفحة
 
@@ -238,8 +302,18 @@ function Enrollment() {
   return (
     <div className="enrollment-page" dir="rtl">
       <h1>تسجيل الطلاب و المقررات</h1>
-      {success && <div className="success-message">{success}</div>}
-      {combinedError && <div className="error-message">خطأ: {combinedError}</div>}
+      {success && <div className="success-message" role="status">{success}</div>}
+      {combinedError && (
+        <div className="error-message" role="alert">
+          خطأ: {translateToArabic(combinedError)}
+          {String(combinedError).includes('No lectures found') && (
+            <>
+              <br />
+              <small>يبدو أنه لا توجد محاضرات مسجلة لهذه المقررات. الرجاء التأكد من إنشاء محاضرات لهذه المقررات أولاً.</small>
+            </>
+          )}
+        </div>
+      )}
       
       <div className="filters section-card">
         <input type="text" placeholder="فلترة حسب الاسم" value={filterName} onChange={e => setFilterName(e.target.value)} />
@@ -267,7 +341,10 @@ function Enrollment() {
       <form onSubmit={handleEnroll} className="enrollment-form two-col">
         <div className="form-group section-card">
           <div className="group-head">
-            <label>اختر الطلاب</label>
+            <label>
+              اختر الطلاب
+              <span className="badge">{selectedStudents.length}/{filteredStudents.length}</span>
+            </label>
             <div className="checkbox-item inline">
               <input
                 type="checkbox"
@@ -351,7 +428,21 @@ function Enrollment() {
 
 
         <div className="form-group section-card">
-          <label>اختر المقررات</label>
+          <div className="group-head">
+            <label>
+              اختر المقررات
+              <span className="badge">{selectedCourses.length}/{filteredCourses.length}</span>
+            </label>
+            <div className="checkbox-item inline">
+              <input
+                type="checkbox"
+                id="courses-select-all"
+                checked={selectedCourses.length > 0 && selectedCourses.length === filteredCourses.length}
+                onChange={(e) => handleSelectAllCourses(e.target.checked)}
+              />
+              <label htmlFor="courses-select-all">تحديد الكل</label>
+            </div>
+          </div>
           <div className="scroll-area">
             <div className="courses-checkbox-group">
               {filteredCourses.map(course => (
@@ -371,7 +462,9 @@ function Enrollment() {
         </div>
         <div className="enroll-actions">
           <div className="enroll-actions__inner enroll-card no-accent">
-            <button type="submit" className="btn btn-primary enroll-submit">تسجيل</button>
+            <button type="submit" className="btn btn-primary enroll-submit" disabled={submitting}>
+              {submitting ? 'جارٍ التسجيل...' : 'تسجيل'}
+            </button>
             <UploadExcel />
           </div>
         </div>

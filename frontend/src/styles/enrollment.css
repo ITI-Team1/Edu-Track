@@ -224,6 +224,22 @@
     color: var(--text);
     font-weight: 700;
   }
+
+  /* Small badge for counters */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-inline-start: 8px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+    color: #1e293b;
+    background: #e2e8f0;
+    border: 1px solid #cbd5e1;
+    vertical-align: middle;
+  }
   
   /* Buttons */
   .btn {
@@ -249,6 +265,13 @@
     box-shadow: 0 10px 22px rgba(37,99,235,.35);
   }
   .btn-primary:hover { box-shadow: 0 12px 26px rgba(37,99,235,.45); }
+  .btn:disabled,
+  .btn[disabled] {
+    opacity: .6;
+    cursor: not-allowed;
+    box-shadow: none;
+    filter: grayscale(.1);
+  }
   /* Outline variant matching primary */
   .btn-primary-outline {
     background: transparent;
@@ -291,6 +314,21 @@
   }
   .enroll-card.no-accent::before { display: none; }
   .enroll-actions__inner .enroll-submit { min-width: 140px; }
+  .enroll-actions__inner .enroll-submit[disabled]::after {
+    content: "";
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,.6);
+    border-top-color: transparent;
+    display: inline-block;
+    margin-inline-start: 8px;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
 
   /* Inner card to carry background for the actions area */
   .enrollment-actions-inner {
@@ -327,6 +365,16 @@
     border: 1px solid #bae6fd;
     border-radius: 10px;
     padding: 6px 10px;
+  }
+  .enroll-upload__status.is-success {
+    background: #dcfce7; /* green-100 */
+    border-color: #bbf7d0; /* green-200 */
+    color: #14532d; /* green-900 */
+  }
+  .enroll-upload__status.is-error {
+    background: #fee2e2; /* red-100 */
+    border-color: #fecaca; /* red-200 */
+    color: #7f1d1d; /* red-900 */
   }
 
   .btn.btn-secondary-outline {

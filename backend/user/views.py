@@ -177,7 +177,7 @@ class UploadExcelView(APIView):
 
             # Prepare response with detailed statistics
             response_data = {
-                "success": "Users imported successfully",
+                "success": "تم استيراد المستخدمين بنجاح",
                 "processed": processed_count,
                 "created": created_count,
                 "updated": processed_count - created_count
