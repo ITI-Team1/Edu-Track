@@ -90,9 +90,18 @@ function Courses() {
         instructor: firstLec ? getInstructorName(firstLec) : '—',
         room: firstLec ? getRoomName(firstLec) : '—',
         nextClass,
+        sessionsCount: relatedLectures.length,
       };
     });
   }, [allCourses, lectures, enrolledCourseIds, getInstructorName, getRoomName]);
+
+  // New: total number of lectures across the user's enrolled courses
+  const totalLecturesCount = React.useMemo(() => {
+    return (Array.isArray(lectures) ? lectures : []).filter(lec => {
+      const cid = Number(typeof lec.course === 'object' ? lec.course?.id : lec.course);
+      return enrolledCourseIds.has(cid);
+    }).length;
+  }, [lectures, enrolledCourseIds]);
 
   const combinedLoading = lecLoading || crsLoading || locLoading || usrLoading;
   const combinedError = lecError?.message || crsError?.message || locError?.message || usrError?.message || '';
@@ -154,11 +163,9 @@ function Courses() {
           <p>مقررات مسجلة هذا الفصل</p>
         </div>
         <div className="stat-card-contact">
-          <h3>إجمالي الساعات المعتمدة</h3>
-          <div className="stat-number-contact">
-            {enrolledCourseCards.reduce((sum, c) => sum + (c.credits || 0), 0)}
-          </div>
-          <p>ساعة معتمدة</p>
+          <h3>إجمالي المحاضرات</h3>
+          <div className="stat-number-contact">{totalLecturesCount}</div>
+          <p>محاضرات ضمن مقرراتك</p>
         </div>
       </div>
 
@@ -177,7 +184,7 @@ function Courses() {
             <div key={course.id} className="course-card">
               <div className="course-header">
                 <h3>{course.name}</h3>
-                <span className="course-credits">{course.credits} ساعة معتمدة</span>
+                <span className="course-credits">عدد المحاضرات: {course.sessionsCount}</span>
               </div>
               
               <div className="course-info">
