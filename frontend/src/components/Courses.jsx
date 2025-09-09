@@ -87,7 +87,6 @@ function Courses() {
       return {
         id: c.id,
         name: c.title || c.name || c.slug,
-        credits: c.credits || 3,
         instructor: firstLec ? getInstructorName(firstLec) : '—',
         room: firstLec ? getRoomName(firstLec) : '—',
         nextClass,
@@ -204,7 +203,6 @@ function Courses() {
             </div>
             <div className="course-modal-body">
               <div className="course-modal-meta">
-                <span className="courses-badge">ساعات معتمدة: {modalCourse.credits}</span>
                 {Array.isArray(modalCourse.programs) && modalCourse.programs.length > 0 && (
                   <span className="courses-badge alt">البرامج المرتبطة: {modalCourse.programs.length}</span>
                 )}
