@@ -1,0 +1,90 @@
+@startuml
+hide circle
+hide methods
+hide stereotypes
+skinparam linetype ortho
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam class {
+  BackgroundColor White
+  ArrowColor #444444
+  BorderColor #444444
+}
+
+class University {
+  +id: PK
+  +name
+  +slug
+  +logo
+}
+class Faculty {
+  +id: PK
+  +name
+  +slug
+  +logo
+  +university_id FK
+}
+class Program {
+  +id: PK
+  +name
+  +slug
+  +faculty_id FK
+}
+class Course {
+  +id: PK
+  +title
+  +slug
+}
+class Location {
+  +id: PK
+  +name
+  +slug
+  +capacity
+}
+class User {
+  +id: PK
+  +username
+  +email
+  +...profile fields...
+  +university_id FK (nullable)
+  +faculty_id FK (nullable)
+  +program_id FK (nullable)
+}
+class Lecture {
+  +id: PK
+  +course_id FK
+  +instructor_id FK -> User
+  +location_id FK
+  +day
+  +starttime
+  +endtime
+}
+class Attendance {
+  +id: PK
+  +lecture_id FK
+  +time
+}
+class StudentAttendance {
+  +id: PK
+  +attendance_id FK
+  +student_id FK -> User
+  +ip (unique)
+  +present
+}
+
+University ||--o{ Faculty : has
+Faculty ||--o{ Program : offers
+Program ||--o{ Course : includes
+Course ||--o{ Lecture : scheduled
+Location ||--o{ Lecture : hosts
+User ||--o{ Lecture : teaches
+Lecture ||--o{ Attendance : sessions
+Attendance ||--o{ StudentAttendance : records
+User ||--o{ StudentAttendance : recorded
+User }o--o{ Lecture : attends
+Faculty }o--o{ Location : uses
+Course }o--o{ Program : M2M
+University ||--o{ User : affiliation
+Faculty ||--o{ User : affiliation
+Program ||--o{ User : enrollment
+@enduml

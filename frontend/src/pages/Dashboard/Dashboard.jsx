@@ -103,7 +103,7 @@ function Dashboard() {
             <span className="tab-text">نظرة عامة</span>
           </button>
                     {/* التسجيل الإكاديمي */}
-          {(user.groups.includes(2) || user.groups.includes(6) || user.groups.includes(4) || user.groups.includes(1)) && (
+          {(user.groups.includes(2) || user.groups.includes(6) || user.groups.includes(1)) && (
           <button
             className={`sidebar-tab ${activeTab === "courses" ? "active" : ""}`}
             onClick={() => setActiveTab("courses")}

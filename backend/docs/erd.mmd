@@ -1,0 +1,68 @@
+%% Mermaid ER diagram for Edu-Track
+%% Generate with: npx @mermaid-js/mermaid-cli -i docs/erd.mmd -o docs/erd.png
+
+erDiagram
+    UNIVERSITY ||--o{ FACULTY : has
+    FACULTY ||--o{ PROGRAM : offers
+    PROGRAM ||--o{ COURSE : includes
+    COURSE }o--o{ PROGRAM : M2M
+    FACULTY }o--o{ LOCATION : M2M
+    COURSE ||--o{ LECTURE : scheduled
+    LOCATION ||--o{ LECTURE : hosts
+    USER ||--o{ LECTURE : teaches
+    USER }o--o{ LECTURE : attends
+    LECTURE ||--o{ ATTENDANCE : sessions
+    ATTENDANCE ||--o{ STUDENTATTENDANCE : records
+    USER ||--o{ STUDENTATTENDANCE : recorded
+    UNIVERSITY ||--o{ USER : affiliation
+    FACULTY ||--o{ USER : affiliation
+    PROGRAM ||--o{ USER : enrollment
+
+    UNIVERSITY {
+        int id
+        string name
+        string slug
+        string logo
+    }
+    FACULTY {
+        int id
+        string name
+        string slug
+        string logo
+    }
+    PROGRAM {
+        int id
+        string name
+        string slug
+    }
+    COURSE {
+        int id
+        string title
+        string slug
+    }
+    LOCATION {
+        int id
+        string name
+        string slug
+        int capacity
+    }
+    USER {
+        int id
+        string username
+        string email
+    }
+    LECTURE {
+        int id
+        time starttime
+        time endtime
+        string day
+    }
+    ATTENDANCE {
+        int id
+        datetime time
+    }
+    STUDENTATTENDANCE {
+        int id
+        string ip
+        bool present
+    }
