@@ -94,7 +94,7 @@ function Login() {
               />
             </div>
             
-            <button type="submit" className="login-btn btn-primary" disabled={loading}>
+            <button type="submit" className="login-btn !bg-amber-700 " disabled={loading}>
               {loading ? 'جاري تسجيل الدخول...' : 'تسجيل الدخول'}
             </button>
           </form>
