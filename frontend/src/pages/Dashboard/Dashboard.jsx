@@ -1,15 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import './dashboard.css';
-import Courses from '../../components/Courses';
-import Schedule from '../../components/Schedule';
-import FacultyManage from '../FacultyManage/FacultyManage';
-import Department from '../Department/Department';
-import Hall from '../Hall/Hall';
-import CoursesMange from '../courseMange/CoursesMange';
-import Lecture from '../Lecture/Lecture';
-import Enrollment from '../../components/Enrollment';
+
+// Lazy load all heavy components
+const Schedule = lazy(() => import('../../components/Schedule'));
+const FacultyManage = lazy(() => import('../FacultyManage/FacultyManage'));
+const Department = lazy(() => import('../Department/Department'));
+const Hall = lazy(() => import('../Hall/Hall'));
+const CoursesMange = lazy(() => import('../courseMange/CoursesMange'));
+const Lecture = lazy(() => import('../Lecture/Lecture'));
+const Enrollment = lazy(() => import('../../components/Enrollment'));
+const Courses = lazy(() => import('../../components/Courses'));
 
 function Dashboard() {
   const [activeTab, setActiveTab] = useState("overview");
@@ -80,122 +82,146 @@ function Dashboard() {
   }
 // console.log(user.groups);
 
+
   return (
 
-    <div className="dashboard-container">
+    <div className="flex min-h-screen flex-col md:flex-row">
       {/* <PlexusBackground /> */}
       {/* Sidebar */}
-      <aside className="dashboard-sidebar">
-        <nav className="sidebar-nav">
+      <aside className="
+      flex flex-col 
+    w-full h-auto relative top-0 left-0 
+    border-b border-[rgba(100,108,255,0.2)]
+    bg-[linear-gradient(180deg,#1e1e2e_0%,#282c4e_50%,#2d3748_100%)]
+    overflow-visible 
+    z-[1000]
+    shadow-[4px_0_20px_rgba(0,0,0,0.1)]
+    md:fixed md:h-screen md:w-[240px] md:border-b-0 md:border-r
+    lg:w-[280px]
+  
+      ">
+        <nav className="    flex flex-row
+    !w-full !order-2
+    !gap-[0.3rem] !p-[0.3rem]      
+    !overflow-x-auto !overflow-y-visible
+    !min-h-0
+    !mt-0
+    ![scrollbar-width:thin]
+    ![scrollbar-color:rgba(100,108,255,0.3)_transparent]
+    sm:!gap-[0.4rem] sm:!p-[0.4rem]   
+    md:flex-col md:overflow-y-auto md:overflow-x-hidden
+    md:!gap-[0.5rem] md:!p-2 md:!mt-12 md:!order-none
+    md:![scrollbar-width:none] ">
           {/* 2 طالب */}
           {/* 4 مدير القسم */}
           {/* 3 دكتور معيد */}
           {/* 6 مدير الجامعة */}
           {/* 5 مدير الكليه */}
 
-          <h3 style={{ margin: "20px" }}>لوحة التحكم</h3>
+          <h3 className='hidden md:block !m-3.5' >لوحة التحكم</h3>
           <button
-            className={`sidebar-tab ${activeTab === "overview" ? "active" : ""
+            className={`sidebar-tabs 
+              ${activeTab === "overview" ? "sidebar-active" : ""
               }`}
             onClick={() => setActiveTab("overview")}
           >
-            <span className="tab-icon">📊</span>
-            <span className="tab-text">نظرة عامة</span>
+            <span className="text-center text-[0.75rem] md:text-xl  min-w-5 ">📊</span>
+            <span className="md:text-lg font-medium text-xs ">نظرة عامة</span>
           </button>
                     {/* التسجيل الإكاديمي */}
           {(user.groups.includes(2) || user.groups.includes(6) || user.groups.includes(1)) && (
           <button
-            className={`sidebar-tab ${activeTab === "courses" ? "active" : ""}`}
+            className={`sidebar-tabs ${activeTab === "courses" ? 'sidebar-active' : ""}`}
             onClick={() => setActiveTab("courses")}
           >
-            <span className="tab-icon">📚</span>
-            <span className="tab-text">التسجيل الإكاديمي</span>
+            <span className="text-center text-[0.75rem] md:text-xl  min-w-5 ">📚</span>
+            <span className="md:text-lg font-medium text-xs ">التسجيل الإكاديمي</span>
           </button>
           )}
           {/* الجدول */}
           {(user.groups.includes(1) || user.groups.includes(2) || user.groups.includes(3) || user.groups.includes(6)) && (
           <button
-            className={`sidebar-tab ${activeTab === "schedule" ? "active" : ""
+            className={`sidebar-tabs ${activeTab === "schedule" ? 'sidebar-active' : ""
               }`}
             onClick={() => setActiveTab("schedule")}
           >
-            <span className="tab-icon">📅</span>
-            <span className="tab-text">الجدول</span>
+            <span className="text-center text-[0.75rem] md:text-xl  min-w-5 ">📅</span>
+            <span className="md:text-lg font-medium text-xs ">الجدول</span>
           </button>
           )}
           {/* جدول الأمتحانات */}
           {(user.groups.includes(2) || user.groups.includes(6) || user.groups.includes(1)) && (
           <button
-            className={`sidebar-tab ${activeTab === "progress" ? "active" : ""
+            className={`sidebar-tabs ${activeTab === "progress" ? 'sidebar-active' : ""
               }`}
             onClick={() => setActiveTab("progress")}
           >
-            <span className="tab-icon">📈</span>
-            <span className="tab-text">جدول الأمتحانات</span>
+            <span className="text-center text-[0.75rem] md:text-xl  min-w-5 ">📈</span>
+            <span className="md:text-lg font-medium text-xs ">جدول الأمتحانات</span>
           </button>
           )}
           {/* تسجيل طلاب */}
           {(user.groups.includes(6) || user.groups.includes(4) || user.groups.includes(5) || user.groups.includes(1)) && (
           <button
-            className={`sidebar-tab ${activeTab === "enroll" ? "active" : ""}`}
+            className={`sidebar-tabs ${activeTab === "enroll" ? 'sidebar-active' : ""}`}
             onClick={() => setActiveTab("enroll")}
           >
-            <span className="tab-icon">🧾</span>
-            <span className="tab-text">تسجيل الطلاب</span>
+            <span className="text-center text-[0.75rem] md:text-xl  min-w-5 ">🧾</span>
+            <span className="md:text-lg font-medium text-xs ">تسجيل الطلاب</span>
           </button>
           )}
           {/* الكليات */}
           {(user.groups.includes(6) || user.groups.includes(5) || user.groups.includes(1)) && (
           <button
-            className={`sidebar-tab ${activeTab === "facultyManagement" ? "active" : ""
+            className={`sidebar-tabs ${activeTab === "facultyManagement" ? 'sidebar-active' : ""
               }`}
             onClick={() => setActiveTab("facultyManagement")}
           >
-            <span className="tab-icon">🏫</span>
-            <span className="tab-text"> الكليات</span>
+            <span className="text-center text-[0.75rem] md:text-xl  min-w-5 ">🏫</span>
+            <span className="md:text-lg font-medium text-xs "> الكليات</span>
           </button>
           )}
           {/* الأقسام */}
           {(user.groups.includes(6) || user.groups.includes(5) || user.groups.includes(1)) && (
           <button
-            className={`sidebar-tab ${activeTab === "department" ? "active" : ""
+            className={`sidebar-tabs ${activeTab === "department" ? 'sidebar-active' : ""
               }`}
             onClick={() => setActiveTab("department")}
           >
-            <span className="tab-icon"> 🗂️ </span>
-            <span className="tab-text"> الأقسام</span>
+            <span className="text-center text-[0.75rem] md:text-xl  min-w-5 "> 🗂️ </span>
+            <span className="md:text-lg font-medium text-xs "> الأقسام</span>
           </button>
           )}
           {/* المقررات */}
           {(user.groups.includes(6) || user.groups.includes(5) || user.groups.includes(1)) && (
           <button
-            className={`sidebar-tab ${activeTab === "coursesMange" ? "active" : ""}`}
+            className={`sidebar-tabs ${activeTab === "coursesMange" ? 'sidebar-active' : ""}`}
             onClick={() => setActiveTab("coursesMange")}
           >
-            <span className="tab-icon">📝</span>
-            <span className="tab-text">المقررات</span>
+            <span className="text-center text-[0.75rem] md:text-xl  min-w-5 ">📝</span>
+            <span className="md:text-lg font-medium text-xs ">المقررات</span>
           </button>
           )}
            {/* المحاضرات */}
           {(user.groups.includes(6) || user.groups.includes(4) || user.groups.includes(5) || user.groups.includes(1)) &&  (
           <button
-            className={`sidebar-tab ${activeTab === "lecture" ? "active" : ""}`}
+            className={`sidebar-tabs ${activeTab === "lecture" ? 'sidebar-active' : ""}`}
             onClick={() => setActiveTab("lecture")}
           >
-            <span className="tab-icon">📝</span>
-            <span className="tab-text">المحاضرات</span>
+            <span className="text-center text-[0.75rem] md:text-xl  min-w-5 ">📝</span>
+            <span className="md:text-lg font-medium text-xs ">المحاضرات</span>
           </button>
           )}
           {/* القاعات */}
           {(user.groups.includes(6) || user.groups.includes(5) || user.groups.includes(1)) && (
           <button
-            className={`sidebar-tab ${
-              activeTab === "hall" ? "active" : ""
+            className={`sidebar-tabs ${
+              activeTab === "hall" ? 'sidebar-active' : ""
             }`}
             onClick={() => setActiveTab("hall")}
           >
-            <span className="tab-icon">🏛️</span>
-            <span className="tab-text"> القاعات</span>
+            <span className="text-center text-[0.75rem] md:text-xl  min-w-5 ">🏛️</span>
+            <span className="md:text-lg font-medium text-xs "> القاعات</span>
           </button>
           )}
 
@@ -212,24 +238,24 @@ function Dashboard() {
           {/* الحضور */}
           {user.groups.includes(6)|| user.groups.includes(3) || user.groups.includes(1) && (
           <button
-            className={`sidebar-tab ${activeTab === "attendance" ? "active" : ""}`}
-            style={{ display: 'none' }}
+            className={`sidebar-tabs ${activeTab === "attendance" ? 'sidebar-active' : ""}`}
+            style={{ display: '' }}
             onClick={() => {}}
           >
-            <span className="tab-icon">✅</span>
-            <span className="tab-text">الحضور</span>
+            <span className="text-center text-[0.75rem] md:text-xl  min-w-5 ">✅</span>
+            <span className="md:text-lg font-medium text-xs ">الحضور</span>
           </button>
           )}
         </nav>
-        <div className="sidebar-header">
+        <div className="!p-[2rem_1.5rem_1.5rem] !text-center md:!text-right">
           {/* Mobile-only header title; styled to show only on small screens in CSS */}
-          <h2 className="dashboard-title">لوحة التحكم</h2>
-          <div className="user-info">
+          <h2 className="md:hidden block  ">لوحة التحكم</h2>
+          <div className="md:text-xl md:font-bold">
             <span>مرحباً بك، {user?.first_name || "طالب"}!</span>
           </div>
         </div>
-        <div className="sidebar-footer">
-          <Link to="/profile" className="btn btn-secondary">
+        <div className="!p-6 hidden md:block  border-gray-500 border-t-2">
+          <Link to="/profile" className="btn-main !w-full !p-[0.75rem_1rem] text-center !block    ">
             الملف الشخصي
           </Link>
         </div>
@@ -301,48 +327,18 @@ function Dashboard() {
               
             </div>
           )}
- {activeTab === "enroll" && (
-            <div>
-              <Enrollment />
-            </div>
-          )}
-          {activeTab === "courses" && (
-            <div>
-              <Courses />
-            </div>
-          )}
-          {activeTab === "facultyManagement" && (
-            <div>
-              <FacultyManage />
-            </div>
-          )}
-          {activeTab === "coursesMange" && (
-            <div>
-              <CoursesMange />
-            </div>
-          )}
-          {activeTab === "schedule" && (
-            <div>
-              <Schedule />
-            </div>
-          )}
-          {activeTab === "department" && (
-            <div>
-              <Department />
-            </div>
-          )}
-          {activeTab === "hall" && (
-            <div>
-              <Hall />
-            </div>
-          )}
-          {activeTab === "lecture" && (
-            <div>
-              <Lecture />
-            </div>
-          )}
-          {/* Attendance panel removed: Access attendance from Schedule cards only */}
-
+  <Suspense fallback={<div className="p-6 text-center">
+    {/*should be loader */}
+    🔄 جاري التحميل...</div>}>
+            {activeTab === "enroll" && <Enrollment />}
+            {activeTab === "courses" && <Courses />}
+            {activeTab === "facultyManagement" && <FacultyManage />}
+            {activeTab === "coursesMange" && <CoursesMange />}
+            {activeTab === "schedule" && <Schedule />}
+            {activeTab === "department" && <Department />}
+            {activeTab === "hall" && <Hall />}
+            {activeTab === "lecture" && <Lecture />}
+          </Suspense>
           {activeTab === "progress" && (
             <div className="content-card progress-section-applying">
               <h2>التقدم الأكاديمي</h2>

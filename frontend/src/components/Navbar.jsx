@@ -1,22 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import "../styles/navbar.css";
 import psuLogo from "../assets/psu-logo.svg";
 
-function Navbar() {
+export default function Navbar() {
   const { isAuthenticated, logout, user } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    // Use hysteresis to prevent rapid toggling near the top edge
-    const SHOW_AT = 60; // px: add .scrolled when beyond this value
-    const HIDE_AT = 20; // px: remove .scrolled only when back above this value
+    const SHOW_AT = 60;
+    const HIDE_AT = 20;
     let ticking = false;
 
     const onScroll = () => {
-      const y = window.scrollY || document.documentElement.scrollTop || 0;
+      const y = window.scrollY || 0;
       if (ticking) return;
       ticking = true;
       window.requestAnimationFrame(() => {
@@ -29,172 +27,130 @@ function Navbar() {
       });
     };
 
-    onScroll(); // initialize in case page loads mid-scroll
+    onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-  };
-
-  const closeMenu = () => {
-    setIsMenuOpen(false);
-  };
+  const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+  const closeMenu = () => setIsMenuOpen(false);
 
   return (
-    <nav className={`navbar ${scrolled ? "scrolled" : ""}`}>
-      <div className="navbar-brand">
-        <Link to="/" className="navbar-logo" onClick={closeMenu}>
-          <img src={psuLogo} alt="جامعة بورسعيد" className="navbar-logo-img" />
-          <h4>جامعة بورسعيد</h4>
+    <nav
+      className={`!sticky !top-0 !z-50 !flex !items-center !justify-between !transition-all !duration-200 
+        ${scrolled
+          ? "!py-2 !px-6 !shadow-lg !bg-gradient-to-r !from-slate-900/75 !via-slate-800/85 !to-gray-800/95"
+          : "!py-1 md:py-6 !px-4 !shadow-md !bg-gradient-to-r !from-slate-900 !via-slate-800/95 !to-gray-800"
+        }`}
+    >
+            {/* Mobile Menu Button */}
+      <button
+        onClick={toggleMenu}
+        className="!flex !flex-col md:!hidden !p-2 !rounded hover:!bg-indigo-500/10 !transition"
+        aria-label="Toggle navigation menu"
+      >
+        <span
+          className={`!h-[3px] !w-6 !rounded !bg-white/90 !mb-1 !transition-transform !duration-300 
+            ${isMenuOpen ? "!rotate-45 !translate-y-[6px]" : ""}`}
+        />
+        <span
+          className={`!h-[3px] !w-6 !rounded !bg-white/90 !mb-1 !transition-opacity !duration-300 
+            ${isMenuOpen ? "!opacity-0" : ""}`}
+        />
+        <span
+          className={`!h-[3px] !w-6 !rounded !bg-white/90 !transition-transform !duration-300 
+            ${isMenuOpen ? "!-rotate-45 !-translate-y-[6px]" : ""}`}
+        />
+      </button>
+
+      {/* Brand */}
+      <div className="!flex !items-center">
+        <Link
+          to="/"
+          onClick={closeMenu}
+          className="!flex !items-center !p-0 !rounded-md !transition-all !duration-200  hover:!-translate-y-0.5"
+        >
+          <img
+            src={psuLogo}
+            alt="جامعة بورسعيد"
+            className={`!transition-all !duration-200 !drop-shadow-md
+              ${scrolled ? "!h-10" : "h-10 !md:h-14"} !w-auto !brightness-110 !contrast-110`}
+          />
+          <h4
+            className={` !font-cairo !font-semibold !text-white/90 !transition-all !duration-200
+              ${scrolled ? "!text-base" : "!md:text-lg"}`}
+          >
+            جامعة بورسعيد
+          </h4>
         </Link>
       </div>
 
-      <button
-        className={`navbar-toggle ${isMenuOpen ? "active" : ""}`}
-        onClick={toggleMenu}
-        aria-label="Toggle navigation menu"
+
+      {/* Center Menu */}
+      <div
+        className={`!flex !my-1 !flex-col !p-1.5 md:!flex-row md:!items-center md:!gap-8 !text-white/90 !font-cairo 
+        !bg-gradient-to-r !from-slate-800/90 !to-slate-900/80 md:!bg-transparent 
+        !rounded-2xl  md:!static !absolute !top-full !left-0 !right-0
+        md:!opacity-100 md:!visible !transition-all !duration-300 !backdrop-blur-lg
+        ${isMenuOpen ? "!opacity-100 !visible !translate-y-0" : "!opacity-0 !invisible !-translate-y-4"}
+        md:!translate-y-0 md:!flex`}
       >
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
-
-      <div className={`navbar-menu ${isMenuOpen ? "active" : ""}`}>
-        {!isAuthenticated ? (
-          // Public navigation
-          <>
-            <Link
-              to="/contact"
-              className="nav-link"
-              onClick={() => {
-                closeMenu();
-                window.scrollTo({ top: 0, behavior: "smooth" });
-              }}
-            >
-              اتصل بنا
-            </Link>
-
-            <Link
-              to="/help"
-              className="nav-link"
-              onClick={() => {
-                closeMenu();
-                window.scrollTo({ top: 0, behavior: "smooth" });
-              }}
-            >
-              مركز المساعدة
-            </Link>
-            <Link
-              to="/about"
-              className="nav-link"
-              onClick={() => {
-                closeMenu();
-                window.scrollTo({ top: 0, behavior: "smooth" });
-              }}
-            >
-              حول
-            </Link>
-            <Link
-              to="/features"
-              className="nav-link"
-              onClick={() => {
-                closeMenu();
-                window.scrollTo({ top: 0, behavior: "smooth" });
-              }}
-            >
-              المميزات
-            </Link>
-            <Link
-              to="/"
-              className="nav-link"
-              onClick={() => {
-                closeMenu();
-                window.scrollTo({ top: 0, behavior: "smooth" });
-              }}
-            >
-              الرئيسية
-            </Link>
-          </>
-        ) : (
-          // Authenticated navigation
-          <>
-            <Link
-              to="/logs"
-              className="nav-link"
-              onClick={() => {
-                closeMenu();
-                window.scrollTo({ top: 0, behavior: "smooth" });
-              }}
-            >
-              السجلات
-            </Link>
-            <Link
-              to="/dashboard"
-              className="nav-link"
-              onClick={() => {
-                closeMenu();
-                window.scrollTo({ top: 0, behavior: "smooth" });
-              }}
-            >
-              لوحة التحكم
-            </Link>
-            <Link
-              to="/"
-              className="nav-link"
-              onClick={() => {
-                closeMenu();
-                window.scrollTo({ top: 0, behavior: "smooth" });
-              }}
-            >
-              الصفحة الرئيسية
-            </Link>
-          </>
-        )}
+        {(isAuthenticated
+          ? [
+              { to: "/logs", label: "السجلات" },
+              { to: "/dashboard", label: "لوحة التحكم" },
+              { to: "/", label: "الصفحة الرئيسية" },
+            ]
+          : [
+              { to: "/", label: "الرئيسية" },
+              { to: "/features", label: "المميزات" },
+              { to: "/about", label: "حول" },
+              { to: "/help", label: "مركز المساعدة" },
+              { to: "/contact", label: "اتصل بنا" },
+            ]
+        ).map(link => (
+          <Link
+            key={link.to}
+            to={link.to}
+            onClick={() => {
+              closeMenu();
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            className="!px-4 !py-3 md:!py-2 md:!px-3 !text-center !text-lg md:!text-base 
+              !font-semibold !rounded-md !relative !transition-all !duration-200 
+              hover:!bg-indigo-500/10 hover:!text-white hover:!-translate-y-0.5 "
+          >
+            {link.label}
+          </Link>
+        ))}
       </div>
 
-      <div className="navbar-auth">
+      {/* Auth section */}
+      <div className="!flex !items-center !gap-4">
         {!isAuthenticated ? (
-          <>
-            <Link
-              to="/login"
-              className="btn btn-outline"
-              onClick={() => {
-                closeMenu();
-                window.scrollTo({ top: 0, behavior: "smooth" });
-              }}
-            >
-              تسجيل الدخول
-            </Link>
-            {/* <Link to="/register" className="btn btn-primary" onClick={closeMenu}>إنشاء حساب</Link> */}
-          </>
+          <Link
+            to="/login"
+            onClick={closeMenu}
+            className="!px-5 !py-2 !rounded-md !bg-slate-600 !text-white !font-semibold !shadow-md 
+              !transition-all !duration-200 hover:!bg-slate-500 hover:!-translate-y-0.5 !text-sm md:!text-base"
+          >
+            تسجيل الدخول
+          </Link>
         ) : (
-          <div className="user-section">
+          <div className="!flex !items-center !gap-3">
             <Link
               to="/profile"
-              className="profile-icon"
-              onClick={() => {
-                closeMenu();
-                window.scrollTo({ top: 0, behavior: "smooth" });
-              }}
+              onClick={closeMenu}
+              className="!flex !items-center !justify-center w-9 h-9 md:!w-10 md:!h-10 !rounded-full 
+                !bg-gradient-to-br !from-indigo-400/20 !to-indigo-500/20 !shadow-md 
+                hover:!scale-110 hover:!-translate-y-0.5 hover:!shadow-lg !transition-all !duration-200 "
             >
               {user?.picture ? (
-                (() => {
-                  const p = user.picture;
-                  const normalized = p.startsWith("http")
-                    ? p
-                    : p.startsWith("/")
-                    ? `http://localhost:8000${p}`
-                    : `http://localhost:8000/media/${p}`;
-                  return (
-                    <img
-                      className="profile-icon-img"
-                      alt="صورة الحساب"
-                      src={`${normalized}?t=${Date.now()}`}
-                    />
-                  );
-                })()
+                <img
+                  className="!w-full !h-full !rounded-full !object-cover"
+                  src={user.picture}
+                  alt="صورة الحساب"
+                />
               ) : (
                 <svg
                   width="24"
@@ -210,16 +166,13 @@ function Navbar() {
                 </svg>
               )}
             </Link>
-            {/* Icon-only logout across all sizes */}
             <button
-              className="logout-icon"
-              title="تسجيل الخروج"
-              aria-label="تسجيل الخروج"
               onClick={() => {
                 logout();
                 closeMenu();
-                window.scrollTo({ top: 0, behavior: "smooth" });
               }}
+              className="!flex cursor-pointer !items-center !justify-center w-8 h-8 md:!w-10 md:!h-10 !rounded-full !bg-white/10 !text-white 
+                !shadow-md hover:!bg-red-600/25 hover:!scale-110 hover:!-translate-y-0.5 hover:!shadow-lg !transition-all !duration-200"
             >
               <svg
                 width="20"
@@ -257,5 +210,3 @@ function Navbar() {
     </nav>
   );
 }
-
-export default Navbar;

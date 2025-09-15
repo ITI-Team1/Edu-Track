@@ -128,7 +128,7 @@ function Home() {
   return (
     <div className="home" dir="rtl">
       <section
-        className="hero-section hero-grid"
+        className="hero-section "
         aria-label="قسم المقدمة"
         style={{ backgroundImage: `url(${heroImg})` }}
       >
@@ -173,18 +173,20 @@ function Home() {
             ))}
           </div>
         </div>
-        <div className="hero-center">
-          <img src={uniLogo} alt="شعار الجامعة" className="hero-logo" />
-          <h1 className="hero-title typewriter">
+        <div className="px-4 pt-16 pb-12 max-w-[960px] mx-auto relative z-[1]">
+          <img src={uniLogo} alt="شعار الجامعة" className="!block !mx-auto !mb-4 !h-auto md:w-[260px] sm:w-[130px] w-[110px]" />
+          <h1 className="font-cairo !text-white !font-semibold !direction-rtl 
+           !mt-1 !mb-3 !text-[2.2rem] sm:!text-[3rem] lg:!text-[4rem]
+           ![text-shadow:0_2px_16px_rgba(0,0,0,0.35)]  whitespace-pre-wrap">
             {typedTitle}
             {/* <span className="cursor" aria-hidden="true">|</span> */}
           </h1>
-          <p className="hero-subtitle typewriter">{typedSubTitle}</p>
-          <div className="cta-buttons">
+          <p className="hero-subtitle !text-white whitespace-pre-wrap">{typedSubTitle}</p>
+          <div className="btn-main">
             {!isAuthenticated ? (
-              <Link to="/dashboard" className="hero-primary">ابدأ التعلّم</Link>
+              <Link to="/dashboard" className="">ابدأ التعلّم</Link>
             ) : (
-              <Link to="/dashboard" className="hero-primary">لوحة التحكم</Link>
+              <Link to="/dashboard" className="">لوحة التحكم</Link>
             )}
           </div>
           <p className="hero-note">
@@ -202,39 +204,61 @@ function Home() {
       </section>
 
       {/* Quick stats strip for extra visual appeal */}
-  <section ref={statsRef} className="stats-strip" aria-label="إحصائيات سريعة">
-        <div className="stat">
-          <span className="stat-icon">🎓</span>
-          <div className="stat-text">
-            <strong>+{stats.programs}</strong>
-            <span>برنامج أكاديمي</span>
+  <section ref={statsRef} className="grid !gap-4 !max-w-[1200px] !mx-auto !mt-6 !mb-8 !px-4
+           md:[grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]
+           md:!gap-3 md:!mt-4 md:!mb-6 
+           [grid-template-columns:repeat(2,1fr)]" aria-label="إحصائيات سريعة">
+        <div className="flex items-center !bg-[#2d3648] !text-white !rounded-[14px] 
+           md:!px-6 md:!py-[1.15rem] md:!gap-3 border border-[rgba(100,108,255,0.25)]
+           shadow-[0_8px_26px_rgba(0,0,0,0.28)]
+           sm:!px-[1.2rem] sm:!py-4 sm:!gap-2.5
+           !px-4 !py-3.5 !gap-2">
+          <span className="md:text-[1.8rem] sm:text-[1.6rem] text-[1.4rem];">🎓</span>
+          <div className="grid leading-[1.2] ">
+            <strong className='md:text-[1.35rem] font-extrabold sm:text-[1.2rem] text-[1.1rem]'>+{stats.programs}</strong>
+            <span className='md:text-[1rem] text-white/80 sm:text-[0.9rem] text-[0.8rem]'>برنامج أكاديمي</span>
           </div>
         </div>
-        <div className="stat">
-          <span className="stat-icon">👩‍🏫</span>
-          <div className="stat-text">
-            <strong>+{stats.staff}</strong>
-            <span>عضو هيئة تدريس</span>
+        <div className="flex items-center !bg-[#2d3648] !text-white !rounded-[14px] 
+           md:!px-6 md:!py-[1.15rem] md:!gap-3 border border-[rgba(100,108,255,0.25)]
+           shadow-[0_8px_26px_rgba(0,0,0,0.28)]
+           sm:!px-[1.2rem] sm:!py-4 sm:!gap-2.5
+           !px-4 !py-3.5 !gap-2">
+          <span className="md:text-[1.8rem] sm:text-[1.6rem] text-[1.4rem];">👩‍🏫</span>
+          <div className="grid leading-[1.2] ">
+            <strong className='md:text-[1.35rem] font-extrabold sm:text-[1.2rem] text-[1.1rem]'>+{stats.staff}</strong>
+            <span className='md:text-[1rem] text-white/80 sm:text-[0.9rem] text-[0.8rem]'>عضو هيئة تدريس</span>
           </div>
         </div>
-        <div className="stat">
-          <span className="stat-icon">🏛️</span>
-          <div className="stat-text">
-            <strong>+{stats.halls}</strong>
-            <span>قاعة ومحاضرة</span>
+        <div className="flex items-center !bg-[#2d3648] !text-white !rounded-[14px] 
+           md:!px-6 md:!py-[1.15rem] md:!gap-3 border border-[rgba(100,108,255,0.25)]
+           shadow-[0_8px_26px_rgba(0,0,0,0.28)]
+           sm:!px-[1.2rem] sm:!py-4 sm:!gap-2.5
+           !px-4 !py-3.5 !gap-2">
+          <span className="md:text-[1.8rem] sm:text-[1.6rem] text-[1.4rem];">🏛️</span>
+          <div className="grid leading-[1.2] ">
+            <strong className='md:text-[1.35rem] font-extrabold sm:text-[1.2rem] text-[1.1rem]'>+{stats.halls}</strong>
+            <span className='md:text-[1rem] text-white/80 sm:text-[0.9rem] text-[0.8rem]'>قاعة ومحاضرة</span>
           </div>
         </div>
-        <div className="stat">
-          <span className="stat-icon">📈</span>
-          <div className="stat-text">
-            <strong>{stats.realtime}%</strong>
-            <span>متابعة آنية</span>
+        <div className="flex items-center !bg-[#2d3648] !text-white !rounded-[14px] 
+           md:!px-6 md:!py-[1.15rem] md:!gap-3 border border-[rgba(100,108,255,0.25)]
+           shadow-[0_8px_26px_rgba(0,0,0,0.28)]
+           sm:!px-[1.2rem] sm:!py-4 sm:!gap-2.5
+           !px-4 !py-3.5 !gap-2">
+          <span className="md:text-[1.8rem] sm:text-[1.6rem] text-[1.4rem];">📈</span>
+          <div className="grid leading-[1.2] ">
+            <strong className='md:text-[1.35rem] font-extrabold sm:text-[1.2rem] text-[1.1rem]'>{stats.realtime}%</strong>
+            <span className='md:text-[1rem] text-white/80 sm:text-[0.9rem] text-[0.8rem]'>متابعة آنية</span>
           </div>
         </div>
       </section>
 
       {/* Feature tiles */}
-      <section className="feature-grid" aria-label="مزايا المنصة">
+      <section className="grid-cols-2 gap-3 !px-2 !mb-6 !sm:[grid-template-columns:repeat(auto-fit,minmax(300px,1fr))] 
+      !grid !md:[grid-template-columns:repeat(auto-fit,minmax(300px,1fr))]
+           !md:gap-6 md:max-w-[1200px] md:!mx-auto md:!mb-16 md:!px-4
+      " aria-label="مزايا المنصة">
         <article className="feature-card">
           <div className="feature-card-icon">📚</div>
           <h3>إدارة المقررات</h3>

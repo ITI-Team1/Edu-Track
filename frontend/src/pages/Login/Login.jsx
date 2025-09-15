@@ -50,19 +50,19 @@ function Login() {
   return (
     <div className="login-split-page">
       <PlexusBackground />
-      <div className="login-image-section">
+      <div className="login-image-section hover:translate-x-1  duration-300">
         <img
           src={image2}
           alt="Port Said University"
-          className="login-bg-image"
+          className="login-bg-image "
           decoding="async"
           loading="eager"
           fetchPriority="high"
         />
         <div className="university-logo"></div>
       </div>
-      <div className="login-form-section">
-        <div className="login-container">
+      <div className="login-form-section ">
+        <div className="login-container hover:-translate-x-1  duration-300">
           <h2>مرحباً بعودتك</h2>
           <p>سجل دخولك إلى حساب جامعة بورسعيد</p>
           

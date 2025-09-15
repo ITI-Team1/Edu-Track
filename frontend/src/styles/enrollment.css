@@ -153,20 +153,7 @@
     padding: 0;
   }
   
-  .form-group {
-    padding: 16px;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    box-shadow: var(--shadow);
-  }
-  
-  .form-group label {
-    display: block;
-    font-weight: 800;
-    color: var(--text);
-    margin-bottom: 10px;
-  }
-  
+ */
   /* Checkbox groups */
   .students-checkbox-group,
   .courses-checkbox-group {
@@ -411,10 +398,7 @@
   }
   
   /* Subtle card hover for form groups */
-  .form-group:hover {
-    border-color: rgba(59,130,246,.45);
-  }
-  
+
   /* Utility: visually hidden (if needed later) */
   .visually-hidden {
     position: absolute !important;

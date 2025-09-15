@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import './forgot-password.css';
 import PlexusBackground from '../../components/PlexusBackground';
 import api from '../../services/api';
+import { Link } from 'react-router-dom';
 
 function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -47,19 +48,19 @@ function ForgotPassword() {
   };
 
   return (
-    <div className="forgot-password-split-page">
+    <div className="auth-split-page">
       <PlexusBackground />
 
-      <div className="forgot-password-form-section">
-        <div className="forgot-password-container">
+      <div className="form-section">
+        <div className="form-container hover:-translate-y-1 duration-200 animate-slide-in-up">
           <h2>نسيت كلمة المرور</h2>
           <p>أدخل بريدك الإلكتروني لإرسال رابط إعادة تعيين كلمة المرور</p>
 
-          {error && <div className="forgot-password-error-message">{error}</div>}
-          {success && <div className="forgot-password-success-message">{success}</div>}
+          {error && <div className="error-message">{error}</div>}
+          {success && <div className="success-message">{success}</div>}
 
-          <form onSubmit={handleSubmit} className="forgot-password-form">
-            <div className="forgot-password-form-group">
+          <form onSubmit={handleSubmit} className="form">
+            <div className="form-group">
               <label htmlFor="email">البريد الإلكتروني</label>
               <input
                 type="email"
@@ -72,10 +73,15 @@ function ForgotPassword() {
               />
             </div>
 
-            <button type="submit" className="forgot-password-btn btn-primary" disabled={loading}>
+            <button type="submit" className="btn-main " disabled={loading}>
               {loading ? 'جاري الإرسال...' : 'إرسال رابط إعادة التعيين'}
             </button>
           </form>
+                    <div className="form-link">
+            <Link to="/login">العوده الي تسجيل الدخول</Link>
+            
+          </div>
+
         </div>
       </div>
     </div>
