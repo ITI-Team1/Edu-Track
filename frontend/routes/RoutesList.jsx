@@ -20,6 +20,7 @@ import Enrollment from "../src/components/Enrollment";
 import AttendancePage from "../src/pages/Attendance/Attendance";
 import JoinAttendance from "../src/pages/Attendance/JoinAttendance";
 import Activation from "../src/pages/Activation/Activation";
+import AttendanceSheet from "../src/pages/AttendanceSheet/AttendanceSheet";
 
 // Small helper to set the page title per route
 const Page = ({ title, children }) => {
@@ -108,6 +109,14 @@ const RoutesList = () => {
         element={
           <ProtectedRoute>
             <Page title="الحضور"><AttendancePage /></Page>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/attendance/sheet/:attendanceId"
+        element={
+          <ProtectedRoute>
+            <Page title="الحضور"><AttendanceSheet /></Page>
           </ProtectedRoute>
         }
       />

@@ -1,0 +1,201 @@
+/* Page base */
+.lecture-page {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    direction: rtl;
+    text-align: right;
+    min-height: 100vh;
+    font-family: 'Cairo', sans-serif;
+  }
+  
+  /* Header (mirror Hall’s page-header override) */
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+  }
+  .page-header h1 {
+    color: #2c5282;
+    font-size: 3rem;
+    margin: 0;
+    font-family: "Cairo", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  }
+  
+  /* Add button (mirror Hall’s standardized add button) */
+  .add-lecture-btn {
+    font-family: "Cairo", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif !important;
+    padding: 0.75rem 1.5rem !important;
+    background: linear-gradient(90deg, #3182ce 0%, #2c5282 100%) !important;
+    color: #fff !important;
+    border: none !important;
+    border-radius: 8px !important;
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: auto !important;
+    box-shadow: none !important;
+    transition: 0.3s ease-in-out !important;
+  }
+  .add-lecture-btn:hover {
+    transform: translateY(-1px) !important;
+    scale: 1.02 !important;
+    box-shadow: 0 4px 6px 0px rgba(0, 0, 0, 0.1) !important;
+  }
+  
+  /* Table wrapper (mirror Hall’s gradient card with top bar) */
+  .lecture-table-wrapper {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border: 1px solid rgba(100, 108, 255, 0.1);
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    padding: 2rem;
+    overflow-x: auto;
+    position: relative;
+  }
+  .lecture-table-wrapper::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #3182ce, #1a365d, #2c5aa0);
+  }
+  
+  /* Table */
+  .lecture-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Cairo', sans-serif;
+  }
+  .lecture-table th, .lecture-table td {
+    padding: 1rem 0.7rem;
+    text-align: center;
+    color: #4b5563;
+    font-size: 1rem;
+    border-bottom: 1px solid rgba(100, 108, 255, 0.1);
+  }
+  .lecture-table th {
+    font-weight: 700;
+    font-size: 1.1rem;
+  }
+  
+  /* Buttons (match FacultyManage: solid blue update, solid red delete) */
+  .btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+
+  .lecture-table .btn.update,
+  .lecture-modal .btn.update {
+    background: #3182ce;
+    color: #fff;
+  }
+  .lecture-table .btn.update:hover,
+  .lecture-modal .btn.update:hover {
+    transform: translateY(-1px);
+  }
+
+  .lecture-table .btn.delete,
+  .lecture-modal .btn.delete {
+    background: #e53e3e;
+    color: #fff;
+  }
+  .lecture-table .btn.delete:hover,
+  .lecture-modal .btn.delete:hover {
+    transform: translateY(-1px);
+  }
+  
+  .btn.cancel { background: #e5e7eb; color: #1f2937; }
+  
+  /* Modal (mirror Hall modal) */
+  .lecture-modal-bg {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-top: 80px;
+    padding-bottom: 80px;
+    overflow-y: auto;
+    z-index: 1000;
+  }
+  .lecture-modal {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border: 1px solid rgba(100, 108, 255, 0.1);
+    border-radius: 16px;
+    padding: 1.25rem; /* more compact */
+    min-width: 320px;
+    max-width: 480px;
+    max-height: calc(100vh - 220px);
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem; /* tighter spacing between fields */
+    position: relative;
+    color: #1f2937;
+    font-family: 'Cairo', sans-serif;
+  }
+  .lecture-modal h3 {
+    text-align: center;
+    color: #3182ce;
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem; /* smaller title */
+  }
+  .lecture-modal label {
+    font-size: 0.9rem; /* smaller labels */
+    margin-bottom: 0.1rem;
+    color: #374151;
+  }
+  .lecture-modal input,
+  .lecture-modal select {
+    width: 100%;
+    padding: 0.4rem; /* tighter input padding */
+    border-radius: 6px;
+    border: 1px solid rgba(100,108,255,0.3);
+    margin-top: 0.3rem;
+    background: #ffffff;
+    color: #1f2937;
+    font-size: 0.95rem; /* slightly smaller text */
+  }
+  .lecture-modal input:focus,
+  .lecture-modal select:focus {
+    outline: none;
+    border-color: #535bf2;
+  }
+  .lecture-modal .btn {
+    margin-top: 0.35rem;
+    width: 100%;
+    padding: 0.5rem 0.75rem; /* smaller button height */
+    font-size: 0.95rem;
+  }
+  .lecture-modal .close-btn {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #3182ce;
+    cursor: pointer;
+  }
+  /* time row: keep compact side-by-side on wide screens, stack on small */
+  .lecture-modal .time-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+  @media (max-width: 420px) {
+    .lecture-modal .time-row {
+      grid-template-columns: 1fr;
+    }
+  }

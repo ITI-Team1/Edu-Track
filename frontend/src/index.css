@@ -139,7 +139,7 @@ input::placeholder, textarea::placeholder {
   /*START Button Main */
 
   .btn-main {
-    @apply mt-5 px-7 !py-3 text-[0.95rem] font-semibold rounded-[10px] text-white cursor-pointer transition-all duration-300 ease-in-out relative overflow-hidden shadow-[0_4px_15px_rgba(49,130,206,0.3)];
+    @apply mt-5 px-7 py-3 text-[0.95rem] font-semibold rounded-[10px] text-white cursor-pointer transition-all duration-300 ease-in-out relative overflow-hidden shadow-[0_4px_15px_rgba(49,130,206,0.3)];
     background: linear-gradient(135deg, #3182ce 0%, #1a365d 100%);
     font-family: "Cairo", sans-serif;
   }
@@ -416,6 +416,7 @@ input::placeholder, textarea::placeholder {
 /* feature card */
 
 @layer components {
+
   .feature-card {
     @apply relative bg-white text-[#1a365d] rounded-2xl 
            md:!p-6 md:!pr-5 md:!pb-5 border border-[#e2e8f0]
