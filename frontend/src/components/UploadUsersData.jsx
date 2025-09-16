@@ -11,7 +11,7 @@ export default function UploadExcel() {
   const [status, setStatus] = useState("");
   const [statusType, setStatusType] = useState(null); // 'success' | 'error' | null
   const [uploading, setUploading] = useState(false);
-
+ 
   // Helper: Arabic text for common HTTP status
   const arabicStatus = (code, text = '') => {
     const map = {
