@@ -97,9 +97,9 @@ export default function Navbar() {
       >
         {(isAuthenticated
           ? [
-              { to: "/logs", label: "السجلات" },
-              { to: "/dashboard", label: "لوحة التحكم" },
-              { to: "/", label: "الصفحة الرئيسية" },
+            { to: "/", label: "الصفحة الرئيسية" },
+            { to: "/dashboard", label: "لوحة التحكم" },
+            { to: "/logs", label: "السجلات" },
             ]
           : [
               { to: "/", label: "الرئيسية" },

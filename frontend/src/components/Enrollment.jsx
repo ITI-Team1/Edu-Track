@@ -79,17 +79,17 @@ function Enrollment() {
   // Debug logging for user object structure
   useEffect(() => {
     if (user) {
-      console.log('=== ENROLLMENT COMPONENT v6.0 ===');
-      console.log('User object:', user);
-      console.log('User groups:', user.groups);
-      console.log('User faculty:', user.faculty);
-      console.log('User program:', user.program);
-      console.log('Extracted faculty ID:', userFacultyId);
-      console.log('Extracted program ID:', userProgramId);
-      console.log('Has faculty and program:', hasFacultyAndProgram);
-      console.log('Is superuser:', isSuperUser);
-      console.log('Username:', user.username);
-      console.log('Email:', user.email);
+      // console.log('=== ENROLLMENT COMPONENT v6.0 ===');
+      // console.log('User object:', user);
+      // console.log('User groups:', user.groups);
+      // console.log('User faculty:', user.faculty);
+      // console.log('User program:', user.program);
+      // console.log('Extracted faculty ID:', userFacultyId);
+      // console.log('Extracted program ID:', userProgramId);
+      // console.log('Has faculty and program:', hasFacultyAndProgram);
+      // console.log('Is superuser:', isSuperUser);
+      // console.log('Username:', user.username);
+      // console.log('Email:', user.email);
     }
   }, [user, userFacultyId, userProgramId, hasFacultyAndProgram, isSuperUser]);
 
@@ -97,21 +97,21 @@ function Enrollment() {
   useEffect(() => {
     if (!user || !faculties.length || !programs.length) return;
     
-    console.log('=== INITIALIZING FILTERS ===');
-    console.log('User faculty ID:', userFacultyId);
-    console.log('User program ID:', userProgramId);
-    console.log('Current filter faculty:', filterFaculty);
-    console.log('Current filter program:', filterProgram);
-    console.log('Is superuser:', isSuperUser);
+    // console.log('=== INITIALIZING FILTERS ===');
+    // console.log('User faculty ID:', userFacultyId);
+    // console.log('User program ID:', userProgramId);
+    // console.log('Current filter faculty:', filterFaculty);
+    // console.log('Current filter program:', filterProgram);
+    // console.log('Is superuser:', isSuperUser);
     
     // Only set filters if they haven't been set yet
     if (userFacultyId && !filterFaculty) {
-      console.log('Setting default faculty filter to:', userFacultyId);
+      // console.log('Setting default faculty filter to:', userFacultyId);
       setFilterFaculty(String(userFacultyId));
     }
     
     if (userProgramId && !filterProgram) {
-      console.log('Setting default program filter to:', userProgramId);
+      // console.log('Setting default program filter to:', userProgramId);
       setFilterProgram(String(userProgramId));
     }
   }, [user, userFacultyId, userProgramId, faculties.length, programs.length]); // Removed filterFaculty and filterProgram from deps
@@ -147,8 +147,8 @@ function Enrollment() {
   const { data: usersData, isLoading: usersLoading, error: usersError, refetch: refetchUsers } = useQuery({
     queryKey: ['students', filterLevel, debouncedName], // Removed userFacultyId and userProgramId from query key
     queryFn: () => {
-      console.log('=== REACT QUERY CALLING fetchStudents ===');
-      console.log('User passed to fetchStudents:', user);
+      // console.log('=== REACT QUERY CALLING fetchStudents ===');
+      // console.log('User passed to fetchStudents:', user);
       return fetchStudents(user, {
         level: filterLevel,
         name: debouncedName
@@ -163,10 +163,10 @@ function Enrollment() {
   // Debug the usersData
   useEffect(() => {
     if (usersData) {
-      console.log('=== USERS DATA RECEIVED ===');
-      console.log('usersData:', usersData);
-      console.log('usersData.results:', usersData.results);
-      console.log('usersData.results length:', usersData.results?.length);
+      // console.log('=== USERS DATA RECEIVED ===');
+      // console.log('usersData:', usersData);
+      // console.log('usersData.results:', usersData.results);
+      // console.log('usersData.results length:', usersData.results?.length);
     }
   }, [usersData]);
 
@@ -192,12 +192,12 @@ function Enrollment() {
   // Client-side filtered students based on selects and debounced name
   const filteredStudents = useMemo(() => {
     const src = usersData?.results || usersData || [];
-    console.log('=== CLIENT-SIDE FILTERING ===');
-    console.log('Total students from API:', src.length);
-    console.log('Filter faculty:', filterFaculty);
-    console.log('Filter program:', filterProgram);
-    console.log('Filter level:', filterLevel);
-    console.log('Filter name:', debouncedName);
+    // console.log('=== CLIENT-SIDE FILTERING ===');
+    // console.log('Total students from API:', src.length);
+    // console.log('Filter faculty:', filterFaculty);
+    // console.log('Filter program:', filterProgram);
+    // console.log('Filter level:', filterLevel);
+    // console.log('Filter name:', debouncedName);
     
     const filtered = (Array.isArray(src) ? src : []).filter(u => {
       const facOk = !filterFaculty || [u.faculty, u.faculty_id, u.faculty?.id].some(v => String(v) === String(filterFaculty));
@@ -207,13 +207,13 @@ function Enrollment() {
       const nameOk = !debouncedName || name.includes(debouncedName.toLowerCase());
       
       if (facOk && progOk && levelOk && nameOk) {
-        console.log('Student matches filters:', u.username, 'Faculty:', u.faculty?.id, 'Program:', u.program?.id);
+        // console.log('Student matches filters:', u.username, 'Faculty:', u.faculty?.id, 'Program:', u.program?.id);
       }
       
       return facOk && progOk && levelOk && nameOk;
     });
     
-    console.log('Filtered students count:', filtered.length);
+    // console.log('Filtered students count:', filtered.length);
     return filtered;
   }, [usersData, filterFaculty, filterProgram, filterLevel, debouncedName]);
 
@@ -318,9 +318,19 @@ function Enrollment() {
         list = list.filter((c) => courseProgramIds(c).some((pid) => programIdsForFaculty.includes(String(pid))));
       }
     }
+    
+    
     return list;
   }, [courses, programs, filterFaculty, filterProgram]);
-
+// get user groups using API localhost:8000/groups
+  useEffect(() => {
+    const getUserGroups = async () => {
+      const res = await fetch('http://localhost:8000/groups');
+      const data = await res.json();
+      console.log(data);
+    };
+    getUserGroups();
+  }, []);
   const combinedLoading = loading || usersLoading;
   const combinedError = error || usersError?.message;
 

@@ -6,7 +6,8 @@ import '../styles/schedule.css';
 import { fetchLectures } from '../services/lectureApi';
 import { fetchCourses } from '../services/courseApi';
 import { fetchLocations } from '../services/locationApi';
-import { fetchUsers } from '../services/userApi';
+import { fetchUserPermissions, fetchUsers } from '../services/userApi';
+import Spinner from './Spinner';
 
 function Schedule() {
   const { isAuthenticated, user } = useAuth();
@@ -29,6 +30,17 @@ function Schedule() {
       navigate('/');
     }
   }, [isAuthenticated, navigate]);
+
+
+  // get user permissions using fetchUserPermissions
+  const [permissions, setPermissions] = useState([]);
+  useEffect(() => {
+    fetchUserPermissions(user).then(permissions => {
+      setPermissions(permissions);
+      
+    });
+  }, [user]);
+
 
   // Load real data
   useEffect(() => {
@@ -249,7 +261,7 @@ function Schedule() {
   return (
     <div className="schedule-page">
         {loading && (
-          <div className="content-card" style={{ marginBottom: '12px' }}>جارٍ التحميل...</div>
+          <Spinner size="large" color="blue" />
         )}
         {!!error && (
           <div className="content-card" style={{ marginBottom: '12px', color: 'red' }}>خطأ: {error}</div>
@@ -313,6 +325,9 @@ function Schedule() {
                   <p><strong>القاعة:</strong> {class_.room}</p>
                   <span className="class-type">{class_.type}</span>
                 </div>
+               {/* check if the user has the permission to add student attendance */}
+                {
+                  permissions.includes('Can add student attendance') && (
                 <div className="class-actions">
                   <Link
                     to={`/attendance/${class_.id}`}
@@ -322,6 +337,8 @@ function Schedule() {
                     الحضور
                   </Link>
                 </div>
+                )
+                } 
               </div>
             ))}
           </div>

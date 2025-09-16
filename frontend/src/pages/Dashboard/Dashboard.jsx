@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import './dashboard.css';
 import Overview from '../Overview/Overview';
+import Spinner from '../../components/Spinner';
+import { fetchUserPermissions } from '../../services/userApi';
 
 // Lazy load all heavy components
 const Schedule = lazy(() => import('../../components/Schedule'));
@@ -19,10 +21,17 @@ function Dashboard() {
   const [activeTab, setActiveTab] = useState("overview");
   const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
-  
-  
+  const [permissions, setPermissions] = useState([]);
+  // get user permissions using fetchUserPermissions
 
 
+  useEffect(() => {
+    console.log(user);
+    fetchUserPermissions(user).then(permissions => {
+      
+      setPermissions(permissions);
+    });
+  }, [user]);
 
   // Ensure we scroll to the top whenever switching dashboard tabs
   useEffect(() => {
@@ -248,10 +257,11 @@ function Dashboard() {
           {activeTab === "overview" && (
            <Overview />
           )}
-  <Suspense fallback={<div className="p-6 text-center">
-    {/*should be loader */}
-    🔄 جاري التحميل...</div>}>
-            {activeTab === "enroll" && <Enrollment />}
+  <Suspense fallback={ <div className="flex flex-col !translate-y-1/2 !translate-x-1/2 !absolute !top-1/3 !left-1/2 " >
+            <Spinner size="large" color="blue" />
+            <div className="text-blue-500 font-bold">جارٍ التحميل...</div>
+          </div>}>
+            {activeTab === "enroll" && <Enrollment  />}
             {activeTab === "courses" && <Courses />}
             {activeTab === "facultyManagement" && <FacultyManage />}
             {activeTab === "coursesMange" && <CoursesMange />}

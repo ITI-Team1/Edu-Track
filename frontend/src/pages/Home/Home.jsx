@@ -182,7 +182,7 @@ function Home() {
             {/* <span className="cursor" aria-hidden="true">|</span> */}
           </h1>
           <p className="hero-subtitle !text-white whitespace-pre-wrap">{typedSubTitle}</p>
-          <div className="btn-main">
+          <div className="btn-main !py-2 !px-10 !w-fit !text-center !block !mx-auto">
             {!isAuthenticated ? (
               <Link to="/dashboard" className="">ابدأ التعلّم</Link>
             ) : (

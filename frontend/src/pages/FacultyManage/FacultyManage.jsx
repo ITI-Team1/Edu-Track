@@ -10,8 +10,13 @@ import {
 import "./FacultyManage.css";
 import Modal from "../../components/ui/Modal";
 import Button from "../../components/ui/Button";
+import { useAuth } from "../../context/AuthContext";
+import { fetchUserPermissions } from "../../services/userApi";
 
 const initialForm = { name: "", slug: "", logo: null, university: 1 };
+
+
+
 
 // Form validation function
 const validateForm = (form) => {
@@ -154,7 +159,7 @@ AddEditForm.propTypes = {
 
 // Memoized FacultyList component
 const FacultyList = memo(
-  ({ faculties, isLoading, isError, onAdd, onEdit, onDelete }) => {
+  ({ faculties, isLoading, isError, onAdd, onEdit, onDelete, permissions }) => {
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [facultyToDelete, setFacultyToDelete] = useState(null);
 
@@ -168,11 +173,11 @@ const FacultyList = memo(
       setShowDeleteModal(false);
       setFacultyToDelete(null);
     };
-
     return (
       <div className="faculty-list-container">
         <div className="header-actions">
           <h1>إدارة الكليات</h1>
+          {permissions.includes('Can add faculty') &&
           <Button onClick={onAdd} className="add-button">
             <span
               style={{
@@ -187,6 +192,7 @@ const FacultyList = memo(
               إضافة كلية
             </span>
           </Button>
+          }
         </div>
         {isLoading ? (
           <div className="loading">جاري التحميل...</div>
@@ -329,8 +335,23 @@ FacultyList.propTypes = {
   onDelete: PropTypes.func.isRequired,
 };
 
-const FacultyManage = () => {
+const FacultyManage = () => {  
   const queryClient = useQueryClient();
+  
+
+  // get user permissions using fetchUserPermissions
+  const { user } = useAuth();
+  
+  const [permissions, setPermissions] = useState([]);
+  useEffect(() => {
+    console.log(user);
+    fetchUserPermissions(user).then(permissions => {
+      
+      setPermissions(permissions);
+    });
+  }, [user]);
+
+
   const [formState, setFormState] = useState({
     form: initialForm,
     editSlug: null,
@@ -367,7 +388,7 @@ const FacultyManage = () => {
     isError,
   } = useQuery({
     queryKey: ["faculties"],
-    queryFn: fetchFaculties,
+    queryFn: fetchFaculties('engineering'),
   });
 
   const createMutation = useMutation({
@@ -533,7 +554,7 @@ const FacultyManage = () => {
       {formState.isOpen ? (
         <AddEditForm {...formProps} />
       ) : (
-        <FacultyList {...listProps} />
+        <FacultyList {...listProps} permissions={permissions} />
       )}
     </div>
   );
