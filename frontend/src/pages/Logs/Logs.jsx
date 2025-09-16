@@ -38,6 +38,50 @@ const safeDay = (v) => {
   return isNaN(d.getTime()) ? '' : d.toISOString().slice(0, 10);
 };
 
+// Build human readable details message from a log entry
+const parseChangeMessage = (msg) => {
+  if (!msg) return null;
+  try {
+    const trimmed = typeof msg === 'string' ? msg.trim() : msg;
+    if (typeof trimmed === 'string' && trimmed.startsWith('[')) {
+      const arr = JSON.parse(trimmed);
+      if (Array.isArray(arr) && arr.length > 0) {
+        const part = arr[0];
+        if (part && typeof part === 'object') {
+          if ('added' in part) return 'تمت الإضافة';
+          if ('deleted' in part) return 'تم الحذف';
+          if ('changed' in part && part.changed && Array.isArray(part.changed.fields)) {
+            return `غيّر الحقول: ${part.changed.fields.join(', ')}`;
+          }
+        }
+      }
+    }
+  } catch (_) {
+    // no-op, fall back to raw
+  }
+  return typeof msg === 'string' ? msg : null;
+};
+
+const formatActionDetails = (log) => {
+  const username = log?.user?.username || 'مستخدم';
+  const modelLabel = log?.content_type ? `${log.content_type.app_label}.${log.content_type.model}` : 'عنصر';
+  const objectRepr = log?.object_repr || '';
+  const changeSummary = parseChangeMessage(log?.change_message);
+
+  switch (log?.action_flag) {
+    case 1:
+      return `قام ${username} بإضافة ${modelLabel} '${objectRepr}'`;
+    case 2: {
+      const details = changeSummary ? ` - ${changeSummary}` : '';
+      return `قام ${username} بتعديل ${modelLabel} '${objectRepr}'${details}`;
+    }
+    case 3:
+      return `قام ${username} بحذف ${modelLabel} '${objectRepr}'`;
+    default:
+      return `قام ${username} بإجراء على ${modelLabel} '${objectRepr}'`;
+  }
+};
+
 // Reusable Components
 const StatCard = ({ icon, title, value, children, className = '' }) => (
   <div className={`stat-card light ${className}`}>
@@ -208,13 +252,14 @@ const LogsTable = ({ logs, loadMore, hasMore, loadingMore }) => {
       <div className="stat-title">السجلات</div>
       <div className="table-wrapper" ref={wrapperRef}>
         <table className="logs-table light modern">
-          <thead><tr><th>المستخدم</th><th>النموذج</th><th>الإجراء</th><th>آخر نشاط</th></tr></thead>
+          <thead><tr><th>المستخدم</th><th>النموذج</th><th>الإجراء</th><th>التفاصيل</th><th>آخر نشاط</th></tr></thead>
           <tbody>
             {logs.map((log) => (
               <tr key={log.id}>
                 <td><div className="user-cell"><div className="avatar">{getInitials(log.user?.username)}</div><div className="user-meta"><div className="name">{log.user?.username || 'N/A'}</div><div className="sub" title={log.object_repr}>{log.object_repr}</div></div></div></td>
                 <td><span className="mono">{log.content_type ? `${log.content_type.app_label}.${log.content_type.model}`: 'N/A'}</span></td>
                 <td><div className="action-cell">{getActionIcon(log.action_flag)}<span className={`logs-badge ${log.action_flag === 1 ? 'add' : log.action_flag === 2 ? 'edit' : 'delete'}`}>{getActionFlagLabel(log.action_flag)}</span></div></td>
+                <td><div className="details-cell">{formatActionDetails(log)}</div></td>
                 <td>{timeAgo(log.action_time)}</td>
               </tr>
             ))}

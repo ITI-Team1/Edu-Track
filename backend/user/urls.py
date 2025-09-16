@@ -7,4 +7,3 @@ urlpatterns = [
     
     path("upload-excel/", UploadExcelView.as_view(), name="upload-excel"),
 ]
-

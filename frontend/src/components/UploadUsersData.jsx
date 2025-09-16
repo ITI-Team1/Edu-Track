@@ -1,7 +1,9 @@
 // UploadUsersData.jsx
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
+import Spinner from "./Spinner";
 
 export default function UploadExcel() {
   const navigate = useNavigate();
@@ -91,21 +93,71 @@ export default function UploadExcel() {
       setStatus("فشل الرفع: " + ("خطأ في الشبكة أو الخادم"));
       setStatusType('error');
     } finally {
-      
-      
       setUploading(false);
     }
   };
 
+  // While uploading: block navigation (back/forward) and page unload, and trap interactions with an overlay
+  useEffect(() => {
+    if (!uploading) return;
+    const beforeUnload = (e) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', beforeUnload);
+
+    // Block SPA back navigation
+    const onPopState = (_) => {
+      if (uploading) {
+        // push back into the current URL
+        window.history.pushState(null, '', window.location.href);
+      }
+    };
+    // push a new state to trap the back button
+    window.history.pushState(null, '', window.location.href);
+    window.addEventListener('popstate', onPopState);
+
+    return () => {
+      window.removeEventListener('beforeunload', beforeUnload);
+      window.removeEventListener('popstate', onPopState);
+    };
+  }, [uploading]);
+
   return (
-    <div className="enroll-upload">
+    <div className="enroll-upload" aria-busy={uploading}>
+      {uploading && createPortal(
+        <div
+          className="upload-overlay"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(15, 23, 42, 0.6)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 999999, // ensure above Navbar
+            backdropFilter: 'blur(1px)'
+          }}
+          aria-live="polite"
+          aria-label="يتم رفع الملف، الرجاء الانتظار"
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+            <Spinner size="large" color="white" />
+            <div style={{ color: '#fff', fontWeight: 600 }}>جارٍ رفع الملف...</div>
+          </div>
+        </div>,
+        document.body
+      )}
       <div
         className="enroll-upload__drop"
         onDragOver={prevent}
         onDragEnter={prevent}
         onDrop={handleDrop}
       >
-        <input id="excel-input" type="file" accept=".xlsx,.xls,.csv" onChange={handleFileChange} hidden />
+        <input id="excel-input" type="file" accept=".xlsx,.xls,.csv" onChange={handleFileChange} hidden disabled={uploading} />
         <label htmlFor="excel-input" className="btn btn-primary-outline">
           اختر ملف Excel
         </label>

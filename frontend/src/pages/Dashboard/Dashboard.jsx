@@ -36,7 +36,28 @@ function Dashboard() {
     }
   }, [isAuthenticated, navigate]);
 
-  // Removed unused mock data
+  // Helper function to check if user has a specific group
+  const hasGroup = (groupId) => {
+    if (!user?.groups) return false;
+    return user.groups.some(group => {
+      const id = typeof group === 'object' ? group.id : group;
+      return id === groupId;
+    });
+  };
+
+  // Helper function to check if user has any of the specified groups
+  const hasAnyGroup = (groupIds) => {
+    return groupIds.some(groupId => hasGroup(groupId));
+  };
+
+  // Debug logging
+  useEffect(() => {
+    if (user) {
+      console.log('Dashboard - User groups:', user.groups);
+      console.log('Dashboard - User is superuser:', user.is_superuser);
+      console.log('Dashboard - User is staff:', user.is_staff);
+    }
+  }, [user]);
 
   if (!isAuthenticated) {
     return null; // Don't render anything while redirecting
@@ -89,8 +110,9 @@ function Dashboard() {
             <span className="text-center text-[0.75rem] md:text-xl  min-w-5 ">📊</span>
             <span className="md:text-lg font-medium text-xs ">نظرة عامة</span>
           </button>
-                    {/* التسجيل الإكاديمي */}
-          {(user.groups.includes(2) || user.groups.includes(6) || user.groups.includes(1)) && (
+          
+          {/* التسجيل الإكاديمي - Students, University President, System Manager */}
+          {hasAnyGroup([2, 6, 1]) && (
           <button
             className={`sidebar-tabs ${activeTab === "courses" ? 'sidebar-active' : ""}`}
             onClick={() => setActiveTab("courses")}
@@ -99,8 +121,9 @@ function Dashboard() {
             <span className="md:text-lg font-medium text-xs ">التسجيل الإكاديمي</span>
           </button>
           )}
-          {/* الجدول */}
-          {(user.groups.includes(1) || user.groups.includes(2) || user.groups.includes(3) || user.groups.includes(6)) && (
+          
+          {/* الجدول - System Manager, Students, Doctors, University President */}
+          {hasAnyGroup([1, 2, 3, 6]) && (
           <button
             className={`sidebar-tabs ${activeTab === "schedule" ? 'sidebar-active' : ""
               }`}
@@ -110,8 +133,9 @@ function Dashboard() {
             <span className="md:text-lg font-medium text-xs ">الجدول</span>
           </button>
           )}
-          {/* جدول الأمتحانات */}
-          {(user.groups.includes(2) || user.groups.includes(6) || user.groups.includes(1)) && (
+          
+          {/* جدول الأمتحانات - Students, University President, System Manager */}
+          {hasAnyGroup([2, 6, 1]) && (
           <button
             className={`sidebar-tabs ${activeTab === "progress" ? 'sidebar-active' : ""
               }`}
@@ -121,8 +145,9 @@ function Dashboard() {
             <span className="md:text-lg font-medium text-xs ">جدول الأمتحانات</span>
           </button>
           )}
-          {/* تسجيل طلاب */}
-          {(user.groups.includes(6) || user.groups.includes(4) || user.groups.includes(5) || user.groups.includes(1)) && (
+          
+          {/* تسجيل طلاب - University President, Department Manager, Faculty Manager, System Manager */}
+          {hasAnyGroup([6, 4, 5, 1]) && (
           <button
             className={`sidebar-tabs ${activeTab === "enroll" ? 'sidebar-active' : ""}`}
             onClick={() => setActiveTab("enroll")}
@@ -131,8 +156,9 @@ function Dashboard() {
             <span className="md:text-lg font-medium text-xs ">تسجيل الطلاب</span>
           </button>
           )}
-          {/* الكليات */}
-          {(user.groups.includes(6) || user.groups.includes(5) || user.groups.includes(1)) && (
+          
+          {/* الكليات - University President, Faculty Manager, System Manager */}
+          {hasAnyGroup([6, 5, 1]) && (
           <button
             className={`sidebar-tabs ${activeTab === "facultyManagement" ? 'sidebar-active' : ""
               }`}
@@ -142,8 +168,9 @@ function Dashboard() {
             <span className="md:text-lg font-medium text-xs "> الكليات</span>
           </button>
           )}
-          {/* الأقسام */}
-          {(user.groups.includes(6) || user.groups.includes(5) || user.groups.includes(1)) && (
+          
+          {/* الأقسام - University President, Faculty Manager, System Manager */}
+          {hasAnyGroup([6, 5, 1]) && (
           <button
             className={`sidebar-tabs ${activeTab === "department" ? 'sidebar-active' : ""
               }`}
@@ -153,8 +180,9 @@ function Dashboard() {
             <span className="md:text-lg font-medium text-xs "> الأقسام</span>
           </button>
           )}
-          {/* المقررات */}
-          {(user.groups.includes(6) || user.groups.includes(5) || user.groups.includes(1)) && (
+          
+          {/* المقررات - University President, Faculty Manager, System Manager */}
+          {hasAnyGroup([6, 5, 1]) && (
           <button
             className={`sidebar-tabs ${activeTab === "coursesMange" ? 'sidebar-active' : ""}`}
             onClick={() => setActiveTab("coursesMange")}
@@ -163,8 +191,9 @@ function Dashboard() {
             <span className="md:text-lg font-medium text-xs ">المقررات</span>
           </button>
           )}
-           {/* المحاضرات */}
-          {(user.groups.includes(6) || user.groups.includes(4) || user.groups.includes(5) || user.groups.includes(1)) &&  (
+          
+          {/* المحاضرات - University President, Department Manager, Faculty Manager, System Manager */}
+          {hasAnyGroup([6, 4, 5, 1]) && (
           <button
             className={`sidebar-tabs ${activeTab === "lecture" ? 'sidebar-active' : ""}`}
             onClick={() => setActiveTab("lecture")}
@@ -173,8 +202,9 @@ function Dashboard() {
             <span className="md:text-lg font-medium text-xs ">المحاضرات</span>
           </button>
           )}
-          {/* القاعات */}
-          {(user.groups.includes(6) || user.groups.includes(5) || user.groups.includes(1)) && (
+          
+          {/* القاعات - University President, Faculty Manager, System Manager */}
+          {hasAnyGroup([6, 5, 1]) && (
           <button
             className={`sidebar-tabs ${
               activeTab === "hall" ? 'sidebar-active' : ""
@@ -186,18 +216,8 @@ function Dashboard() {
           </button>
           )}
 
-     
-          
-
-
-          
-
-
-        
-
-          
-          {/* الحضور */}
-          {user.groups.includes(6)|| user.groups.includes(3) || user.groups.includes(1) && (
+          {/* الحضور - University President, Doctors, System Manager */}
+          {hasAnyGroup([6, 3, 1]) && (
           <button
             className={`sidebar-tabs ${activeTab === "attendance-records" ? 'sidebar-active' : ""}`}
             style={{ display: '' }}
@@ -223,7 +243,6 @@ function Dashboard() {
       </aside>
 
       {/* Main Content */}
-
       <main className="dashboard-main">
         <div className="dashboard-content">
           {activeTab === "overview" && (
