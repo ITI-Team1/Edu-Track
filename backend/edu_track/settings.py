@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     'course.apps.CourseConfig',
     'lecture.apps.LectureConfig',
     'attendance.apps.AttendanceConfig',
+    'survey.apps.SurveyConfig',
     'django_extensions'
 ]
 
