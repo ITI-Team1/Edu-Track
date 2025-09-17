@@ -200,44 +200,45 @@ const FacultyList = memo(
           <div className="error">حدث خطأ في تحميل البيانات</div>
         ) : (
           <div className="faculty-grid">
-            {faculties?.map((faculty) => (
-              <div key={faculty.slug} className="faculty-card content-card">
-                {faculty.logo && (
-                  <div className="faculty-logo">
-                    <img src={faculty.logo} alt={faculty.name} />
-                  </div>
-                )}
-                <div className="faculty-info">
-                  <h3>{faculty.name}</h3>
-                  <p>{faculty.slug}</p>
-                </div>
-                <div className="faculty-actions">
-                  <Button onClick={() => onEdit(faculty)} className="edit-button">
-                    تعديل
-                  </Button>
-                  <Button
-                    onClick={() => openDeleteModal(faculty)}
-                    className="btn delete"
-                    variant="delete"
-                  >
-                    <span
-                      style={{ verticalAlign: "middle", marginRight: "4px" }}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="18"
-                        height="18"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M3 6h18v2H3V6zm2 3h14v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V9zm5 2v7h2v-7h-2zm-4 0v7h2v-7H6zm8 0v7h2v-7h-2z" />
-                      </svg>
-                    </span>
-                    حذف
-                  </Button>
-                </div>
-              </div>
-            ))}
+        {(Array.isArray(faculties) ? faculties : [faculties])?.map((faculty) => (
+  <div key={faculty.slug} className="faculty-card content-card">
+    {faculty.logo && (
+      <div className="faculty-logo">
+        <img src={faculty.logo} alt={faculty.name} />
+      </div>
+    )}
+    <div className="faculty-info">
+      <h3>{faculty.name}</h3>
+      <p>{faculty.slug}</p>
+    </div>
+    <div className="faculty-actions">
+      <Button onClick={() => onEdit(faculty)} className="edit-button">
+        تعديل
+      </Button>
+      <Button
+        onClick={() => openDeleteModal(faculty)}
+        className="btn delete"
+        variant="delete"
+      >
+        <span
+          style={{ verticalAlign: "middle", marginRight: "4px" }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="18"
+            height="18"
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M3 6h18v2H3V6zm2 3h14v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V9zm5 2v7h2v-7h-2zm-4 0v7h2v-7H6zm8 0v7h2v-7h-2z" />
+          </svg>
+        </span>
+        حذف
+      </Button>
+    </div>
+  </div>
+))}
+
           </div>
         )}
         {/* Custom Delete Confirmation Modal */}
@@ -335,23 +336,10 @@ FacultyList.propTypes = {
   onDelete: PropTypes.func.isRequired,
 };
 
-const FacultyManage = () => {  
-  const queryClient = useQueryClient();
-  
-
-  // get user permissions using fetchUserPermissions
+const FacultyManage = ({permissions, facultiesData}) => {  
   const { user } = useAuth();
-  
-  const [permissions, setPermissions] = useState([]);
-  useEffect(() => {
-    console.log(user);
-    fetchUserPermissions(user).then(permissions => {
-      
-      setPermissions(permissions);
-    });
-  }, [user]);
-
-
+  const queryClient = useQueryClient();
+  // console.log(permissions);
   const [formState, setFormState] = useState({
     form: initialForm,
     editSlug: null,
@@ -382,13 +370,25 @@ const FacultyManage = () => {
     };
   }, [formState.isClosing]);
 
+  
+  
+
+let facultySlug='' ;
+if (user.faculty) {
+  facultySlug = facultiesData.find(faculty => faculty.id === user.faculty).slug;
+  console.log(facultySlug);
+}
+console.log(facultySlug);
   const {
     data: faculties,
     isLoading,
     isError,
   } = useQuery({
-    queryKey: ["faculties"],
-    queryFn: fetchFaculties('engineering'),
+    queryKey: ["faculties", facultySlug], // <--- include slug in key
+    queryFn: ({ queryKey }) => {
+      const [, slug] = queryKey; // destructure the slug
+      return fetchFaculties(slug); // pass it to the function
+    },
   });
 
   const createMutation = useMutation({

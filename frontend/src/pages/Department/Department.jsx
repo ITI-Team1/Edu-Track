@@ -9,8 +9,10 @@ import {
 import { fetchFaculties } from "../../services/facultyApi";
 import Modal from "../../components/ui/Modal";
 import Button from "../../components/ui/Button";
+import { useAuth } from "../../context/AuthContext";
 
-export default function Department() {
+export default function Department({permissions, facultiesData}) {
+  const { user } = useAuth();
   const [departments, setDepartments] = useState([]);
   const [faculties, setFaculties] = useState([]);
   const [facultiesLoaded, setFacultiesLoaded] = useState(false);

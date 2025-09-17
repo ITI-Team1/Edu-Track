@@ -5,6 +5,7 @@ import './dashboard.css';
 import Overview from '../Overview/Overview';
 import Spinner from '../../components/Spinner';
 import { fetchUserPermissions } from '../../services/userApi';
+import { fetchFaculties } from '../../services/facultyApi';
 
 // Lazy load all heavy components
 const Schedule = lazy(() => import('../../components/Schedule'));
@@ -24,14 +25,26 @@ function Dashboard() {
   const [permissions, setPermissions] = useState([]);
   // get user permissions using fetchUserPermissions
 
-
+  const [facultiesData, setFacultiesData] = useState([]);
   useEffect(() => {
     console.log(user);
     fetchUserPermissions(user).then(permissions => {
       
       setPermissions(permissions);
     });
+    fetchFaculties('').then(facultyData => {
+      if (Array.isArray(facultyData)) {
+        setFacultiesData(
+          facultyData
+        );
+      } else {
+        console.error("Expected array but got:", facultyData);
+        setFacultiesData([]);
+      }
+    });
+    
   }, [user]);
+console.log(permissions);
 
   // Ensure we scroll to the top whenever switching dashboard tabs
   useEffect(() => {
@@ -261,15 +274,15 @@ function Dashboard() {
             <Spinner size="large" color="blue" />
             <div className="text-blue-500 font-bold">جارٍ التحميل...</div>
           </div>}>
-            {activeTab === "enroll" && <Enrollment  />}
-            {activeTab === "courses" && <Courses />}
-            {activeTab === "facultyManagement" && <FacultyManage />}
-            {activeTab === "coursesMange" && <CoursesMange />}
-            {activeTab === "schedule" && <Schedule />}
-            {activeTab === "department" && <Department />}
-            {activeTab === "hall" && <Hall />}
-            {activeTab === "lecture" && <Lecture />}
-            {activeTab === "attendance-records" && <AttendanceRecords />}
+            {activeTab === "enroll" && <Enrollment  permissions={permissions} facultiesData={facultiesData} />}
+            {activeTab === "courses" && <Courses  permissions={permissions} facultiesData={facultiesData} />}
+            {activeTab === "facultyManagement" && <FacultyManage  permissions={permissions} facultiesData={facultiesData} />}
+            {activeTab === "coursesMange" && <CoursesMange  permissions={permissions} facultiesData={facultiesData} />}
+            {activeTab === "schedule" && <Schedule  permissions={permissions} facultiesData={facultiesData} />}
+            {activeTab === "department" && <Department  permissions={permissions} facultiesData={facultiesData} />}
+            {activeTab === "hall" && <Hall  permissions={permissions} facultiesData={facultiesData} />}
+            {activeTab === "lecture" && <Lecture  permissions={permissions} facultiesData={facultiesData    } />}
+            {activeTab === "attendance-records" && <AttendanceRecords  permissions={permissions} facultiesData={facultiesData} />}
           </Suspense>
           {activeTab === "progress" && (
             <div className="content-card progress-section-applying">

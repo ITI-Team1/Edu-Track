@@ -1,7 +1,7 @@
 import api from './api';
 
-export const fetchFaculties = async (universitySlug) => {
-  const url = universitySlug ? `${api.baseURL}/faculty/?university__slug=${universitySlug}` : `${api.baseURL}/faculty/`;
+export const fetchFaculties = async (facultySlug) => {
+  const url = facultySlug ? `${api.baseURL}/faculty/${facultySlug}` : `${api.baseURL}/faculty/`;
   const res = await fetch(url, {
     headers: api.getAuthHeaders(),
   });
