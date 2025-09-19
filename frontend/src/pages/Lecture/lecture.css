@@ -1,13 +1,66 @@
 /* Page base */
 .lecture-page {
-    padding: 2rem;
-    max-width: 1200px;
-    margin: 0 auto;
-    direction: rtl;
-    text-align: right;
-    min-height: 100vh;
-    font-family: 'Cairo', sans-serif;
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  direction: rtl;
+  text-align: right;
+  min-height: 100vh;
+  font-family: 'Cairo', sans-serif;
+}
+
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .lecture-page { padding: 1rem; }
+  .page-header { flex-direction: column; gap: 0.75rem; text-align: center; }
+  .page-header h1 { font-size: 1.8rem; }
+  .lecture-table-wrapper { padding: 1rem; }
+  .lecture-table th,
+  .lecture-table td { padding: 0.6rem 0.4rem; font-size: 0.95rem; }
+}
+
+@media (max-width: 480px) {
+  .page-header h1 { font-size: 1.5rem; }
+  .lecture-table th,
+  .lecture-table td { font-size: 0.9rem; }
+}
+
+/* Mobile card layout: show all data without horizontal scroll */
+@media (max-width: 640px) {
+  .lecture-table-wrapper { overflow: visible; }
+  .lecture-table,
+  .lecture-table thead,
+  .lecture-table tbody,
+  .lecture-table th,
+  .lecture-table td,
+  .lecture-table tr {
+    display: block;
+    width: 100%;
   }
+  .lecture-table thead { display: none; }
+  .lecture-table tr {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    padding: 10px 12px;
+  }
+  .lecture-table td {
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+  }
+  .lecture-table td:last-child { border-bottom: 0; }
+  .lecture-table td::before {
+    content: attr(data-label);
+    font-weight: 700;
+    color: #1e3a8a;
+  }
+}
   
   /* Header (mirror Hall’s page-header override) */
   .page-header {
@@ -82,38 +135,7 @@
     font-size: 1.1rem;
   }
   
-  /* Buttons (match FacultyManage: solid blue update, solid red delete) */
-  .btn {
-    padding: 0.5rem 1rem;
-    font-size: 0.875rem;
-    font-weight: 600;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: transform 0.2s;
-  }
-
-  .lecture-table .btn.update,
-  .lecture-modal .btn.update {
-    background: #3182ce;
-    color: #fff;
-  }
-  .lecture-table .btn.update:hover,
-  .lecture-modal .btn.update:hover {
-    transform: translateY(-1px);
-  }
-
-  .lecture-table .btn.delete,
-  .lecture-modal .btn.delete {
-    background: #e53e3e;
-    color: #fff;
-  }
-  .lecture-table .btn.delete:hover,
-  .lecture-modal .btn.delete:hover {
-    transform: translateY(-1px);
-  }
-  
-  .btn.cancel { background: #e5e7eb; color: #1f2937; }
+  /* Buttons are standardized globally in src/styles/global.css */
   
   /* Modal (mirror Hall modal) */
   .lecture-modal-bg {

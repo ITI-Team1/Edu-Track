@@ -9,6 +9,59 @@
     font-family: 'Cairo', sans-serif;
   }
   
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .courses-mange-page { padding: 1rem; }
+    .page-header { flex-direction: column; gap: 0.75rem; text-align: center; }
+    .page-header h1 { font-size: 1.8rem; }
+    .courses-mange-table-wrapper { padding: 1rem; }
+    .courses-mange-table th,
+    .courses-mange-table td { padding: 0.6rem 0.4rem; font-size: 0.95rem; }
+  }
+
+  @media (max-width: 480px) {
+    .page-header h1 { font-size: 1.5rem; }
+    .courses-mange-add-btn { width: 100%; }
+    .courses-mange-table th,
+    .courses-mange-table td { font-size: 0.9rem; }
+  }
+
+  /* Mobile card layout: show all data without horizontal scroll */
+  @media (max-width: 640px) {
+    .courses-mange-table-wrapper { overflow: visible; }
+    .courses-mange-table,
+    .courses-mange-table thead,
+    .courses-mange-table tbody,
+    .courses-mange-table th,
+    .courses-mange-table td,
+    .courses-mange-table tr {
+      display: block;
+      width: 100%;
+    }
+    .courses-mange-table thead { display: none; }
+    .courses-mange-table tr {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      margin-bottom: 12px;
+      padding: 10px 12px;
+    }
+    .courses-mange-table td {
+      border-bottom: 1px solid #f1f5f9;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 0;
+    }
+    .courses-mange-table td:last-child { border-bottom: 0; }
+    .courses-mange-table td::before {
+      content: attr(data-label);
+      font-weight: 700;
+      color: #1e3a8a;
+    }
+  }
+  
   /* Header */
   .courses-mange-header {
     color: #1f2937;
@@ -35,7 +88,7 @@
   /* Add button (mirror Hall’s standardized add button) */
   .courses-mange-add-btn {
     font-family: "Cairo", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif !important;
-    padding: 0.75rem 1.5rem !important;
+    padding: 1.9rem 1.5rem !important;
     background: linear-gradient(90deg, #3182ce 0%, #2c5282 100%) !important;
     color: #fff !important;
     border: none !important;
@@ -92,35 +145,8 @@
     font-size: 1.1rem;
   }
   
-  /* Buttons (match FacultyManage: solid blue update, solid red delete) */
-  .btn {
-    padding: 0.5rem 1rem;
-    font-size: 0.875rem;
-    font-weight: 600;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: transform 0.2s;
-  }
-  .courses-mange-table .btn.update,
-  .courses-mange-modal .btn.update {
-    background: #3182ce;
-    color: #fff;
-  }
-  .courses-mange-table .btn.update:hover,
-  .courses-mange-modal .btn.update:hover {
-    transform: translateY(-1px);
-  }
-  .courses-mange-table .btn.delete,
-  .courses-mange-modal .btn.delete {
-    background: #e53e3e;
-    color: #fff;
-  }
-  .courses-mange-table .btn.delete:hover,
-  .courses-mange-modal .btn.delete:hover {
-    transform: translateY(-1px);
-  }
-  .btn.cancel { background: #e5e7eb; color: #1f2937; }
+  /* Buttons are standardized globally in src/styles/global.css */
+  /* Keep only container-specific adjustments below */
   
   /* Modal (mirror Hall modal) */
   .courses-mange-modal-bg {

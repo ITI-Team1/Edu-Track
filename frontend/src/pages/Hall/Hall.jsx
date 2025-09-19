@@ -312,11 +312,11 @@ export default function Hall() {
             <tbody>
               {halls.map((hall) => (
                 <tr key={hall.slug} className="hall-row">
-                  <td>{hall.name}</td>
-                  <td>{getFacultyNames(hall).join(', ')}</td>
-                  <td>{hall.slug}</td>
-                  <td>{hall.capacity}</td>
-                  <td>
+                  <td data-label="اسم القاعة">{hall.name}</td>
+                  <td data-label="اسم الكلية">{getFacultyNames(hall).join(', ')}</td>
+                  <td data-label="Slug">{hall.slug}</td>
+                  <td data-label="مساحة القاعة">{hall.capacity}</td>
+                  <td data-label="تعديل">
                     <Button
                       className="btn update"
                       variant="update"
@@ -325,15 +325,13 @@ export default function Hall() {
                       تعديل{" "}
                     </Button>
                   </td>
-                  <td>
+                  <td data-label="حذف">
                     <Button
                       className="btn delete"
                       variant="delete"
                       onClick={() => openDeleteModal(hall)}
                     >
-                      <span
-                        style={{ verticalAlign: "middle", marginRight: "4px" }}
-                      >
+                      <span className="btn-icon-left" aria-hidden="true">
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           width="18"
@@ -494,7 +492,7 @@ export default function Hall() {
               onClick={() => handleDelete(hallToDelete.slug)}
               disabled={loading}
             >
-              <span style={{ verticalAlign: "middle", marginRight: "4px" }}>
+              <span className="btn-icon-left" aria-hidden="true">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="18"

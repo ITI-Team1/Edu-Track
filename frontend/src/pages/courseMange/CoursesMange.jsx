@@ -245,9 +245,9 @@ export default function CoursesMange() {
             <tbody>
               {courses.map((course) => (
                 <tr key={course.slug}>
-                  <td>{course.title}</td>
-                  <td>{course.slug}</td>
-                  <td>
+                  <td data-label="اسم المقرر">{course.title}</td>
+                  <td data-label="المعرف (Slug)">{course.slug}</td>
+                  <td data-label="البرامج المرتبطة">
                     {Array.isArray(course.programs) ? course.programs
                           .map((p) => {
                             const program = programs.find((pr) => pr.id === (p.id || p));
@@ -256,7 +256,7 @@ export default function CoursesMange() {
                           .join(" - ")
                       : "-"}
                   </td>
-                  <td>
+                  <td data-label="تعديل">
                     <Button
                       className="btn update"
                       variant="update"
@@ -265,15 +265,13 @@ export default function CoursesMange() {
                       تعديل
                     </Button>
                   </td>
-                  <td>
+                  <td data-label="حذف">
                     <Button
                       className="btn delete"
                       variant="delete"
                       onClick={() => openDeleteModal(course)}
                     >
-                      <span
-                        style={{ verticalAlign: "middle", marginRight: "4px" }}
-                      >
+                      <span className="btn-icon-left" aria-hidden="true">
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           width="18"
@@ -430,7 +428,7 @@ export default function CoursesMange() {
               onClick={() => handleDelete(courseToDelete.slug)}
               disabled={loading}
             >
-              <span style={{ verticalAlign: "middle", marginRight: "4px" }}>
+              <span className="btn-icon-left" aria-hidden="true">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="18"

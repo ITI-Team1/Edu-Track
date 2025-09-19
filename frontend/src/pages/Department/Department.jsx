@@ -250,15 +250,15 @@ export default function Department({permissions, facultiesData}) {
                 </div>
               </div>
               <div className="department-actions">
-                <Button variant="update" onClick={() => handleUpdate(dept)}>
+                <Button className="btn update btn-lg" variant="update" onClick={() => handleUpdate(dept)}>
                   تعديل
                 </Button>
                 <Button
                   variant="delete"
                   onClick={() => openDeleteModal(dept)}
-                  className="btn delete"
+                  className="btn delete btn-lg"
                 >
-                  <span className="btn-icon" aria-hidden="true">
+                  <span className="btn-icon-left" aria-hidden="true">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       width="18"
@@ -412,7 +412,7 @@ export default function Department({permissions, facultiesData}) {
               }}
             >
               <Button
-                className="btn delete"
+                className="btn delete btn-lg"
                 variant="delete"
                 onClick={() => handleDelete(deptToDelete.slug)}
                 disabled={loading}

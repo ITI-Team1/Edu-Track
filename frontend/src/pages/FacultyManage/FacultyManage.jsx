@@ -24,7 +24,7 @@ const validateForm = (form) => {
   if (!form.name.trim()) {
     errors.name = "اسم الكلية مطلوب";
   } else if (form.name.length > 30) {
-    errors.name = "اسم الكلية يجب أن لا يتجاوز 30 حرف";
+    errors.name = "اسم الكلية يجب أن لا ي تجاوز 30 حرف";
   }
 
   if (!form.slug.trim()) {
@@ -212,17 +212,15 @@ const FacultyList = memo(
       <p>{faculty.slug}</p>
     </div>
     <div className="faculty-actions">
-      <Button onClick={() => onEdit(faculty)} className="edit-button">
+      <Button onClick={() => onEdit(faculty)} className="btn update btn-lg" variant="update">
         تعديل
       </Button>
       <Button
         onClick={() => openDeleteModal(faculty)}
-        className="btn delete"
+        className="btn delete btn-lg"
         variant="delete"
       >
-        <span
-          style={{ verticalAlign: "middle", marginRight: "4px" }}
-        >
+        <span className="btn-icon-left" aria-hidden="true">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="18"
@@ -283,8 +281,8 @@ const FacultyList = memo(
                 marginTop: "1.5rem",
               }}
             >
-              <Button className="btn delete" variant="delete" onClick={confirmDelete}>
-                <span style={{ verticalAlign: "middle", marginRight: "4px" }}>
+              <Button className="btn delete btn-lg" variant="delete" onClick={confirmDelete}>
+                <span className="btn-icon-left" aria-hidden="true">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="18"

@@ -8,6 +8,59 @@
   min-height: 100vh;
 }
 
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .hall-page { padding: 1rem; }
+  .hall-page .page-header { flex-direction: column; gap: 0.75rem; text-align: center; }
+  .hall-page .page-header h1 { font-size: 1.8rem; }
+  .hall-table-wrapper { padding: 1rem; }
+  .hall-table th,
+  .hall-table td { padding: 0.6rem 0.4rem; font-size: 0.95rem; }
+}
+
+@media (max-width: 480px) {
+  .hall-page .page-header h1 { font-size: 1.5rem; }
+  .add-hall-btn { width: 100%; }
+  .hall-table th,
+  .hall-table td { font-size: 0.9rem; }
+}
+
+/* Mobile card layout: show all data without horizontal scroll */
+@media (max-width: 640px) {
+  .hall-table-wrapper { overflow: visible; }
+  .hall-table,
+  .hall-table thead,
+  .hall-table tbody,
+  .hall-table th,
+  .hall-table td,
+  .hall-table tr {
+    display: block;
+    width: 100%;
+  }
+  .hall-table thead { display: none; }
+  .hall-table tr {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    padding: 10px 12px;
+  }
+  .hall-table td {
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+  }
+  .hall-table td:last-child { border-bottom: 0; }
+  .hall-table td::before {
+    content: attr(data-label);
+    font-weight: 700;
+    color: #1e3a8a;
+  }
+}
+
 .hall-header {
   color: #1f2937;
   margin-bottom: 2rem;
@@ -95,45 +148,7 @@
   gap: 0.5rem;
   margin-top: auto;
 }
-.hall-actions .btn {
-  flex: 1;
-  text-align: center;
-  padding: 0.7rem 1rem;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #fff;
-  border: 2px solid transparent;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(10px);
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.3s, box-shadow 0.3s, border-color 0.3s, transform 0.3s;
-  will-change: transform, box-shadow, background;
-}
-
-.hall-row .btn.update {
-  color: #fff;
-  background: linear-gradient(135deg, #1a365d, #535bf2);
-  border-color: rgba(100, 108, 255, 0.3);
-}
-.hall-row .btn.update:hover {
-  background: linear-gradient(135deg, #6b72ff 0%, #5a62f4 100%);
-  box-shadow: 0 6px 25px rgba(100, 108, 255, 0.3);
-  border-color: rgba(100, 108, 255, 0.5);
-  transform: translateY(-2px) scale(1.04);
-}
-
-.hall-row .btn.delete {
-  color: #fff;
-  background: #d63031;
-  border-color: rgba(214, 48, 49, 0.3);
-}
-.hall-row .btn.delete:hover {
-  background: #b71c1c;
-  box-shadow: 0 6px 25px rgba(214, 48, 49, 0.2);
-  border-color: rgba(214, 48, 49, 0.5);
-  transform: translateY(-2px) scale(1.04);
-}
+/* Buttons are standardized globally in src/styles/global.css */
 
 /* Modal Styles for Hall Page */
 .hall-modal-bg {
@@ -262,19 +277,7 @@
   box-shadow: 0 4px 6px 0px rgba(0, 0, 0, 0.1) !important;
 }
 
-/* Edit button -> align with FacultyManage edit style */
-.hall-row .btn.update,
-.hall-modal .btn.update {
-  background: #3182ce !important; /* solid blue like FacultyManage edit-button */
-  color: #fff !important;
-  border: none !important;
-  border-radius: 8px !important;
-}
-.hall-row .btn.update:hover,
-.hall-modal .btn.update:hover {
-  transform: translateY(-1px) !important;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
-}
+/* Buttons are standardized globally in src/styles/global.css */
 
 /* Header section aligned with FacultyManage */
 .hall-page .page-header {
