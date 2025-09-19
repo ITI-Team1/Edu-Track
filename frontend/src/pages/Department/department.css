@@ -23,7 +23,7 @@
   /* Add button (match FacultyManage .add-button) */
   .add-department-card {
     font-family: "Cairo", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-    /* padding: 0.75rem 1.5rem; */
+    padding: 1.9rem 1.5rem !important;
     background: linear-gradient(90deg, #3182ce 0%, #2c5282 100%);
     color: #fff;
     border: none;
@@ -94,35 +94,7 @@
     padding: inherit;
   }
   
-  /* Buttons */
-  .btn {
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: 6px;
-    font-size: 0.9rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: transform 0.2s;
-  }
-  /* Solid blue update like .edit-button */
-  .btn.update {
-    background: #3182ce;
-    color: #fff;
-  }
-  /* RED delete (on cards and modals) */
-  .btn.delete {
-    background: #e53e3e;
-    color: #fff;
-  }
-  .btn:hover {
-    transform: translateY(-1px);
-  }
-  /* Neutral cancel */
-  .btn.cancel {
-    background: #eee;
-    color: #333;
-    border: 1px solid #bbb;
-  }
+  /* Buttons are standardized globally in src/styles/global.css */
   
   /* Modal (match FacultyManage modal) */
   .department-modal-bg {

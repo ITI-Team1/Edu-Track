@@ -8,6 +8,7 @@ export default defineConfig({
   server: {
     // host: '0.0.0.0', // Allow external connections
     port: 5173,
-    strictPort: true,
+    // If 5173 is busy, Vite will pick the next available port
+    strictPort: false,
   },
 })

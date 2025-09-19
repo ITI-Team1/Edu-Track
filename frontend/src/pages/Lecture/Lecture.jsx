@@ -306,14 +306,14 @@ export default function Lecture() {
             <tbody>
               {lectures.map((lec) => (
                 <tr key={lec.id} className="lecture-row">
-                  <td>{getCourseName(lec)}</td>
-                  <td>{getUserName(lec)}</td>
-                  <td>{getLocationName(lec)}</td>
-                  <td>{lec.day}</td>
-                  <td>
+                  <td data-label="المقرر">{getCourseName(lec)}</td>
+                  <td data-label="المحاضر">{getUserName(lec)}</td>
+                  <td data-label="القاعة">{getLocationName(lec)}</td>
+                  <td data-label="اليوم">{lec.day}</td>
+                  <td data-label="الوقت">
                     {formatTimeArabic(lec.starttime)} - {formatTimeArabic(lec.endtime)}
                   </td>
-                  <td>
+                  <td data-label="تعديل">
                     <Button
                       className="btn update"
                       variant="update"
@@ -322,15 +322,13 @@ export default function Lecture() {
                       تعديل
                     </Button>
                   </td>
-                  <td>
+                  <td data-label="حذف">
                     <Button
                       className="btn delete"
                       variant="delete"
                       onClick={() => openDeleteModal(lec)}
                     >
-                      <span
-                        style={{ verticalAlign: "middle", marginRight: "4px" }}
-                      >
+                      <span className="btn-icon-left" aria-hidden="true">
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           width="18"
@@ -515,7 +513,7 @@ export default function Lecture() {
               onClick={() => handleDelete(lectureToDelete.id)}
               disabled={loading}
             >
-              <span style={{ verticalAlign: "middle", marginRight: "4px" }}>
+              <span className="btn-icon-left" aria-hidden="true">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="18"

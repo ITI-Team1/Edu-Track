@@ -9,6 +9,72 @@
     font-family: 'Cairo', sans-serif;
   }
   
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .lecture-page {
+    padding: 1rem;
+  }
+  .page-header {
+    flex-direction: column;
+    gap: 0.75rem;
+    text-align: center;
+  }
+  .page-header h1 {
+    font-size: 1.8rem;
+  }
+  .lecture-table-wrapper {
+    padding: 1rem;
+  }
+  .lecture-table th,
+  .lecture-table td {
+    padding: 0.6rem 0.4rem;
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-header h1 { font-size: 1.5rem; }
+  .lecture-table th,
+  .lecture-table td { font-size: 0.9rem; }
+  .class-actions .btn { width: 100%; }
+}
+
+/* Mobile card layout: show all data without horizontal scroll */
+@media (max-width: 640px) {
+  .attendance-records-page .lecture-table-wrapper { overflow: visible; }
+  .attendance-records-page .lecture-table,
+  .attendance-records-page .lecture-table thead,
+  .attendance-records-page .lecture-table tbody,
+  .attendance-records-page .lecture-table th,
+  .attendance-records-page .lecture-table td,
+  .attendance-records-page .lecture-table tr {
+    display: block;
+    width: 100%;
+  }
+  .attendance-records-page .lecture-table thead { display: none; }
+  .attendance-records-page .lecture-table tr {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    padding: 10px 12px;
+  }
+  .attendance-records-page .lecture-table td {
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+  }
+  .attendance-records-page .lecture-table td:last-child { border-bottom: 0; }
+  .attendance-records-page .lecture-table td::before {
+    content: attr(data-label);
+    font-weight: 700;
+    color: #1e3a8a;
+  }
+}
+  
   /* Header (mirror Hall’s page-header override) */
   .page-header {
     display: flex;
@@ -91,6 +157,7 @@
     border-radius: 6px;
     cursor: pointer;
     transition: transform 0.2s;
+    
   }
 
   .lecture-table .btn.update,

@@ -247,7 +247,7 @@ export default function AttendanceRecords() {
   };
 
   return (
-    <div className="lecture-page">
+    <div className="lecture-page attendance-records-page">
       <div className="page-header">
                
         <h1>المحاضرات</h1>
@@ -282,14 +282,14 @@ export default function AttendanceRecords() {
             <tbody>
               {lectures.map((lec) => (
                 <tr key={lec.id} className="lecture-row">
-                  <td>{getCourseName(lec)}</td>
+                  <td data-label="المقرر">{getCourseName(lec)}</td>
                 
-                  <td>{getLocationName(lec)}</td>
-                  <td>{lec.day}</td>
-                  <td>
+                  <td data-label="القاعة">{getLocationName(lec)}</td>
+                  <td data-label="اليوم">{lec.day}</td>
+                  <td data-label="الوقت">
                     {formatTimeArabic(lec.starttime)} - {formatTimeArabic(lec.endtime)}
                   </td>
-                  <td>
+                  <td data-label="الحضور">
                   <div className="class-actions">
                   <Link
                     to={`/attendance/sheet/${lec.id}`}
