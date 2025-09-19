@@ -157,7 +157,7 @@
     padding: 1.25rem; /* more compact */
     min-width: 320px;
     max-width: 480px;
-    max-height: calc(100vh - 220px);
+    max-height: calc(105vh - 220px);
     overflow: hidden;
     box-shadow: 0 4px 20px rgba(0,0,0,0.08);
     display: flex;
@@ -167,6 +167,13 @@
     color: #1f2937;
     font-family: 'Cairo', sans-serif;
   }
+  .lecture-modal::before{
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, #3182ce, #1a365d, #2c5aa0);
+  }
   .lecture-modal h3 {
     text-align: center;
     color: #3182ce;
@@ -175,7 +182,7 @@
   }
   .lecture-modal label {
     font-size: 0.9rem; /* smaller labels */
-    margin-bottom: 0.1rem;
+    margin-bottom: 0.8rem;
     color: #374151;
   }
   .lecture-modal input,

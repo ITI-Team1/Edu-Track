@@ -11,7 +11,7 @@ import "./FacultyManage.css";
 import Modal from "../../components/ui/Modal";
 import Button from "../../components/ui/Button";
 import { useAuth } from "../../context/AuthContext";
-import { fetchUserPermissions } from "../../services/userApi";
+// import { fetchUserPermissions } from "../../services/userApi";
 
 const initialForm = { name: "", slug: "", logo: null, university: 1 };
 
@@ -28,9 +28,9 @@ const validateForm = (form) => {
   }
 
   if (!form.slug.trim()) {
-    errors.slug = "الرابط المختصر مطلوب";
+    errors.slug = "الاسم المختصر مطلوب";
   } else if (form.slug.length > 30) {
-    errors.slug = "الرابط المختصر يجب أن لا يتجاوز 30 حرف";
+    errors.slug = "الاسم المختصر يجب أن لا يتجاوز 30 حرف";
   }
 
   if (form.logo && form.logo.size > 5 * 1024 * 1024) {
@@ -81,7 +81,7 @@ const AddEditForm = memo(
 
             <div >
               <label htmlFor="faculty-slug" className="themed-label">
-                الرابط المختصر
+                الاسم المختصر
               </label>
               <input
                 id="faculty-slug"
@@ -95,9 +95,6 @@ const AddEditForm = memo(
                 autoComplete="off"
                 dir="ltr"
               />
-              <small className="input-helper">
-                {form.slug.length}/30 - سيتم استخدامه في الرابط
-              </small>
             </div>
 
             <div >
@@ -374,7 +371,7 @@ const FacultyManage = ({permissions, facultiesData}) => {
 let facultySlug='' ;
 if (user.faculty) {
   facultySlug = facultiesData.find(faculty => faculty.id === user.faculty).slug;
-  console.log(facultySlug);
+    // console.warn('facultySlug', facultySlug);
 }
 console.log(facultySlug);
   const {
@@ -549,11 +546,10 @@ console.log(facultySlug);
 
   return (
     <div className="faculty-manage" dir="rtl">
-      {formState.isOpen ? (
-        <AddEditForm {...formProps} />
-      ) : (
-        <FacultyList {...listProps} permissions={permissions} />
-      )}
+      {/* Always render the list so it stays visible behind the modal */}
+      <FacultyList {...listProps} permissions={permissions} />
+      {/* Overlay the add/edit modal when needed */}
+      {formState.isOpen && <AddEditForm {...formProps} />}
     </div>
   );
 };

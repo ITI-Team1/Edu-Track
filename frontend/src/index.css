@@ -489,3 +489,216 @@ input::placeholder, textarea::placeholder {
   }
 }
 
+
+/* === Shared modal visuals (applies across all CRUD forms) === */
+/* Optional generic backdrop/container if a page doesn't provide its own */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.45);
+  backdrop-filter: blur(2px);
+  display: grid;
+  place-items: center;
+  z-index: 50;
+  padding: 1rem;
+}
+
+.modal-container {
+  position: relative;
+  width: 100%;
+  max-width: 560px;
+  background: #ffffff;
+  color: #1f2937;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 20px 60px rgba(2, 6, 23, 0.25);
+  padding: 1.25rem 1rem 1rem;
+}
+
+/* Decorative blue stripe on top of any modal (generic) */
+.modal-top-stripe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  border-top-left-radius: 14px;
+  border-top-right-radius: 14px;
+  background: linear-gradient(90deg, #3182ce, #1a365d, #2c5aa0);
+  pointer-events: none;
+}
+
+/* Simple close button with background only */
+.close-btn {
+  transition: background-color .2s ease;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 1px solid rgba(49, 130, 206, 0.2) !important;
+  padding: 0.5rem !important;
+  font-size: 1.3rem !important;
+  color: #3182ce !important;
+  width: 2.5rem !important;
+  height: 2.5rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+}
+.close-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(49,130,206,0.3) !important;
+}
+
+.close-btn:hover {
+  background: #3182ce !important;
+  color: #fff !important;
+  border-color: rgba(49, 130, 206, 0.4) !important;
+  box-shadow: 0 4px 12px rgba(49, 130, 206, 0.15) !important;
+}
+
+/* Unified modern form styling for all CRUD modals */
+.faculty-modal,
+.courses-mange-modal,
+.lecture-modal,
+.hall-modal,
+.department-modal {
+  --et-border: 1px solid rgba(100,108,255,.12);
+  --et-radius: 14px;
+  --et-focus-ring: 0 0 0 3px rgba(49,130,206,.12);
+  padding: 2.5rem 2rem 2rem !important;
+  gap: 0.3rem !important;
+}
+
+/* Enhanced modal headers - bigger and bolder */
+.faculty-modal h3,
+.courses-mange-modal h3,
+.lecture-modal h3,
+.hall-modal h3,
+.department-modal h3 {
+  color: #486ab8 !important;
+  font-size: 2rem !important;
+  font-weight: 950 !important;
+  text-align: center !important;
+  letter-spacing: 0.3px !important;
+  line-height: 1.1 !important;
+  text-shadow: 0 2px 4px rgba(43, 52, 73, 0.12);
+  padding-bottom: 1rem;
+  border-bottom: 3px solid rgba(43, 52, 73, 0.15);
+  position: relative;
+}
+
+.faculty-modal label,
+.courses-mange-modal label,
+.lecture-modal label,
+.hall-modal label,
+.department-modal label {
+  font-weight: 700;
+  color: #2c5282;
+  margin-bottom: .4rem;
+  font-size: 1rem;
+  display: block;
+}
+
+.faculty-modal input, .faculty-modal select,
+.courses-mange-modal input, .courses-mange-modal select,
+.lecture-modal input, .lecture-modal select,
+.hall-modal input, .hall-modal select,
+.department-modal input, .department-modal select {
+  width: 100%;
+  padding: .8rem 1rem;
+  border-radius: 12px;
+  border: var(--et-border);
+  background: #fff;
+  color: #1f2937;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  transition: border-color .15s ease, box-shadow .15s ease, transform .08s ease;
+}
+
+.faculty-modal input:focus, .faculty-modal select:focus,
+.courses-mange-modal input:focus, .courses-mange-modal select:focus,
+.lecture-modal input:focus, .lecture-modal select:focus,
+.hall-modal input:focus, .hall-modal select:focus,
+.department-modal input:focus, .department-modal select:focus {
+  border-color: #3182ce;
+  box-shadow: var(--et-focus-ring);
+  outline: none;
+  transform: translateY(-1px);
+}
+
+/* Enhanced file input styling */
+.faculty-modal input[type="file"],
+.courses-mange-modal input[type="file"],
+.lecture-modal input[type="file"],
+.hall-modal input[type="file"],
+.department-modal input[type="file"] {
+  padding: 1.2rem;
+  border: 2px dashed #3182ce;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #f8fafc 0%, #e6f0ff 100%);
+  color: #2c5282;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: all .2s ease;
+}
+
+.faculty-modal input[type="file"]:hover,
+.courses-mange-modal input[type="file"]:hover,
+.lecture-modal input[type="file"]:hover,
+.hall-modal input[type="file"]:hover,
+.department-modal input[type="file"]:hover {
+  border-color: #2c5282;
+  background: linear-gradient(135deg, #e6f0ff 0%, #dbeafe 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(49, 130, 206, 0.15);
+}
+
+.faculty-modal .btn.update,
+.courses-mange-modal .btn.update,
+.lecture-modal .btn.update,
+.hall-modal .btn.update,
+.department-modal .btn.update {
+  background: linear-gradient(90deg,#3182ce,#2c5282);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: .9rem 1.5rem;
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin-top: .5rem;
+  transition: all .2s ease;
+}
+
+.faculty-modal .btn.update:hover,
+.courses-mange-modal .btn.update:hover,
+.lecture-modal .btn.update:hover,
+.hall-modal .btn.update:hover,
+.department-modal .btn.update:hover { 
+  transform: translateY(-2px); 
+  box-shadow: 0 6px 20px rgba(49, 130, 206, 0.25);
+}
+
+.faculty-modal .btn.cancel,
+.courses-mange-modal .btn.cancel,
+.lecture-modal .btn.cancel,
+.hall-modal .btn.cancel,
+.department-modal .btn.cancel {
+  background: #eef2f7;
+  color: #273146;
+  border: 1px solid #c9d3e2;
+  border-radius: 12px;
+  padding: .9rem 1.5rem;
+  font-size: 1.05rem;
+  transition: all .2s ease;
+}
+
+.faculty-modal .btn.cancel:hover,
+.courses-mange-modal .btn.cancel:hover,
+.lecture-modal .btn.cancel:hover,
+.hall-modal .btn.cancel:hover,
+.department-modal .btn.cancel:hover {
+  background: #e2e8f0;
+  transform: translateY(-1px);
+}
+

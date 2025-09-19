@@ -73,7 +73,7 @@ export default function Hall() {
       { id: 2, name: 'كلية العلوم' },
       { id: 3, name: 'كلية التجارة' },
     ]);
-  }, []);
+  });
   */
   // END MOCK DATA
 
@@ -206,14 +206,12 @@ export default function Hall() {
       return;
     }
     if (!form.slug?.trim()) {
-      setError("المعرف (Slug) مطلوب");
+      setError("الاسم المختصر مطلوب");
       return;
     }
     const slugPattern = /^[A-Za-z0-9_-]+$/;
     if (!slugPattern.test(form.slug)) {
-      setError(
-        "المعرف (Slug) يجب أن يحتوي على أحرف إنجليزية أو أرقام أو - أو _ فقط"
-      );
+      setError("الاسم المختصر يجب أن يحتوي على أحرف إنجليزية أو أرقام أو - أو _ فقط");
       return;
     }
     const selectedFacultyIds = Array.isArray(form.faculties) ? form.faculties.map(Number).filter(Number.isFinite) : [];
@@ -410,7 +408,7 @@ export default function Hall() {
               </div>
             </fieldset>
             <label>
-              slug:
+              الاسم المختصر:
               <input
                 name="slug"
                 type="text"

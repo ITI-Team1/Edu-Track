@@ -1,215 +1,315 @@
 /* Page base */
 .courses-mange-page {
-    padding: 2rem;
-    max-width: 1200px;
-    margin: 0 auto;
-    direction: rtl;
-    text-align: right;
-    min-height: 100vh;
-    font-family: 'Cairo', sans-serif;
-  }
-  
-  /* Responsive adjustments */
-  @media (max-width: 768px) {
-    .courses-mange-page { padding: 1rem; }
-    .page-header { flex-direction: column; gap: 0.75rem; text-align: center; }
-    .page-header h1 { font-size: 1.8rem; }
-    .courses-mange-table-wrapper { padding: 1rem; }
-    .courses-mange-table th,
-    .courses-mange-table td { padding: 0.6rem 0.4rem; font-size: 0.95rem; }
-  }
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  direction: rtl;
+  text-align: right;
+  min-height: 100vh;
+  font-family: "Cairo", sans-serif;
+}
 
-  @media (max-width: 480px) {
-    .page-header h1 { font-size: 1.5rem; }
-    .courses-mange-add-btn { width: 100%; }
-    .courses-mange-table th,
-    .courses-mange-table td { font-size: 0.9rem; }
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .courses-mange-page {
+    padding: 1rem;
   }
-
-  /* Mobile card layout: show all data without horizontal scroll */
-  @media (max-width: 640px) {
-    .courses-mange-table-wrapper { overflow: visible; }
-    .courses-mange-table,
-    .courses-mange-table thead,
-    .courses-mange-table tbody,
-    .courses-mange-table th,
-    .courses-mange-table td,
-    .courses-mange-table tr {
-      display: block;
-      width: 100%;
-    }
-    .courses-mange-table thead { display: none; }
-    .courses-mange-table tr {
-      background: #fff;
-      border: 1px solid #e5e7eb;
-      border-radius: 12px;
-      margin-bottom: 12px;
-      padding: 10px 12px;
-    }
-    .courses-mange-table td {
-      border-bottom: 1px solid #f1f5f9;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 0;
-    }
-    .courses-mange-table td:last-child { border-bottom: 0; }
-    .courses-mange-table td::before {
-      content: attr(data-label);
-      font-weight: 700;
-      color: #1e3a8a;
-    }
-  }
-  
-  /* Header */
-  .courses-mange-header {
-    color: #1f2937;
-    margin-bottom: 2rem;
-    text-align: center;
-    font-size: 1.75rem;
-    font-weight: 600;
-    font-family: 'Cairo', sans-serif;
-  }
-  /* Unified page header (match Lecture) */
   .page-header {
+    flex-direction: column;
+    gap: 0.75rem;
+    text-align: center;
+  }
+  .page-header h1 {
+    font-size: 1.8rem;
+  }
+  .courses-mange-table-wrapper {
+    padding: 1rem;
+  }
+  .courses-mange-table th,
+  .courses-mange-table td {
+    padding: 0.6rem 0.4rem;
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-header h1 {
+    font-size: 1.5rem;
+  }
+  .courses-mange-add-btn {
+    width: 100%;
+  }
+  .courses-mange-table th,
+  .courses-mange-table td {
+    font-size: 0.9rem;
+  }
+}
+
+/* Mobile card layout: show all data without horizontal scroll */
+@media (max-width: 640px) {
+  .courses-mange-table-wrapper {
+    overflow: visible;
+  }
+  .courses-mange-table,
+  .courses-mange-table thead,
+  .courses-mange-table tbody,
+  .courses-mange-table th,
+  .courses-mange-table td,
+  .courses-mange-table tr {
+    display: block;
+    width: 100%;
+  }
+  .courses-mange-table thead {
+    display: none;
+  }
+  .courses-mange-table tr {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    padding: 10px 12px;
+  }
+  .courses-mange-table td {
+    border-bottom: 1px solid #f1f5f9;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
+    gap: 10px;
+    padding: 10px 0;
   }
-  .page-header h1 {
-    color: #2c5282;
-    font-size: 3rem;
-    margin: 0;
-    font-family: "Cairo", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  .courses-mange-table td:last-child {
+    border-bottom: 0;
   }
-  
-  /* Add button (mirror Hall’s standardized add button) */
-  .courses-mange-add-btn {
-    font-family: "Cairo", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif !important;
-    padding: 1.9rem 1.5rem !important;
-    background: linear-gradient(90deg, #3182ce 0%, #2c5282 100%) !important;
-    color: #fff !important;
-    border: none !important;
-    border-radius: 8px !important;
-    font-size: 1rem !important;
-    font-weight: 600 !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    min-height: auto !important;
-    box-shadow: none !important;
-    transition: 0.3s ease-in-out !important;
-    margin-bottom: 1rem !important;
-  }
-  .courses-mange-add-btn:hover {
-    transform: translateY(-1px) !important;
-    scale: 1.02 !important;
-    box-shadow: 0 4px 6px 0px rgba(0, 0, 0, 0.1) !important;
-  }
-  
-  /* Table wrapper (mirror Hall’s gradient card with top bar) */
-  .courses-mange-table-wrapper {
-    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-    border: 1px solid rgba(100, 108, 255, 0.1);
-    border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-    padding: 2rem;
-    overflow-x: auto;
-    position: relative;
-  }
-  .courses-mange-table-wrapper::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #3182ce, #1a365d, #2c5aa0);
-  }
-  
-  /* Table */
-  .courses-mange-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-family: 'Cairo', sans-serif;
-  }
-  .courses-mange-table th, .courses-mange-table td {
-    padding: 1rem 0.7rem;
-    text-align: center;
-    color: #4b5563;
-    font-size: 1rem;
-    border-bottom: 1px solid rgba(100, 108, 255, 0.1);
-  }
-  .courses-mange-table th {
+  .courses-mange-table td::before {
+    content: attr(data-label);
     font-weight: 700;
-    font-size: 1.1rem;
+    color: #1e3a8a;
   }
-  
-  /* Buttons are standardized globally in src/styles/global.css */
-  /* Keep only container-specific adjustments below */
-  
-  /* Modal (mirror Hall modal) */
-  .courses-mange-modal-bg {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.4);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding-top: 40px;
-    overflow-y: auto;
-    z-index: 1000;
-  }
-  .courses-mange-modal {
-    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-    border: 1px solid rgba(100, 108, 255, 0.1);
-    border-radius: 16px;
-    padding: 2rem;
-    min-width: 320px;
-    max-width: 560px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    position: relative;
-    color: #1f2937;
-    font-family: 'Cairo', sans-serif;
-  }
-  .courses-mange-modal h3 {
-    text-align: center;
-    color: #3182ce;
-    margin-bottom: 1rem;
-    font-size: 1.2rem;
-  }
-  .courses-mange-modal label {
-    font-size: 1rem;
-    margin-bottom: 0.2rem;
-    color: #374151;
-  }
-  .courses-mange-modal input,
-  .courses-mange-modal select {
-    width: 100%;
-    padding: 0.5rem;
-    border-radius: 8px;
-    border: 1px solid rgba(100,108,255,0.3);
-    margin-top: 0.3rem;
-    background: #ffffff;
-    color: #1f2937;
-    font-size: 1rem;
-  }
-  .courses-mange-modal input:focus,
-  .courses-mange-modal select:focus {
-    outline: none;
-    border-color: #535bf2;
-  }
-  .courses-mange-modal .btn { margin-top: 0.5rem; width: 100%; }
-  .courses-mange-modal .close-btn {
-    position: absolute;
-    top: 1rem;
-    left: 1rem;
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    color: #3182ce;
-    cursor: pointer;
-  }
+}
+
+/* Header */
+.courses-mange-header {
+  color: #1f2937;
+  margin-bottom: 2rem;
+  text-align: center;
+  font-size: 1.75rem;
+  font-weight: 600;
+  font-family: "Cairo", sans-serif;
+}
+/* Unified page header (match Lecture) */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+.page-header h1 {
+  color: #2c5282;
+  font-size: 3rem;
+  margin: 0;
+  font-family: "Cairo", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Add button (mirror Hall’s standardized add button) */
+.courses-mange-add-btn {
+  font-family: "Cairo", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif !important;
+  padding: 1.9rem 1.5rem !important;
+  background: linear-gradient(90deg, #3182ce 0%, #2c5282 100%) !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 8px !important;
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: auto !important;
+  box-shadow: none !important;
+  transition: 0.3s ease-in-out !important;
+  margin-bottom: 1rem !important;
+}
+.courses-mange-add-btn:hover {
+  transform: translateY(-1px) !important;
+  scale: 1.02 !important;
+  box-shadow: 0 4px 6px 0px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Table wrapper (mirror Hall’s gradient card with top bar) */
+.courses-mange-table-wrapper {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid rgba(100, 108, 255, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  padding: 2rem;
+  overflow-x: auto;
+  position: relative;
+}
+.courses-mange-table-wrapper::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #3182ce, #1a365d, #2c5aa0);
+}
+
+/* Table */
+.courses-mange-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: "Cairo", sans-serif;
+}
+.courses-mange-table th,
+.courses-mange-table td {
+  padding: 1rem 0.7rem;
+  text-align: center;
+  color: #4b5563;
+  font-size: 1rem;
+  border-bottom: 1px solid rgba(100, 108, 255, 0.1);
+}
+.courses-mange-table th {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+/* Buttons are standardized globally in src/styles/global.css */
+/* Keep only container-specific adjustments below */
+
+/* Modal (mirror Hall modal) */
+.courses-mange-modal-bg {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 40px;
+  overflow-y: auto;
+  z-index: 1000;
+}
+.courses-mange-modal {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid rgba(100, 108, 255, 0.1);
+  border-radius: 16px;
+  padding: 2rem;
+  min-width: 320px;
+  max-width: 460px;
+  width: min(420px, 92vw);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  position: relative;
+  color: #1f2937;
+  font-family: "Cairo", sans-serif;
+  overflow: hidden; /* clip stripe to rounded radius */
+}
+.courses-mange-modal::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: linear-gradient(90deg, #3182ce, #1a365d, #2c5aa0);
+}
+.courses-mange-modal h3 {
+  text-align: center;
+  color: #3182ce;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+}
+.courses-mange-modal label {
+  font-size: 1rem;
+  margin-bottom: 0.2rem;
+  color: #374151;
+}
+.courses-mange-modal input,
+.courses-mange-modal select {
+  width: 100%;
+  padding: 0.5rem;
+  border-radius: 8px;
+  border: 1px solid rgba(100, 108, 255, 0.3);
+  margin-top: 0.3rem;
+  background: #ffffff;
+  color: #1f2937;
+  font-size: 1rem;
+}
+/* Programs multi-select (pills) */
+.programs-multi {
+  border: 0;
+  padding: 0;
+  margin: 0.25rem 0 0.5rem;
+}
+.programs-multi legend {
+  font-size: 0.95rem;
+  color: #2c5282;
+  font-weight: 700;
+  margin-bottom: 0.4rem;
+}
+.programs-multi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+}
+.program-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  border: 1px solid #dbeafe;
+  color: #1f2937;
+  padding: 8px 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+}
+.program-pill:hover {
+  border-color: #93c5fd;
+  box-shadow: 0 2px 10px rgba(59, 130, 246, 0.12);
+  transform: translateY(-1px);
+}
+.program-pill input[type="checkbox"] {
+  margin: 0;
+  padding: 0;
+  position: relative;
+  top: 3px;
+  accent-color: #2c5282;
+  width: 16px;
+  height: 16px;
+}
+.program-pill.checked {
+  background: #f0f9ff;
+  border-color: #60a5fa;
+}
+.program-pill .label-text {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #1e3a8a;
+  margin-right: 2px;
+}
+.programs-multi-empty {
+  color: #64748b;
+  font-size: 0.9rem;
+  padding: 0.25rem 0;
+}
+.courses-mange-modal input:focus,
+.courses-mange-modal select:focus {
+  outline: none;
+  border-color: #535bf2;
+}
+.courses-mange-modal .btn {
+  margin-top: 0.5rem;
+  width: 100%;
+}
+.courses-mange-modal .close-btn {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #3182ce;
+  cursor: pointer;
+}

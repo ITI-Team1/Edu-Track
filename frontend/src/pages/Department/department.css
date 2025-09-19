@@ -115,7 +115,8 @@
     border-radius: 14px;
     padding: 1.25rem 1.5rem;
     min-width: 320px;
-    max-width: 420px;
+    max-width: 460px;
+    width: min(460px, 92vw);
     max-height: 600px;
     box-shadow: 0 12px 30px rgba(2, 6, 23, 0.12);
     display: flex;
@@ -124,6 +125,14 @@
     position: relative;
     color: #1f2937;
     font-family: "Cairo", sans-serif;
+    overflow: hidden; /* ensure stripe respects corners */
+  }
+  .department-modal::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, #3182ce, #1a365d, #2c5aa0);
   }
   .department-modal h3 {
     text-align: center;
@@ -160,6 +169,16 @@
     width: 100%;
     margin-top: 0.4rem;
   }
+  /* Neutral cancel button to match other forms */
+  .department-modal .btn.cancel {
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    background: #eee;
+    color: #333;
+    border: 1px solid #bbb;
+  }
   /* Ensure DELETE is red inside modal too */
   .department-modal .btn.delete {
     background: #e53e3e;
@@ -168,14 +187,9 @@
   .department-modal .btn.delete:hover {
     background: #b71c1c;
   }
-  /* Close button (match FacultyManage) */
+  /* Close button: position only; inherit global visual style */
   .department-modal .close-btn {
     position: absolute;
     top: 1rem;
     left: 1rem;
-    background: none;
-    border: none;
-    font-size: 1.4rem;
-    color: #3182ce;
-    cursor: pointer;
   }

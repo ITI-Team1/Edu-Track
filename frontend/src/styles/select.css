@@ -1,0 +1,72 @@
+.sel-root {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+.sel-input {
+  width: 100%;
+  height: 44px;
+  border: 1px solid #7c96e7;
+  border-radius: 8px;
+  padding: 0 36px 0 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  color: #111;
+  cursor: pointer;
+}
+.sel-input:focus {
+  outline: 2px solid #7c96e7;
+}
+.sel-disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.sel-display {
+  font-size: 1rem;
+}
+.sel-placeholder {
+  color: #9aa4b2;
+}
+.sel-caret {
+  opacity: 0.7;
+}
+.sel-panel {
+  position: absolute;
+  inset-inline: 0;
+  top: 48px;
+  background: #fff;
+  border: 1px solid #cfd6e3;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(20, 26, 70, 0.15);
+  z-index: 1000;
+  overflow: hidden;
+}
+.sel-search {
+  padding: 6px;
+}
+.sel-search input {
+  width: 100%;
+  height: 34px;
+  border: 1px solid #d7ddea;
+  border-radius: 6px;
+  padding: 0 10px;
+}
+.sel-options {
+  max-height: 220px;
+  overflow: auto;
+  padding: 6px;
+}
+.sel-option {
+  padding: 4px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.sel-option:hover {
+  background: #eef2ff;
+}
+.sel-option.selected {
+  background: #3b82f6;
+  color: #fff;
+}

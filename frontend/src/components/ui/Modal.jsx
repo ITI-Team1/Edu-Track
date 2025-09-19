@@ -31,8 +31,16 @@ const Modal = ({
   return (
     <div className={backdropCls}>
       <div className={modalCls} style={containerStyle}>
+        {/* Decorative top stripe */}
+        <div className="modal-top-stripe" aria-hidden="true" />
         {showClose && (
-          <button type="button" className="close-btn" onClick={onClose}>
+          <button
+            type="button"
+            className="close-btn"
+            onClick={onClose}
+            aria-label="إغلاق النافذة"
+            title="إغلاق"
+          >
             ×
           </button>
         )}

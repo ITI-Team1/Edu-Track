@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import "./lecture.css";
 import Modal from "../../components/ui/Modal";
 import Button from "../../components/ui/Button";
+import TimePicker from "../../components/ui/TimePicker";
+import Select from "../../components/ui/Select";
 import {
   fetchLectures,
   createLecture,
@@ -118,6 +120,41 @@ export default function Lecture() {
     starttime: "", // HH:MM
     endtime: "", // HH:MM
   });
+
+  // Helper to add minutes in 24h string HH:MM -> HH:MM
+  const addMinutes = (time, mins) => {
+    if (!time) return time;
+    const [h, m] = time.split(":").map(Number);
+    if (!Number.isFinite(h) || !Number.isFinite(m)) return time;
+    const base = new Date(1970, 0, 1, h, m, 0);
+    base.setMinutes(base.getMinutes() + mins);
+    const HH = String(base.getHours()).padStart(2, "0");
+    const MM = String(base.getMinutes()).padStart(2, "0");
+    return `${HH}:${MM}`;
+  };
+
+  // When start time changes, auto bump end if empty or <= start
+  const onStartChange = (v) => {
+    setForm((prev) => {
+      const next = { ...prev, starttime: v };
+      if (!prev.endtime || !isEndAfter(prev.endtime, v)) {
+        // default duration 90 minutes
+        next.endtime = addMinutes(v, 90);
+      }
+      return next;
+    });
+  };
+
+  const onEndChange = (v) => {
+    setForm((prev) => ({ ...prev, endtime: v }));
+  };
+
+  const isEndAfter = (end, start) => {
+    if (!end || !start) return false;
+    const a = new Date(`1970-01-01T${start}:00`);
+    const b = new Date(`1970-01-01T${end}:00`);
+    return b > a;
+  };
 
   const dayOptions = useMemo(
     () => [
@@ -367,85 +404,53 @@ export default function Lecture() {
           >
             <label>
               المقرر:
-              <select
+              <Select
                 value={form.course}
-                onChange={(e) => setForm({ ...form, course: e.target.value })}
-                required
-              >
-                <option value="">اختر المقرر</option>
-                {courses.map((course) => (
-                  <option key={course.id} value={course.id}>
-                    {course.title}
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => setForm({ ...form, course: val })}
+                placeholder="اختر المقرر"
+                options={courses.map(c=>({value:c.id, label:c.title}))}
+              />
             </label>
             <label>
               المٌحاضر:
-              <select
+              <Select
                 value={form.instructor}
-                onChange={(e) => setForm({ ...form, instructor: e.target.value })}
-                required
-              >
-                <option value="">اختر المحاضر</option>
-                {users.map((user) => (
-                  <option key={user.id} value={user.id}>
-                    {user.first_name} {user.last_name}
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => setForm({ ...form, instructor: val })}
+                placeholder="اختر المحاضر"
+                options={users.map(u=>({value:u.id, label:`${u.first_name} ${u.last_name}`}))}
+              />
             </label>
             <label>
               القاعة:
-              <select
+              <Select
                 value={form.location}
-                onChange={(e) => setForm({ ...form, location: e.target.value })}
-                required
-              >
-                <option value="">اختر القاعة</option>
-                {locations.map((loc) => (
-                  <option key={loc.id} value={loc.id}>
-                    {loc.name}
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => setForm({ ...form, location: val })}
+                placeholder="اختر القاعة"
+                options={locations.map(l=>({value:l.id, label:l.name}))}
+              />
             </label>
             <label>
               اليوم:
-              <select
+              <Select
                 value={form.day}
-                onChange={(e) => setForm({ ...form, day: e.target.value })}
-                required
-              >
-                <option value="">اختر اليوم</option>
-                {dayOptions.map((d) => (
-                  <option key={d} value={d}>
-                    {d}
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => setForm({ ...form, day: val })}
+                placeholder="اختر اليوم"
+                options={dayOptions.map(d=>({value:d, label:d}))}
+              />
             </label>
             <div className="time-row">
               <label>
                 وقت البدء:
-                <input
-                  type="time"
+                <TimePicker
                   value={form.starttime}
-                  onChange={(e) =>
-                    setForm({ ...form, starttime: e.target.value })
-                  }
-                  required
+                  onChange={onStartChange}
                 />
               </label>
               <label>
                 وقت الانتهاء:
-                <input
-                  type="time"
+                <TimePicker
                   value={form.endtime}
-                  onChange={(e) =>
-                    setForm({ ...form, endtime: e.target.value })
-                  }
-                  required
+                  onChange={onEndChange}
                 />
               </label>
             </div>

@@ -10,9 +10,10 @@ import { fetchFaculties } from "../../services/facultyApi";
 import Modal from "../../components/ui/Modal";
 import Button from "../../components/ui/Button";
 import { useAuth } from "../../context/AuthContext";
+import Select from "../../components/ui/Select";
 
-export default function Department({permissions, facultiesData}) {
-  const { user } = useAuth();
+export default function Department({_permissions, _facultiesData}) {
+  const { user: _user } = useAuth();
   const [departments, setDepartments] = useState([]);
   const [faculties, setFaculties] = useState([]);
   const [facultiesLoaded, setFacultiesLoaded] = useState(false);
@@ -144,15 +145,13 @@ export default function Department({permissions, facultiesData}) {
       return;
     }
     if (!form.slug?.trim()) {
-      setError("المعرف (Slug) مطلوب");
+      setError("الاسم المختصر مطلوب");
       return;
     }
     // Slug must be ASCII letters/numbers/-/_ to match Django SlugField default
     const slugPattern = /^[A-Za-z0-9_-]+$/;
     if (!slugPattern.test(form.slug)) {
-      setError(
-        "المعرف (Slug) يجب أن يحتوي على أحرف إنجليزية أو أرقام أو - أو _ فقط"
-      );
+      setError("الاسم المختصر يجب أن يحتوي على أحرف إنجليزية أو أرقام أو - أو _ فقط");
       return;
     }
     if (!form.faculty) {
@@ -300,33 +299,25 @@ export default function Department({permissions, facultiesData}) {
                 />
               </label>
               <label>
-                المعرف (Slug):
+                الاسم المختصر:
                 <input
                   type="text"
                   name="slug"
                   value={form.slug}
                   onChange={(e) => setForm({ ...form, slug: e.target.value })}
-                  placeholder="مثال: computer-science"
+                  placeholder="مثال: algorithms"
                   required
                 />
               </label>
               <label>
                 الكلية:
-                <select
-                  name="faculty"
+                <Select
                   value={form.faculty}
-                  onChange={(e) => setForm({ ...form, faculty: e.target.value })}
-                  required
+                  onChange={(val) => setForm({ ...form, faculty: val })}
+                  placeholder="اختر الكلية"
+                  options={facultiesLoaded? faculties.map(f=>({value:f.id, label:f.name})) : []}
                   disabled={!facultiesLoaded}
-                >
-                  <option value="">اختر الكلية</option>
-                  {facultiesLoaded &&
-                    faculties.map((fac) => (
-                      <option key={fac.id} value={fac.id}>
-                        {fac.name}
-                      </option>
-                    ))}
-                </select>
+                />
               </label>
               <Button
                 type="submit"

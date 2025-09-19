@@ -162,14 +162,12 @@ export default function CoursesMange() {
       return;
     }
     if (!form.slug?.trim()) {
-      setError("المعرف (Slug) مطلوب");
+      setError("الاسم المختصر مطلوب");
       return;
     }
     const slugPattern = /^[A-Za-z0-9_-]+$/;
     if (!slugPattern.test(form.slug)) {
-      setError(
-        "المعرف (Slug) يجب أن يحتوي على أحرف إنجليزية أو أرقام أو - أو _ فقط"
-      );
+      setError("الاسم المختصر يجب أن يحتوي على أحرف إنجليزية أو أرقام أو - أو _ فقط");
       return;
     }
     if (!Array.isArray(form.programs) || form.programs.length === 0) {
@@ -320,7 +318,7 @@ export default function CoursesMange() {
               />
             </label>
             <label>
-              المعرف (Slug):
+              الاسم المختصر:
               <input
                 name="slug"
                 type="text"
@@ -329,45 +327,40 @@ export default function CoursesMange() {
                 required
               />
             </label>
-            <label>
-              اختر البرامج المرتبطة:
-              <select
-                name="programs"
-                multiple
-                size={Math.min(6, Math.max(3, programs.length || 3))}
-                value={(form.programs || []).map(String)}
-                onChange={(e) => {
-                  const opts = Array.from(e.target.selectedOptions).map(
-                    (o) => o.value
+            <fieldset className="programs-multi">
+              <legend>اختر البرامج المرتبطة (متعدد):</legend>
+              <div className="programs-multi-grid">
+                {programsLoaded && programs.map((p) => {
+                  const idNum = Number(p.id);
+                  const selectedNums = (form.programs || []).map(Number);
+                  const checked = selectedNums.includes(idNum);
+                  return (
+                    <label key={p.slug || p.id} className={`program-pill ${checked ? 'checked' : ''}`}>
+                      <input
+                        type="checkbox"
+                        value={idNum}
+                        checked={checked}
+                        onChange={() => {
+                          setForm((prev) => {
+                            const set = new Set((prev.programs || []).map(Number));
+                            if (set.has(idNum)) set.delete(idNum); else set.add(idNum);
+                            return { ...prev, programs: Array.from(set) };
+                          });
+                        }}
+                        disabled={!programsLoaded}
+                      />
+                      <span className="label-text">{p.name || p.title}</span>
+                    </label>
                   );
-                  setForm({ ...form, programs: opts });
-                }}
-                disabled={!programsLoaded || !programs.length}
-                required
-              >
+                })}
                 {!programsLoaded && (
-                  <option value="" disabled>
-                    جاري تحميل البرامج...
-                  </option>
+                  <div className="programs-multi-empty">لا يمكن تحميل البرامج الآن</div>
                 )}
-                {programsLoaded && !programs.length && (
-                  <option value="" disabled>
-                    لا توجد برامج متاحة
-                  </option>
+                {programsLoaded && programs.length === 0 && (
+                  <div className="programs-multi-empty">لا توجد برامج متاحة</div>
                 )}
-                {programsLoaded && programs.length > 0 && (
-                  <option value="" disabled>
-                    — اختر برنامج/برامج —
-                  </option>
-                )}
-                {programsLoaded &&
-                  programs.map((p) => (
-                    <option key={p.slug || p.id} value={String(p.id)}>
-                      {p.name || p.title}
-                    </option>
-                  ))}
-              </select>
-            </label>
+              </div>
+            </fieldset>
             <Button
               type="submit"
               className="btn update"
