@@ -55,7 +55,11 @@ export default function Select({
     };
   }, []);
 
-  const handleSelect = (opt) => {
+  const handleSelect = (opt, e) => {
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
     onChange?.(opt.value);
     setOpen(false);
     setQuery("");
@@ -89,7 +93,7 @@ export default function Select({
                 <div
                   key={String(opt.value)}
                   className={`sel-option ${selected && String(selected.value) === String(opt.value) ? "selected" : ""}`}
-                  onClick={() => handleSelect(opt)}
+                  onClick={(e) => handleSelect(opt, e)}
                   role="option"
                 >
                   {opt.label}

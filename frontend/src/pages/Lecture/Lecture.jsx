@@ -77,7 +77,6 @@ export default function Lecture() {
 //check if the doctor has the same faculty
 if(user.faculty){
       const doctorsWithSameFaculty = doctors.filter(d => d.faculty?.id == user.faculty?.id );
-      console.log(doctorsWithSameFaculty);
       setDoctors(doctorsWithSameFaculty);
     }else{
       setDoctors(doctors);
@@ -427,11 +426,14 @@ if(user.faculty){
             <label>
               المٌحاضر:
               <Select
-                value={form.instructor}
-                onChange={(val) => setForm({ ...form, instructor: val })}
-                placeholder="اختر المحاضر"
-                options={doctors.map(u=>({value:u.id, label:`${u.first_name} ${u.last_name}`}))}
-              />
+  value={form.instructor}
+  onChange={(val) => setForm({ ...form, instructor: val })}
+  placeholder="اختر المحاضر"
+  options={doctors.map(u => ({
+    value: u.id, 
+    label: `${u.first_name} ${u.last_name} ${u.faculty?.name ? ` - ${u.faculty.name}` : ''}${u.program?.name ? ` - ${u.program.name}` : ''}`
+  }))}                
+/>
             </label>
             <label>
               القاعة:
@@ -441,6 +443,7 @@ if(user.faculty){
                 placeholder="اختر القاعة"
                 options={locations.map(l=>({value:l.id, label:l.name}))}
               />
+  
             </label>
             <label>
               اليوم:
