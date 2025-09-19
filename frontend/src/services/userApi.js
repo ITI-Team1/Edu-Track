@@ -22,7 +22,7 @@ export const fetchUserPermissions = async (user) => {
   const allGroups = await res.json();
 
   // Filter groups the user belongs to
-  const userGroups = allGroups.filter(group => user.groups.includes(group.id));
+  const userGroups = allGroups.filter(group => user.groups.map(group => group.id).includes(group.id));
 
   // Combine all permissions from those groups
   const permissions = userGroups.flatMap(group => group.permissions);

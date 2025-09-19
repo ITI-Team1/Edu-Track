@@ -6,6 +6,7 @@ import Overview from '../Overview/Overview';
 import Spinner from '../../components/Spinner';
 import { fetchUserPermissions } from '../../services/userApi';
 import { fetchFaculties } from '../../services/facultyApi';
+import StudentDegree from '../StudentDegrees/StudentDegree';
 
 // Lazy load all heavy components
 const Schedule = lazy(() => import('../../components/Schedule'));
@@ -247,8 +248,17 @@ console.log(permissions);
           >
             <span className="text-center text-[0.75rem] md:text-xl  min-w-5 ">✅</span>
             <span className="md:text-lg font-medium text-xs ">تقرير الغياب</span>
-          </button>
-          )}
+            </button>
+            )}
+            {hasAnyGroup([2, 1]) && (
+          <button
+            className={`sidebar-tabs ${activeTab === "student-degrees" ? 'sidebar-active' : ""}`}
+            onClick={() => setActiveTab("student-degrees")}
+          >
+            <span className="text-center text-[0.75rem] md:text-xl  min-w-5 ">📊</span>
+            <span className="md:text-lg font-medium text-xs ">الدرجات </span>
+            </button>
+            )}
         </nav>
         <div className="!p-[2rem_1.5rem_1.5rem] !text-center md:!text-right">
           {/* Mobile-only header title; styled to show only on small screens in CSS */}
@@ -283,6 +293,7 @@ console.log(permissions);
             {activeTab === "hall" && <Hall  permissions={permissions} facultiesData={facultiesData} />}
             {activeTab === "lecture" && <Lecture  permissions={permissions} facultiesData={facultiesData    } />}
             {activeTab === "attendance-records" && <AttendanceRecords  permissions={permissions} facultiesData={facultiesData} />}
+            {activeTab === "student-degrees" && <StudentDegree   />}
           </Suspense>
           {activeTab === "progress" && (
             <div className="content-card progress-section-applying">

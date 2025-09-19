@@ -290,10 +290,10 @@ export default function AttendanceRecords() {
                     {formatTimeArabic(lec.starttime)} - {formatTimeArabic(lec.endtime)}
                   </td>
                   <td data-label="الحضور">
-                  <div className="class-actions">
+                  <div className="class-actions justify-center">
                   <Link
                     to={`/attendance/sheet/${lec.id}`}
-                    className="btn"
+                    className="btn-main !px-4 !py-2 "
                     title="عرض الحضور لهذه المحاضرة"
                   >
                     تقرير الغياب

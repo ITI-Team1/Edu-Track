@@ -505,7 +505,7 @@ input::placeholder, textarea::placeholder {
 
 .modal-container {
   position: relative;
-  width: 100%;
+  width: fit-content;
   max-width: 560px;
   background: #ffffff;
   color: #1f2937;

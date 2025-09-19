@@ -191,7 +191,9 @@ const FacultyList = memo(
           <div className="error">حدث خطأ في تحميل البيانات</div>
         ) : (
           <div className="faculty-grid">
-        {(Array.isArray(faculties) ? faculties : [faculties])?.map((faculty) => (
+       dasdsa
+       dasdasddsa
+       dsa {(Array.isArray(faculties) ? faculties : [faculties])?.map((faculty) => (
   <div key={faculty.slug} className="faculty-card content-card">
     {faculty.logo && (
       <div className="faculty-logo">
@@ -364,7 +366,7 @@ const FacultyManage = ({permissions, facultiesData}) => {
 
 let facultySlug='' ;
 if (user.faculty) {
-  facultySlug = facultiesData.find(faculty => faculty.id === user.faculty).slug;
+  facultySlug = user.faculty.slug;
 }
 
   const {

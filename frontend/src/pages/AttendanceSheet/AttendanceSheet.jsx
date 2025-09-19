@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { useParams, useNavigate } from 'react-router-dom';
-import QRCode from 'qrcode';
+
 import logoRaw from '../../assets/psu-logo.svg?raw';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -9,18 +9,20 @@ import { getLecture, fetchLectures } from '../../services/lectureApi';
 import { fetchCourses } from '../../services/courseApi';
 import { fetchUsers } from '../../services/userApi';
 import '../Attendance/attendance.css';
+import Modal from '../../components/ui/Modal';
 
 // Instructor view (QR + students). Frontend-only QR rotation; no DB storage.
 // Treat route param as lectureId. Optional prop to override.
 const AttendancePage = ({ attendanceId: propAttendanceId }) => {
     const params = useParams();
     const lectureId = propAttendanceId || params.attendanceId;
-    const [qrToken, setQrToken] = useState(null);
-    const [qrSvg, setQrSvg] = useState('');
-    const [joinLink, setJoinLink] = useState(null);
+    
+    
+    
     const [students, setStudents] = useState([]);
-    const [secondsLeft, setSecondsLeft] = useState(10);
+    const [showModal, setShowModal] = useState(false);
     const [headingText, setHeadingText] = useState('');
+    const [student, setStudent] = useState(null);
     const navigate = useNavigate();
     // Build present set from localStorage (same-origin, cross-tab)
     const readPresentSet = useCallback(() => {
@@ -34,17 +36,7 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
     }, [lectureId]);
 
     // Frontend-only QR rotation: random token + deep link to /attendance/join
-    const generateQR = useCallback(async () => {
-        if (!lectureId) return;
-        const rand = crypto?.getRandomValues
-            ? Array.from(crypto.getRandomValues(new Uint8Array(12)))
-                    .map((b) => b.toString(16).padStart(2, '0'))
-                    .join('')
-            : Math.random().toString(36).slice(2);
-        setQrToken(rand);
-        const base = (import.meta.env.VITE_PUBLIC_BASE_URL || window.location.origin).replace(/\/$/, '');
-        setJoinLink(`${base}/attendance/join?lec=${encodeURIComponent(lectureId)}&j=${rand}`);
-    }, [lectureId]);
+    
 
     const fetchStudents = useCallback(async () => {
         if (!lectureId) return;
@@ -152,38 +144,21 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
         fetchStudents();
     }, [lectureId, fetchStudents]);
 
-    // Rotation timer (one interval every second; when counter hits 0 rotate & reset)
-    const rotateNow = useCallback(async () => {
-        await generateQR();
-        setSecondsLeft(10);
-    }, [generateQR]);
 
-    useEffect(() => {
-        if (!lectureId) return;
-        rotateNow();
-        const intv = setInterval(() => {
-            setSecondsLeft((prev) => {
-                if (prev <= 1) {
-                    // Trigger rotation
-                    rotateNow();
-                    return 10;
-                }
-                return prev - 1;
-            });
-        }, 1000);
-        return () => clearInterval(intv);
-    }, [lectureId, rotateNow]);
 
-    useEffect(() => {
-        if (qrToken) {
-            const payload = joinLink || JSON.stringify({ token: qrToken, lectureId });
-            QRCode.toString(payload, { type: 'svg', width: 260 }, (err, str) => {
-                if (!err) setQrSvg(str);
-            });
-        }
-    }, [qrToken, lectureId, joinLink]);
+    const handleEdit = (student) => {
+        // open modal to edit the attendance
+        setShowModal(true); 
+        setStudent(student);
+        console.log(student);
+    }
 
-    // Sync across tabs on same device
+    const handleEditSubmit = (student) => {
+        console.log(student);
+        setShowModal(false);
+    }
+
+        // Sync across tabs on same device
     useEffect(() => {
         const onStorage = (e) => {
             if (e.key === `attend:lec:${lectureId}`) fetchStudents();
@@ -200,7 +175,7 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
         <div className='attendance-page'>
             {/* Header with title and safety alert under it */}
             <div className='attendance-header'>
-                <button className='btn btn-secondary-attendance !ms-10' onClick={() => navigate('/dashboard')}>لوحة التحكم</button>
+                <button className='btn btn-secondary-attendance  !m-10' onClick={() => navigate('/dashboard')}>لوحة التحكم</button>
                 <h2 className='attendance-title'>
                     {headingText || `المحاضرة رقم ${lectureId}`}
                 </h2>
@@ -237,6 +212,8 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
                                             <th style='border:1px solid #fff;padding:6px 8px;'>الكود</th>
                                             <th style='border:1px solid #fff;padding:6px 8px;'>الاسم</th>
                                             <th style='border:1px solid #fff;padding:6px 8px;'>الحالة</th>
+                                            <th style='border:1px solid #fff;padding:6px 8px;'>درجه الحضور</th>
+                                            <th style='border:1px solid #fff;padding:6px 8px;'>درجة اعمال السنة</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -248,7 +225,9 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
                                                     <td style='border:1px solid #fff;padding:6px 8px;text-align:center; color: #2c3649;'>${s.username}</td>
                                                     <td style='border:1px solid #fff;padding:6px 8px;text-align:center;font-weight:600;color:#fff;background:${s.present ? '#16a34a' : '#dc2626'}'>${
                                                         s.present ? 'حضور' : 'غياب'
-                                                    }</td>
+                                                        }</td>
+                                                        <td style='border:1px solid #fff;padding:6px 8px;text-align:center; color: #2c3649;'>${i +10}</td>
+                                                        <td style='border:1px solid #fff;padding:6px 8px;text-align:center; color: #2c3649;'>${i +20}</td>
                                                 </tr>`
                                             )
                                             .join('')}
@@ -280,6 +259,10 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
                             <th>الكود</th>
                             <th>الاسم</th>
                             <th>الحالة</th>
+                            <th>درجه الحضور</th>
+                            <th>درجة اعمال السنة</th>
+                            <th>تعديل درجة اعمال السنة</th>
+                            
                         </tr>
                     </thead>
                     <tbody>
@@ -294,6 +277,12 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
                                 >
                                     {s.present ? 'حضور' : 'غياب'}
                                 </td>
+                                
+                                <td>{s.id+5}</td>
+                                <td>{s.id+20}</td>
+                                <td>
+                                    <button className='btn btn-secondary-attendance' onClick={() => handleEdit(s)}>تعديل</button>
+                                </td>
                             </tr>
                         ))}
                     </tbody>
@@ -301,6 +290,33 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
             </div>
             
             </div>
+            {showModal && <Modal   isOpen={showModal} onClose={() => setShowModal(false)} title='تعديل درجة اعمال السنة'>
+               <div className='flex flex-col gap-2 !h-fit !w-fit'>
+
+                <div className='flex flex-col gap-5 !mb-5  '>
+                    <div className='flex flex gap-2 text-2xl'>
+
+                    <p >الاسم الطالب :</p>
+                    <p>{student.username}</p>
+                    </div>
+                 
+                    <div className='flex flex gap-2 text-2xl'>
+
+                    <p>الدرجة الحالية لاعمال السنة :</p>
+                    <p>{student.id+20}</p>
+                    </div>
+                    
+                    
+                    
+                    
+                </div>
+                <div className='flex flex gap-2 text-2xl'>
+                    <p className=' !w-50'>درجة اعمال السنة الجديدة:</p>
+                    <input type='number' className=' h-8 w-40 !p-2 '  onChange={(e) => setEditValue(e.target.value)} />
+                </div>
+                <button className='btn btn-secondary-attendance !w-full' onClick={() => handleEditSubmit(s.id)}>تعديل</button>
+               </div>
+            </Modal>}
         </div>
     );
 };

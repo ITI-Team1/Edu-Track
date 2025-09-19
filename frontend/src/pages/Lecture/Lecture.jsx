@@ -13,6 +13,7 @@ import {
 import { fetchLocations } from "../../services/locationApi";
 import { fetchCourses } from "../../services/courseApi"
 import { fetchUsers } from "../../services/userApi"
+import { useAuth } from "../../context/AuthContext";
 
 export default function Lecture() {
   const [lectures, setLectures] = useState([]);
@@ -26,13 +27,14 @@ export default function Lecture() {
   const [lectureToDelete, setLectureToDelete] = useState(null);
   const [modalType, setModalType] = useState("create");
   const [selectedLecture, setSelectedLecture] = useState(null);
-
+  const {user} = useAuth()
+  const [doctors, setDoctors] = useState([])
   // Loaders and CRUD handlers (restored)
   useEffect(() => {
     loadLectures();
     loadLocations();
     loadCourses();
-    loadUsers();
+    loadDoctors();
   }, []);
 
   const loadLectures = async () => {
@@ -67,13 +69,24 @@ export default function Lecture() {
       setError(err?.message || "");
     }
   };
-
-  const loadUsers = async () => {
+//check  which user  has the same faculty
+  const loadDoctors = async () => {
     try {
-      const data = await fetchUsers();
-      setUsers(Array.isArray(data) ? data : []);
+      const allUsers = await fetchUsers();
+      const doctors = allUsers.filter(u => u.groups.map(g => g.name).includes('دكاترة - معيدين'));
+//check if the doctor has the same faculty
+if(user.faculty){
+      const doctorsWithSameFaculty = doctors.filter(d => d.faculty?.id == user.faculty?.id );
+      console.log(doctorsWithSameFaculty);
+      setDoctors(doctorsWithSameFaculty);
+    }else{
+      setDoctors(doctors);
+    }
+     
+      
+      
     } catch (err) {
-      setUsers([]);
+      setDoctors([]);
       setError(err?.message || "");
     }
   };
@@ -417,7 +430,7 @@ export default function Lecture() {
                 value={form.instructor}
                 onChange={(val) => setForm({ ...form, instructor: val })}
                 placeholder="اختر المحاضر"
-                options={users.map(u=>({value:u.id, label:`${u.first_name} ${u.last_name}`}))}
+                options={doctors.map(u=>({value:u.id, label:`${u.first_name} ${u.last_name}`}))}
               />
             </label>
             <label>

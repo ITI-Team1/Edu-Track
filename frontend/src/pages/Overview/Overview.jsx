@@ -263,7 +263,7 @@ export default function Overview() {
           <h2>جدول اليوم</h2>
           <div className="schedule-list">
             {todaySchedule.length === 0 && (
-              <div className="schedule-item content-card" style={{ textAlign: 'center', padding: '16px' }}>
+              <div className=" text-gray-800 !text-lg schedule-item content-card" style={{ textAlign: 'center', padding: '16px' }}>
                 لا توجد محاضرات اليوم
               </div>
             )}
