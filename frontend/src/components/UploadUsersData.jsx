@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import Spinner from "./Spinner";
 
-export default function UploadExcel() {
+export default function UploadExcel({ onUploadComplete, onError }) {
   const navigate = useNavigate();
   const [file, setFile] = useState(null);
   const [status, setStatus] = useState("");
@@ -46,9 +46,17 @@ export default function UploadExcel() {
   };
   const prevent = (e) => e.preventDefault();
 
-  const handleUpload = async () => {
+  const handleUpload = async (e) => {
+    if (e) {
+      e.preventDefault(); // Prevent form submission if called from a form
+      e.stopPropagation(); // Stop event bubbling
+    }
+    
     if (!file) {
-      setStatus("الرجاء اختيار ملف Excel أولاً");
+      const errorMsg = "الرجاء اختيار ملف Excel أولاً";
+      setStatus(errorMsg);
+      setStatusType('error');
+      if (onError) onError(errorMsg);
       return;
     }
     const formData = new FormData();
@@ -76,18 +84,27 @@ export default function UploadExcel() {
           if (m.includes('uploaded successfully')) return 'تم الرفع بنجاح';
           return 'تم الرفع بنجاح';
         };
-        setStatus(successMsg(data.success));
+        
+        const msg = successMsg(data.success);
+        setStatus(msg);
         setStatusType('success');
         setFile(null);
-        // Signal Dashboard to refresh and navigate there without full reload
-        try {
-          window.dispatchEvent(new Event('dashboard-refresh'));
-        } catch {}
-        navigate(`/dashboard?refresh=${Date.now()}`);
-      } else {
-        setStatus("فشل الرفع: " + (data.error || arabicStatus(res.status, res.statusText)));
-        setStatusType('error');
         
+        // Call the success callback if provided
+        if (onUploadComplete) {
+          onUploadComplete(msg);
+        } else {
+          // Fallback to default behavior
+          try {
+            window.dispatchEvent(new Event('dashboard-refresh'));
+            navigate(`/dashboard?refresh=${Date.now()}`);
+          } catch {}
+        }
+      } else {
+        const errorMsg = "فشل الرفع: " + (data.error || arabicStatus(res.status, res.statusText));
+        setStatus(errorMsg);
+        setStatusType('error');
+        if (onError) onError(errorMsg);
       }
     } catch (_err) {
       setStatus("فشل الرفع: " + ("خطأ في الشبكة أو الخادم"));
@@ -146,7 +163,12 @@ export default function UploadExcel() {
         >
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
             <Spinner size="large" color="white" />
-            <div style={{ color: '#fff', fontWeight: 600 }}>جارٍ رفع الملف...</div>
+            <div style={{ color: '#fff', fontWeight: 600 }}>
+
+              <Spinner size="lg" color="primary" />
+            
+            
+            </div>
           </div>
         </div>,
         document.body

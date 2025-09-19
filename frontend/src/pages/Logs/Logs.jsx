@@ -6,6 +6,7 @@ import api from "../../services/api";
 import "./Logs.css";
 import { useAuth } from "../../context/AuthContext";
 import LogsHero from '../../components/LogsHero';
+import Spinner from '../../components/Spinner';
 
 // Helper Functions
 const getActionFlagLabel = (flag) => {
@@ -383,7 +384,10 @@ const Logs = () => {
     }
   };
 
-  if (loading) return <div className="loading-container">Loading...</div>;
+  if (loading) return <div className="loading-container">
+
+    <Spinner size='lg' color='primary' />
+  </div>;
   if (error) return <div className="error-container">{error}</div>;
 
   return (

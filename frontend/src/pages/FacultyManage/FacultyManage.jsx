@@ -11,8 +11,6 @@ import "./FacultyManage.css";
 import Modal from "../../components/ui/Modal";
 import Button from "../../components/ui/Button";
 import { useAuth } from "../../context/AuthContext";
-// import { fetchUserPermissions } from "../../services/userApi";
-
 const initialForm = { name: "", slug: "", logo: null, university: 1 };
 
 
@@ -175,17 +173,13 @@ const FacultyList = memo(
         <div className="header-actions">
           <h1>إدارة الكليات</h1>
           {permissions.includes('Can add faculty') &&
-          <Button onClick={onAdd} className="add-button">
+          <Button onClick={onAdd} className="add-button-faculty">
             <span
-              style={{
-                fontSize: "1.5rem",
-                marginBottom: 0,
-                marginLeft: "0.5rem",
-              }}
+             className="text-2xl"
             >
               +
             </span>
-            <span style={{ fontWeight: "bold", fontSize: "1rem" }}>
+            <span className="text-lg">
               إضافة كلية
             </span>
           </Button>
@@ -371,9 +365,8 @@ const FacultyManage = ({permissions, facultiesData}) => {
 let facultySlug='' ;
 if (user.faculty) {
   facultySlug = facultiesData.find(faculty => faculty.id === user.faculty).slug;
-    // console.warn('facultySlug', facultySlug);
 }
-console.log(facultySlug);
+
   const {
     data: faculties,
     isLoading,

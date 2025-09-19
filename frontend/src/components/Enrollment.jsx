@@ -1,270 +1,250 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import '../styles/enrollment.css';
+
+// API imports
 import { fetchCourses } from '../services/courseApi';
 import { fetchFaculties } from '../services/facultyApi';
 import { fetchPrograms } from '../services/programApi';
 import { fetchStudents, enrollStudents } from '../services/enrollmentApi';
-import UploadExcel from './UploadUsersData';
-import { useLocation } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 
-function Enrollment() {
+// Component imports
+import UploadExcel from './UploadUsersData';
+import Spinner from './Spinner';
+
+// Constants
+const ITEM_HEIGHT = 80;
+const OVERSCAN = 6;
+const DEFAULT_CONTAINER_HEIGHT = 380;
+const DEBOUNCE_DELAY = 500;
+const AUTO_DISMISS_DELAY = 4000;
+
+// User permission constants
+const SUPER_USER_GROUPS = [1, 6]; // مدير النظام (1) or رئيس الجامعة (6)
+
+const Enrollment = () => {
+  // ===== STATE MANAGEMENT =====
+  
+  // Data states
   const [courses, setCourses] = useState([]);
   const [faculties, setFaculties] = useState([]);
   const [programs, setPrograms] = useState([]);
   const [selectedStudents, setSelectedStudents] = useState([]);
   const [selectedCourses, setSelectedCourses] = useState([]);
+  
+  // Loading and error states
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  // Filter states
   const [filterFaculty, setFilterFaculty] = useState('');
   const [filterProgram, setFilterProgram] = useState('');
   const [filterLevel, setFilterLevel] = useState('');
   const [filterName, setFilterName] = useState('');
   const [debouncedName, setDebouncedName] = useState('');
 
-  // Get current user from auth context
-  const { user } = useAuth();
-
-  // Virtualization state for students list
+  // Virtualization states
   const scrollRef = useRef(null);
   const [scrollTop, setScrollTop] = useState(0);
-  const [containerHeight, setContainerHeight] = useState(380);
-  const ITEM_HEIGHT = 80;
-  const OVERSCAN = 6;
+  const [containerHeight, setContainerHeight] = useState(DEFAULT_CONTAINER_HEIGHT);
 
-  // Quick lookup maps for faculty/program names
-  const facultyNameMap = useMemo(() => {
-    const m = {};
-    (faculties || []).forEach((f) => {
-      m[String(f.id)] = f.name;
-    });
-    return m;
-  }, [faculties]);
+  // ===== HOOKS =====
+  const { user } = useAuth();
+  const location = useLocation();
 
-  const programNameMap = useMemo(() => {
-    const m = {};
-    (programs || []).forEach((p) => {
-      m[String(p.id)] = p.name;
-    });
-    return m;
-  }, [programs]);
-
-  // Get user's faculty and program
-  const userFacultyId = useMemo(() => {
-    if (!user) return null;
-    return user.faculty?.id || user.faculty_id || user.faculty;
-  }, [user]);
-
-  const userProgramId = useMemo(() => {
-    if (!user) return null;
-    return user.program?.id || user.program_id || user.program;
-  }, [user]);
-
-  // Check if user is superuser (can change filters)
-  const isSuperUser = useMemo(() => {
-    if (!user?.groups) return false;
-    return user.groups.some(group => {
+  // ===== MEMOIZED VALUES =====
+  
+  // User permissions and data
+  const userPermissions = useMemo(() => {
+    if (!user) return { isSuperUser: false, facultyId: null, programId: null };
+    
+    const isSuperUser = user.groups?.some(group => {
       const groupId = typeof group === 'object' ? group.id : group;
-      return groupId === 1 || groupId === 6; // مدير النظام (1) or رئيس الجامعة (6)
-    });
+      return SUPER_USER_GROUPS.includes(groupId);
+    }) || false;
+    
+    const facultyId = user.faculty?.id || user.faculty_id || user.faculty;
+    const programId = user.program?.id || user.program_id || user.program;
+    
+    return { isSuperUser, facultyId, programId };
   }, [user]);
 
-  // Check if user has faculty and program assigned
-  const hasFacultyAndProgram = userFacultyId && userProgramId;
+  // Quick lookup maps for performance
+  const lookupMaps = useMemo(() => ({
+    faculty: (faculties || []).reduce((map, faculty) => {
+      map[String(faculty.id)] = faculty.name;
+      return map;
+    }, {}),
+    program: (programs || []).reduce((map, program) => {
+      map[String(program.id)] = program.name;
+      return map;
+    }, {})
+  }), [faculties, programs]);
 
-  // Debug logging for user object structure
-  useEffect(() => {
-    if (user) {
-      // console.log('=== ENROLLMENT COMPONENT v6.0 ===');
-      // console.log('User object:', user);
-      // console.log('User groups:', user.groups);
-      // console.log('User faculty:', user.faculty);
-      // console.log('User program:', user.program);
-      // console.log('Extracted faculty ID:', userFacultyId);
-      // console.log('Extracted program ID:', userProgramId);
-      // console.log('Has faculty and program:', hasFacultyAndProgram);
-      // console.log('Is superuser:', isSuperUser);
-      // console.log('Username:', user.username);
-      // console.log('Email:', user.email);
-    }
-  }, [user, userFacultyId, userProgramId, hasFacultyAndProgram, isSuperUser]);
+  // Filtered programs based on selected faculty
+  const filteredPrograms = useMemo(() => {
+    if (!filterFaculty) return programs || [];
+    
+    return (programs || []).filter(program => 
+      [program.faculty, program.faculty_id, program.faculty?.id]
+        .some(id => String(id) === String(filterFaculty))
+    );
+  }, [programs, filterFaculty]);
 
-  // Initialize filters based on user's faculty and program
-  useEffect(() => {
-    if (!user || !faculties.length || !programs.length) return;
+  // Filtered courses based on faculty and program
+  const filteredCourses = useMemo(() => {
+    let courseList = Array.isArray(courses) ? [...courses] : [];
     
-    // console.log('=== INITIALIZING FILTERS ===');
-    // console.log('User faculty ID:', userFacultyId);
-    // console.log('User program ID:', userProgramId);
-    // console.log('Current filter faculty:', filterFaculty);
-    // console.log('Current filter program:', filterProgram);
-    // console.log('Is superuser:', isSuperUser);
-    
-    // Only set filters if they haven't been set yet
-    if (userFacultyId && !filterFaculty) {
-      // console.log('Setting default faculty filter to:', userFacultyId);
-      setFilterFaculty(String(userFacultyId));
-    }
-    
-    if (userProgramId && !filterProgram) {
-      // console.log('Setting default program filter to:', userProgramId);
-      setFilterProgram(String(userProgramId));
-    }
-  }, [user, userFacultyId, userProgramId, faculties.length, programs.length]); // Removed filterFaculty and filterProgram from deps
+    const getProgramId = program => program && typeof program === 'object' ? program.id : program;
+    const getCourseProgramIds = course => 
+      Array.isArray(course?.programs) ? course.programs.map(getProgramId) : [];
 
-  useEffect(() => {
-    const loadInitialData = async () => {
-      try {
-        setLoading(true);
-        const [coursesData, facultiesData, programsData] = await Promise.all([
-          fetchCourses(),
-          fetchFaculties(),
-          fetchPrograms(),
-        ]);
-        setCourses(coursesData);
-        setFaculties(facultiesData.results || facultiesData);
-        setPrograms(programsData.results || programsData);
-      } catch (err) {
-        setError(err.message || 'حدث خطأ غير متوقع');
-      } finally {
-        setLoading(false);
+    if (filterProgram) {
+      courseList = courseList.filter(course =>
+        getCourseProgramIds(course).some(programId => 
+          String(programId) === String(filterProgram)
+        )
+      );
+    }
+
+    if (filterFaculty) {
+      const facultyProgramIds = (programs || [])
+        .filter(program => 
+          [program.faculty, program.faculty_id, program.faculty?.id]
+            .some(id => String(id) === String(filterFaculty))
+        )
+        .map(program => String(program.id));
+      
+      if (facultyProgramIds.length) {
+        courseList = courseList.filter(course =>
+          getCourseProgramIds(course).some(programId => 
+            facultyProgramIds.includes(String(programId))
+          )
+        );
       }
-    };
-    loadInitialData();
-  }, []);
+    }
+    
+    return courseList;
+  }, [courses, programs, filterFaculty, filterProgram]);
 
-  // Debounce name filter
-  useEffect(() => {
-    const t = setTimeout(() => setDebouncedName(filterName), 500);
-    return () => clearTimeout(t);
-  }, [filterName]);
-
-  // React Query: fetch and cache students using the enrollmentApi service
-  const { data: usersData, isLoading: usersLoading, error: usersError, refetch: refetchUsers } = useQuery({
-    queryKey: ['students', filterLevel, debouncedName], // Removed userFacultyId and userProgramId from query key
-    queryFn: () => {
-      // console.log('=== REACT QUERY CALLING fetchStudents ===');
-      // console.log('User passed to fetchStudents:', user);
-      return fetchStudents(user, {
-        level: filterLevel,
-        name: debouncedName
-      });
-    },
+  // ===== REACT QUERY =====
+  
+  const { 
+    data: usersData, 
+    isLoading: usersLoading, 
+    error: usersError, 
+    refetch: refetchUsers 
+  } = useQuery({
+    queryKey: ['students', filterLevel, debouncedName],
+    queryFn: () => fetchStudents(user, {
+      level: filterLevel,
+      name: debouncedName
+    }),
     staleTime: 1000 * 60,
     gcTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
     enabled: !!user,
   });
 
-  // Debug the usersData
-  useEffect(() => {
-    if (usersData) {
-      // console.log('=== USERS DATA RECEIVED ===');
-      // console.log('usersData:', usersData);
-      // console.log('usersData.results:', usersData.results);
-      // console.log('usersData.results length:', usersData.results?.length);
-    }
-  }, [usersData]);
+  const { refetch: refetchCourses } = useQuery({
+    queryKey: ['courses'],
+    queryFn: fetchCourses,
+    enabled: false
+  });
 
-  // Rerender users list when UploadUsersData signals
-  const location = useLocation();
-  useEffect(() => {
-    const onRefresh = () => {
-      refetchUsers();
-    };
-    window.addEventListener('enrollment-refresh', onRefresh);
-    return () => window.removeEventListener('enrollment-refresh', onRefresh);
-  }, [refetchUsers]);
+  const { refetch: refetchStudents } = useQuery({
+    queryKey: ['students'],
+    queryFn: fetchStudents,
+    enabled: false
+  });
 
-  useEffect(() => {
-    try {
-      const params = new URLSearchParams(location.search);
-      if (params.has('refresh')) {
-        refetchUsers();
-      }
-    } catch {}
-  }, [location.search, refetchUsers]);
-
-  // Client-side filtered students based on selects and debounced name
+  // ===== FILTERED DATA =====
+  
   const filteredStudents = useMemo(() => {
-    const src = usersData?.results || usersData || [];
-    // console.log('=== CLIENT-SIDE FILTERING ===');
-    // console.log('Total students from API:', src.length);
-    // console.log('Filter faculty:', filterFaculty);
-    // console.log('Filter program:', filterProgram);
-    // console.log('Filter level:', filterLevel);
-    // console.log('Filter name:', debouncedName);
+    const students = usersData?.results || usersData || [];
     
-    const filtered = (Array.isArray(src) ? src : []).filter(u => {
-      const facOk = !filterFaculty || [u.faculty, u.faculty_id, u.faculty?.id].some(v => String(v) === String(filterFaculty));
-      const progOk = !filterProgram || [u.program, u.program_id, u.program?.id].some(v => String(v) === String(filterProgram));
-      const levelOk = !filterLevel || String(u.level || '') === String(filterLevel);
-      const name = `${u.first_name || ''} ${u.last_name || ''} ${u.username || ''} ${u.email || ''}`.toLowerCase();
-      const nameOk = !debouncedName || name.includes(debouncedName.toLowerCase());
+    return (Array.isArray(students) ? students : []).filter(student => {
+      const facultyMatch = !filterFaculty || 
+        [student.faculty, student.faculty_id, student.faculty?.id]
+          .some(id => String(id) === String(filterFaculty));
       
-      if (facOk && progOk && levelOk && nameOk) {
-        // console.log('Student matches filters:', u.username, 'Faculty:', u.faculty?.id, 'Program:', u.program?.id);
-      }
+      const programMatch = !filterProgram || 
+        [student.program, student.program_id, student.program?.id]
+          .some(id => String(id) === String(filterProgram));
       
-      return facOk && progOk && levelOk && nameOk;
+      const levelMatch = !filterLevel || String(student.level || '') === String(filterLevel);
+      
+      const nameText = `${student.first_name || ''} ${student.last_name || ''} ${student.username || ''} ${student.email || ''}`.toLowerCase();
+      const nameMatch = !debouncedName || nameText.includes(debouncedName.toLowerCase());
+      
+      return facultyMatch && programMatch && levelMatch && nameMatch;
     });
-    
-    // console.log('Filtered students count:', filtered.length);
-    return filtered;
   }, [usersData, filterFaculty, filterProgram, filterLevel, debouncedName]);
 
-  // Measure container height
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const measure = () => setContainerHeight(el.clientHeight || 380);
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
+  // ===== VIRTUALIZATION CALCULATIONS =====
+  
+  const virtualizationData = useMemo(() => {
+    const totalCount = filteredStudents.length;
+    const visibleCount = Math.ceil(containerHeight / ITEM_HEIGHT) + OVERSCAN * 2;
+    const startIndex = Math.max(0, Math.floor(scrollTop / ITEM_HEIGHT) - OVERSCAN);
+    const endIndex = Math.min(totalCount, startIndex + visibleCount);
+    
+    return {
+      totalCount,
+      startIndex,
+      endIndex,
+      topSpacer: startIndex * ITEM_HEIGHT,
+      bottomSpacer: (totalCount - endIndex) * ITEM_HEIGHT,
+      visibleStudents: filteredStudents.slice(startIndex, endIndex)
+    };
+  }, [filteredStudents, containerHeight, scrollTop]);
 
-  // Virtual window calculations
-  const totalCount = filteredStudents.length;
-  const visibleCount = Math.ceil(containerHeight / ITEM_HEIGHT) + OVERSCAN * 2;
-  const startIndex = Math.max(0, Math.floor(scrollTop / ITEM_HEIGHT) - OVERSCAN);
-  const endIndex = Math.min(totalCount, startIndex + visibleCount);
-  const topSpacer = startIndex * ITEM_HEIGHT;
-  const bottomSpacer = (totalCount - endIndex) * ITEM_HEIGHT;
-  const visibleStudents = filteredStudents.slice(startIndex, endIndex);
+  // ===== UTILITY FUNCTIONS =====
+  
+  const translateToArabic = (message) => {
+    if (!message) return '';
+    
+    const translations = {
+      'No lectures found for the given courses.': 'لا توجد محاضرات مسجلة لهذه المقررات.',
+      'Failed to load users': 'فشل تحميل المستخدمين',
+      'Failed to enroll': 'فشل التسجيل',
+      'NetworkError': 'خطأ في الشبكة',
+      'Unauthorized': 'غير مصرح بالدخول',
+      'Forbidden': 'غير مسموح لك بتنفيذ هذه العملية',
+      'Not Found': 'غير موجود',
+    };
+    
+    const msg = String(message);
+    
+    if (translations[msg]) return translations[msg];
+    if (msg.includes('No lectures found')) return 'لا توجد محاضرات مسجلة لهذه المقررات.';
+    if (msg.includes('detail') && msg.includes('Not Found')) return 'غير موجود';
+    
+    return msg;
+  };
 
-  // Programs filtered by selected faculty
-  const filteredPrograms = useMemo(() => {
-    const list = programs || [];
-    if (!filterFaculty) return list;
-    return list.filter((pr) => [pr.faculty, pr.faculty_id, pr.faculty?.id].some((v) => String(v) === String(filterFaculty)));
-  }, [programs, filterFaculty]);
-
-  // Clear program filter if it doesn't belong to current faculty
-  useEffect(() => {
-    if (!filterProgram) return;
-    const exists = (filteredPrograms || []).some((pr) => String(pr.id) === String(filterProgram));
-    if (!exists) setFilterProgram('');
-  }, [filterFaculty, filteredPrograms, filterProgram]);
-
+  // ===== EVENT HANDLERS =====
+  
   const handleEnroll = async (e) => {
     e.preventDefault();
+    
     if (selectedStudents.length === 0 || selectedCourses.length === 0) {
       setError('الرجاء اختيار طالب واحد على الأقل ومقرر واحد على الأقل.');
       return;
     }
+    
     try {
       setError(null);
       setSuccess('');
       setSubmitting(true);
       
       const results = await enrollStudents(selectedStudents, selectedCourses);
-
-      const failed = results.filter(r => r.status === 'rejected');
+      const failed = results.filter(result => result.status === 'rejected');
+      
       if (failed.length === 0) {
         setSuccess('تم تسجيل جميع الطلاب بنجاح');
       } else if (failed.length === results.length) {
@@ -272,12 +252,12 @@ function Enrollment() {
       } else {
         setSuccess(`تم بعض التسجيلات بنجاح. فشل: ${failed.length}/${results.length}`);
       }
+      
       setSelectedStudents([]);
       setSelectedCourses([]);
     } catch (err) {
       setError(translateToArabic(err.message) || 'فشل التسجيل');
-    }
-    finally {
+    } finally {
       setSubmitting(false);
     }
   };
@@ -293,95 +273,228 @@ function Enrollment() {
 
   const handleSelectAllCourses = (checked) => {
     if (checked) {
-      const allCourseIds = filteredCourses.map(c => c.id);
+      const allCourseIds = filteredCourses.map(course => course.id);
       setSelectedCourses(allCourseIds);
     } else {
       setSelectedCourses([]);
     }
   };
 
-  // Courses filtered by Program and Faculty
-  const filteredCourses = useMemo(() => {
-    let list = Array.isArray(courses) ? [...courses] : [];
-    const getProgId = (p) => (p && typeof p === 'object' ? p.id : p);
-    const courseProgramIds = (c) => Array.isArray(c?.programs) ? c.programs.map(getProgId) : [];
-
-    if (filterProgram) {
-      list = list.filter((c) => courseProgramIds(c).some((pid) => String(pid) === String(filterProgram)));
+  const handleStudentSelection = (studentId, checked) => {
+    const idStr = String(studentId);
+    
+    if (checked) {
+      setSelectedStudents(prev => 
+        prev.includes(idStr) ? prev : [...prev, idStr]
+      );
+    } else {
+      setSelectedStudents(prev => 
+        prev.filter(id => id !== idStr)
+      );
     }
+  };
 
-    if (filterFaculty) {
-      const programIdsForFaculty = (Array.isArray(programs) ? programs : [])
-        .filter((pr) => [pr.faculty, pr.faculty_id, pr.faculty?.id].some((v) => String(v) === String(filterFaculty)))
-        .map((pr) => String(pr.id));
-      if (programIdsForFaculty.length) {
-        list = list.filter((c) => courseProgramIds(c).some((pid) => programIdsForFaculty.includes(String(pid))));
+  const handleCourseSelection = (courseId, checked) => {
+    if (checked) {
+      setSelectedCourses(prev => 
+        prev.includes(courseId) ? prev : [...prev, courseId]
+      );
+    } else {
+      setSelectedCourses(prev => 
+        prev.filter(id => id !== courseId)
+      );
+    }
+  };
+
+  const handleUploadSuccess = (message) => {
+    setSuccess(message || 'تم رفع الملف بنجاح');
+    refetchCourses?.();
+    refetchStudents?.();
+  };
+
+  const handleUploadError = (error) => {
+    setError(error || 'حدث خطأ أثناء رفع الملف');
+  };
+
+  // ===== EFFECTS =====
+  
+  // Load initial data
+  useEffect(() => {
+    const loadInitialData = async () => {
+      try {
+        setLoading(true);
+        const [coursesData, facultiesData, programsData] = await Promise.all([
+          fetchCourses(),
+          fetchFaculties(),
+          fetchPrograms(),
+        ]);
+        
+        setCourses(coursesData);
+        setFaculties(facultiesData.results || facultiesData);
+        setPrograms(programsData.results || programsData);
+      } catch (err) {
+        setError(err.message || 'حدث خطأ غير متوقع');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadInitialData();
+  }, []);
+
+  // Initialize filters based on user permissions
+  useEffect(() => {
+    if (!user || !faculties.length || !programs.length) return;
+    
+    const { facultyId, programId } = userPermissions;
+    
+    if (facultyId && !filterFaculty) {
+      setFilterFaculty(String(facultyId));
+    }
+    
+    if (programId && !filterProgram) {
+      setFilterProgram(String(programId));
+    }
+  }, [user, userPermissions, faculties.length, programs.length, filterFaculty, filterProgram]);
+
+  // Debounce name filter
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedName(filterName), DEBOUNCE_DELAY);
+    return () => clearTimeout(timer);
+  }, [filterName]);
+
+  // Handle program filter changes when faculty changes
+  useEffect(() => {
+    if (filterFaculty && filterProgram) {
+      const programExists = filteredPrograms.some(
+        program => String(program.id) === String(filterProgram)
+      );
+      if (!programExists) {
+        setFilterProgram('');
       }
     }
-    
-    
-    return list;
-  }, [courses, programs, filterFaculty, filterProgram]);
-// get user groups using API localhost:8000/groups
+  }, [filterFaculty, filteredPrograms, filterProgram]);
+
+  // Measure container height for virtualization
   useEffect(() => {
-    const getUserGroups = async () => {
-      const res = await fetch('http://localhost:8000/groups');
-      const data = await res.json();
-      console.log(data);
-    };
-    getUserGroups();
+    const element = scrollRef.current;
+    if (!element) return;
+    
+    const measureHeight = () => setContainerHeight(element.clientHeight || DEFAULT_CONTAINER_HEIGHT);
+    measureHeight();
+    
+    const resizeObserver = new ResizeObserver(measureHeight);
+    resizeObserver.observe(element);
+    
+    return () => resizeObserver.disconnect();
   }, []);
+
+  // Handle refresh events
+  useEffect(() => {
+    const handleRefresh = () => refetchUsers();
+    
+    window.addEventListener('enrollment-refresh', handleRefresh);
+    return () => window.removeEventListener('enrollment-refresh', handleRefresh);
+  }, [refetchUsers]);
+
+  // Handle URL refresh parameter
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(location.search);
+      if (params.has('refresh')) {
+        refetchUsers();
+      }
+    } catch {
+      // Ignore URL parsing errors
+    }
+  }, [location.search, refetchUsers]);
+
+  // Auto-dismiss messages
+  useEffect(() => {
+    if (!success && !error) return;
+    
+    const timer = setTimeout(() => {
+      setSuccess('');
+      setError(null);
+    }, AUTO_DISMISS_DELAY);
+    
+    return () => clearTimeout(timer);
+  }, [success, error]);
+
+  // ===== RENDER HELPERS =====
+  
+  const renderStudentLabel = (student) => {
+    const facultyId = String(
+      (student.faculty && typeof student.faculty === 'object' ? student.faculty.id : student.faculty_id) ??
+      student.faculty
+    );
+    const programId = String(
+      (student.program && typeof student.program === 'object' ? student.program.id : student.program_id) ??
+      student.program
+    );
+    
+    const facultyName = (student.faculty && typeof student.faculty === 'object' && student.faculty.name) || 
+                       lookupMaps.faculty[facultyId] || 'كلية غير محددة';
+    const programName = (student.program && typeof student.program === 'object' && student.program.name) || 
+                        lookupMaps.program[programId] || 'برنامج غير محدد';
+    const levelName = student.level || 'مستوى غير محدد';
+    const displayName = `${student.first_name || ''} ${student.last_name || ''}`.trim();
+    
+    if (displayName) {
+      return (
+        <>
+          <span className="student-name">{displayName}</span>
+          {student.username && (
+            <span className="student-username"> ({student.username})</span>
+          )}
+          <br />
+          <span className="student-meta">{facultyName} | {programName} | {levelName}</span>
+        </>
+      );
+    } else if (student.username) {
+      return (
+        <>
+          <span className="student-name">{student.username}</span>
+          <br />
+          <span className="student-meta">{facultyName} | {programName} | {levelName}</span>
+        </>
+      );
+    }
+    
+    return null;
+  };
+
+  // ===== LOADING STATE =====
+  
   const combinedLoading = loading || usersLoading;
   const combinedError = error || usersError?.message;
 
-  // Translate common backend messages to Arabic
-  const translateToArabic = (msg) => {
-    if (!msg) return '';
-    const m = String(msg);
-    const map = {
-      'No lectures found for the given courses.': 'لا توجد محاضرات مسجلة لهذه المقررات.',
-      'Failed to load users': 'فشل تحميل المستخدمين',
-      'Failed to enroll': 'فشل التسجيل',
-      'NetworkError': 'خطأ في الشبكة',
-      'Unauthorized': 'غير مصرح بالدخول',
-      'Forbidden': 'غير مسموح لك بتنفيذ هذه العملية',
-      'Not Found': 'غير موجود',
-    };
-    if (map[m]) return map[m];
-    if (m.includes('No lectures found')) return 'لا توجد محاضرات مسجلة لهذه المقررات.';
-    if (m.includes('detail') && m.includes('Not Found')) return 'غير موجود';
-    return m;
-  };
+  if (combinedLoading) {
+    return <div className="loading-container">
+<Spinner size='lg' color='primary' />
 
-  // Auto-dismiss success/error
-  useEffect(() => {
-    if (!success && !combinedError) return;
-    const t = setTimeout(() => {
-      setSuccess('');
-      setError(null);
-    }, 4000);
-    return () => clearTimeout(t);
-  }, [success, combinedError]);
+    </div>;
+  }
 
-  if (combinedLoading) return <div>جارٍ التحميل...</div>;
-
+  // ===== MAIN RENDER =====
+  
   return (
     <div className="enrollment-page" dir="rtl">
       <h1>تسجيل الطلاب و المقررات</h1>
       
-      {success && <div className="success-message" role="status">{success}</div>}
-      {combinedError && (
-        <div className="error-message" role="alert">
-          خطأ: {translateToArabic(combinedError)}
-          {String(combinedError).includes('No lectures found') && (
-            <>
-              <br />
-              <small>يبدو أنه لا توجد محاضرات مسجلة لهذه المقررات. الرجاء التأكد من إنشاء محاضرات لهذه المقررات أولاً.</small>
-            </>
-          )}
+      {success && (
+        <div className="success-message" role="status">
+          {success}
         </div>
       )}
       
+      {combinedError && (
+        <div className="error-message" role="alert">
+          خطأ: {translateToArabic(combinedError)}
+        </div>
+      )}
+      
+      {/* Filters Section */}
       <div className="filters section-card">
         <input 
           type="text" 
@@ -389,26 +502,37 @@ function Enrollment() {
           value={filterName} 
           onChange={e => setFilterName(e.target.value)}
         />
+        
         <select 
           value={filterFaculty} 
           onChange={e => setFilterFaculty(e.target.value)}
-          disabled={!isSuperUser}
+          disabled={!userPermissions.isSuperUser}
         >
           <option value="">كل الكليات</option>
-          {faculties.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+          {faculties.map(faculty => (
+            <option key={faculty.id} value={faculty.id}>
+              {faculty.name}
+            </option>
+          ))}
         </select>
+        
         <select 
           value={filterProgram} 
           onChange={e => setFilterProgram(e.target.value)}
-          disabled={!isSuperUser}
+          disabled={!userPermissions.isSuperUser}
         >
           <option value="">كل البرامج</option>
-          {filteredPrograms.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+          {filteredPrograms.map(program => (
+            <option key={program.id} value={program.id}>
+              {program.name}
+            </option>
+          ))}
         </select>
+        
         <select 
           value={filterLevel} 
           onChange={e => setFilterLevel(e.target.value)}
-          disabled={!isSuperUser}
+          disabled={!userPermissions.isSuperUser}
         >
           <option value="">كل المستويات</option>
           <option value="المستوى الأول">المستوى الأول</option>
@@ -419,19 +543,24 @@ function Enrollment() {
           <option value="المستوى السادس">المستوى السادس</option>
           <option value="المستوى السابع">المستوى السابع</option>
         </select>
-        {!isSuperUser && (
+        
+        {!userPermissions.isSuperUser && (
           <div style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
             * فلاتر الكلية والبرنامج والمستوى ثابتة بناءً على صلاحياتك - يمكنك البحث بالاسم
           </div>
         )}
       </div>
 
+      {/* Main Form */}
       <form onSubmit={handleEnroll} className="enrollment-form two-col">
+        {/* Students Selection */}
         <div className="form-group section-card">
           <div className="group-head">
             <label>
               اختر الطلاب
-              <span className="enr-badge">{selectedStudents.length}/{filteredStudents.length}</span>
+              <span className="enr-badge">
+                {selectedStudents.length}/{filteredStudents.length}
+              </span>
             </label>
             <div className="checkbox-item inline">
               <input
@@ -443,82 +572,53 @@ function Enrollment() {
               <label htmlFor="students-select-all">تحديد الكل</label>
             </div>
           </div>
+          
           <div
             className="scroll-area"
             ref={scrollRef}
             onScroll={(e) => setScrollTop(e.currentTarget.scrollTop)}
           >
-            <div style={{ paddingTop: topSpacer, paddingBottom: bottomSpacer }}>
+            <div style={{ 
+              paddingTop: virtualizationData.topSpacer, 
+              paddingBottom: virtualizationData.bottomSpacer 
+            }}>
               <div className="students-checkbox-group">
-              {visibleStudents.map((student) => {
-                const idStr = String(student.id);
-                const checked = selectedStudents.includes(idStr);
-                return (
-                  <div key={student.id} className="checkbox-item" style={{ height: ITEM_HEIGHT }}>
-                    <input
-                      type="checkbox"
-                      id={`student-${student.id}`}
-                      value={idStr}
-                      checked={checked}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        if (e.target.checked) {
-                          setSelectedStudents((prev) => (prev.includes(v) ? prev : [...prev, v]));
-                        } else {
-                          setSelectedStudents((prev) => prev.filter((id) => id !== v));
-                        }
-                      }}
-                    />
-                    <label htmlFor={`student-${student.id}`}>
-                      {(() => {
-                        const facId = String(
-                          (student.faculty && typeof student.faculty === 'object' ? student.faculty.id : student.faculty_id) ??
-                          student.faculty
-                        );
-                        const progId = String(
-                          (student.program && typeof student.program === 'object' ? student.program.id : student.program_id) ??
-                          student.program
-                        );
-                        const facName = (student.faculty && typeof student.faculty === 'object' && student.faculty.name) || facultyNameMap[facId] || 'كلية غير محددة';
-                        const progName = (student.program && typeof student.program === 'object' && student.program.name) || programNameMap[progId] || 'برنامج غير محدد';
-                        const levelName = student.level || 'مستوى غير محدد';
-                        const displayName = `${student.first_name || ''} ${student.last_name || ''}`.trim();
-                        if (displayName) {
-                          return (
-                            <>
-                              <span className="student-name">{displayName}</span>{' '}
-                              {student.username ? (
-                                <span className="student-username">({student.username})</span>
-                              ) : null}
-                              <br />
-                              <span className="student-meta">{facName} | {progName} | {levelName}</span>
-                            </>
-                          );
-                        } else if (student.username) {
-                          return (
-                            <>
-                              <span className="student-name">{student.username}</span>
-                              <br />
-                              <span className="student-meta">{facName} | {progName} | {levelName}</span>
-                            </>
-                          );
-                        }
-                        return null;
-                      })()}
-                    </label>
-                  </div>
-                );
-              })}
+                {virtualizationData.visibleStudents.map((student) => {
+                  const idStr = String(student.id);
+                  const checked = selectedStudents.includes(idStr);
+                  
+                  return (
+                    <div 
+                      key={student.id} 
+                      className="checkbox-item" 
+                      style={{ height: ITEM_HEIGHT }}
+                    >
+                      <input
+                        type="checkbox"
+                        id={`student-${student.id}`}
+                        value={idStr}
+                        checked={checked}
+                        onChange={(e) => handleStudentSelection(student.id, e.target.checked)}
+                      />
+                      <label htmlFor={`student-${student.id}`}>
+                        {renderStudentLabel(student)}
+                      </label>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
         </div>
 
+        {/* Courses Selection */}
         <div className="form-group section-card">
           <div className="group-head">
             <label>
               اختر المقررات
-              <span className="enr-badge">{selectedCourses.length}/{filteredCourses.length}</span>
+              <span className="enr-badge">
+                {selectedCourses.length}/{filteredCourses.length}
+              </span>
             </label>
             <div className="checkbox-item inline">
               <input
@@ -530,34 +630,50 @@ function Enrollment() {
               <label htmlFor="courses-select-all">تحديد الكل</label>
             </div>
           </div>
+          
           <div className="scroll-area">
             <div className="courses-checkbox-group">
               {filteredCourses.map(course => (
                 <div key={course.id} className="checkbox-item">
-                  <input type="checkbox" id={`course-${course.id}`} value={course.id} checked={selectedCourses.includes(course.id)} onChange={(e) => {
-                    if (e.target.checked) {
-                      setSelectedCourses((prev) => (prev.includes(course.id) ? prev : [...prev, course.id]));
-                    } else {
-                      setSelectedCourses((prev) => prev.filter(id => id !== course.id));
-                    }
-                  }} />
-                  <label htmlFor={`course-${course.id}`}>{course.title}</label>
+                  <input 
+                    type="checkbox" 
+                    id={`course-${course.id}`} 
+                    value={course.id} 
+                    checked={selectedCourses.includes(course.id)} 
+                    onChange={(e) => handleCourseSelection(course.id, e.target.checked)}
+                  />
+                  <label htmlFor={`course-${course.id}`}>
+                    {course.title}
+                  </label>
                 </div>
               ))}
             </div>
           </div>
         </div>
+        
+        {/* Action Section */}
         <div className="enroll-actions">
           <div className="enroll-actions__inner enroll-card no-accent">
-            <button type="submit" className="btn btn-primary enroll-submit" disabled={submitting}>
+            <button 
+              type="submit" 
+              className="btn btn-primary enroll-submit" 
+              disabled={submitting}
+            >
               {submitting ? 'جارٍ التسجيل...' : 'تسجيل'}
             </button>
-            <UploadExcel />
+            
+            <div className="upload-section">
+              <h3>رفع ملف Excel</h3>
+              <UploadExcel 
+                onUploadComplete={handleUploadSuccess}
+                onError={handleUploadError}
+              />
+            </div>
           </div>
         </div>
       </form>
     </div>
   );
-}
+};
 
 export default Enrollment;

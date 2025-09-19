@@ -1,32 +1,41 @@
-import React from 'react';
+import React from "react";
+import clsx from "clsx";
 
-// Lightweight spinner using TailwindCSS utilities (no external deps)
-// Props: size: 'small' | 'medium' | 'large'; color: 'primary' | 'white' | hex
-const Spinner = ({ size = 'medium', color = 'primary' }) => {
-  const sizePx = size === 'small' ? 24 : size === 'large' ? 64 : 40;
+// Spinner component
+// Props: size = 'sm' | 'md' | 'lg'; color = 'primary' | 'white' | custom hex
+const Spinner = ({ size = "md", color = "primary" }) => {
+  const sizeClasses = {
+    sm: "h-6 w-6 border-2",
+    md: "h-10 w-10 border-3",
+    lg: "h-16 w-16 border-4",
+  };
+
   const ringColor =
-    color === 'white' ? '#ffffff' : color === 'primary' ? '#306cce' : color;
-  const baseColor = color === 'white' ? 'rgba(255,255,255,0.25)' : '#e5e7eb';
+    color === "white"
+      ? "border-t-white border-white/30"
+      : color === "primary"
+      ? "border-t-blue-600 border-gray-300"
+      : ""; // custom hex handled separately
 
   return (
     <div
       role="status"
       aria-label="loading"
-      style={{
-        width: sizePx,
-        height: sizePx,
-        borderRadius: '9999px',
-        borderWidth: sizePx >= 48 ? 4 : 3,
-        borderStyle: 'solid',
-        borderColor: baseColor,
-        borderTopColor: ringColor,
-        animation: 'spin 1s linear infinite',
-      }}
+      className={clsx(
+        "animate-spin rounded-full border-solid",
+        sizeClasses[size],
+        ringColor
+      )}
+      style={
+        color !== "primary" && color !== "white"
+          ? {
+              borderColor: "#e5e7eb",
+              borderTopColor: color, // supports custom hex
+            }
+          : {}
+      }
     >
       <span className="sr-only">Loading...</span>
-      <style>
-        {`@keyframes spin { from { transform: rotate(0deg);} to { transform: rotate(360deg);} }`}
-      </style>
     </div>
   );
 };

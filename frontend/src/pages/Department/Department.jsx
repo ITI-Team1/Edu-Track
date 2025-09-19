@@ -191,32 +191,20 @@ export default function Department({_permissions, _facultiesData}) {
       
          <div className="page-header">
          <h1>الأقسام</h1>
-        <div
+        <Button
           className="add-department-card"
           onClick={handleCreate}
-          style={{
-            minWidth: "140px",
-            minHeight: "80px",
-            padding: "1rem 0.7rem",
-            flexDirection: "row",
-            alignItems: "center",
-            gap: "0.5rem",
-            boxSizing: "border-box",
-          }}
+          
         >
           <span
-            style={{
-              fontSize: "1.5rem",
-              marginBottom: 0,
-              marginLeft: "0.5rem",
-            }}
+           className="text-xl"
           >
             +
           </span>
-          <span style={{ fontWeight: "bold", fontSize: "1rem" }}>
+          <span className="text-lg">
             اضافه قسم
           </span>
-        </div>
+        </Button>
       </div>
       {error && (
         <div
