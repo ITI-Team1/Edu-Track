@@ -8,6 +8,8 @@ import html2canvas from 'html2canvas';
 import { getLecture, fetchLectures } from '../../services/lectureApi';
 import { fetchCourses } from '../../services/courseApi';
 import { fetchUsers } from '../../services/userApi';
+import { AttendanceAPI } from '../../services/attendanceApi';
+import Modal from '../../components/ui/Modal';
 import './attendance.css';
 
 // Instructor view (QR + students). Frontend-only QR rotation; no DB storage.
@@ -21,6 +23,9 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
     const [students, setStudents] = useState([]);
     const [secondsLeft, setSecondsLeft] = useState(10);
     const [headingText, setHeadingText] = useState('');
+    const [attendanceGrade, setAttendanceGrade] = useState(0);
+    const [showAttendanceGradeModal, setShowAttendanceGradeModal] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     // Build present set from localStorage (same-origin, cross-tab)
     const readPresentSet = useCallback(() => {
@@ -183,6 +188,101 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
         }
     }, [qrToken, lectureId, joinLink]);
 
+    // Handle setting attendance grade for the lecture
+    const handleSetAttendanceGrade = async () => {
+        if (!attendanceGrade || attendanceGrade <= 0) {
+            alert('يرجى إدخال درجة صحيحة للحضور');
+            return;
+        }
+
+        setLoading(true);
+        try {
+            // First, create an Attendance record for this lecture if it doesn't exist
+            const attendances = await AttendanceAPI.getAttendanceByLecture(lectureId);
+            let attendanceId;
+            
+            if (attendances.length === 0) {
+                // Create new attendance record
+                const newAttendance = await AttendanceAPI.createAttendance({
+                    lecture: Number(lectureId)
+                });
+                attendanceId = newAttendance.data.id;
+            } else {
+                attendanceId = attendances[0].id;
+            }
+            
+            // Get present students from localStorage
+            const presentSet = readPresentSet();
+            const presentStudents = students.filter(student => presentSet.has(student.id));
+            
+            // Create StudentAttendance records for present students
+            const createPromises = presentStudents.map(async (student) => {
+                try {
+                    await AttendanceAPI.createStudentAttendance({
+                        attendance: attendanceId,
+                        student: student.id,
+                        present: true
+                    });
+                } catch (error) {
+                    // If record already exists, update it
+                    if (error.response?.status === 400) {
+                        // Try to find and update existing record
+                        const existingAttendances = await AttendanceAPI.listStudentAttendances();
+                        const existingRecord = existingAttendances.data.find(att => 
+                            att.attendance === attendanceId && att.student === student.id
+                        );
+                        if (existingRecord) {
+                            await AttendanceAPI.updateStudentAttendance(existingRecord.id, {
+                                present: true
+                            });
+                        }
+                    }
+                }
+            });
+            
+            await Promise.all(createPromises);
+            
+            // Create StudentMark records for present students with attendance grade
+            const markPromises = presentStudents.map(async (student) => {
+                try {
+                    await AttendanceAPI.createStudentMark({
+                        student: student.id,
+                        lecture: Number(lectureId),
+                        instructor_mark: 0 // Only attendance grade, no year work grade
+                    });
+                } catch (error) {
+                    // If record already exists, update it
+                    if (error.response?.status === 400) {
+                        // Try to find and update existing record
+                        const existingMarks = await AttendanceAPI.getStudentMarksByLecture(lectureId);
+                        const existingRecord = existingMarks.find(mark => 
+                            mark.student === student.id && mark.lecture === Number(lectureId)
+                        );
+                        if (existingRecord) {
+                            await AttendanceAPI.updateStudentMark(existingRecord.id, {
+                                instructor_mark: 0 // Keep year work grade as 0
+                            });
+                        }
+                    }
+                }
+            });
+            
+            await Promise.all(markPromises);
+            
+            // Recalculate attendance marks to ensure they're properly calculated
+            await AttendanceAPI.recalculateAttendanceMarks(lectureId);
+            
+            setShowAttendanceGradeModal(false);
+            setAttendanceGrade(0);
+            alert(`تم تعيين درجة الحضور ${attendanceGrade} للطلاب الحاضرين`);
+        } catch (error) {
+            console.error('Failed to set attendance grade:', error);
+            alert('فشل في تعيين درجة الحضور');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     // Sync across tabs on same device
     useEffect(() => {
         const onStorage = (e) => {
@@ -215,7 +315,16 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
             <div className='students-section'>
                 <div className='students-toolbar'>
                     <h3 style={{ color: '#2c3649' }}>الطلاب</h3>
-                    <button
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button
+                            className='btn btn-secondary-attendance'
+                            onClick={() => setShowAttendanceGradeModal(true)}
+                            disabled={loading}
+                            style={{ fontSize: '14px', padding: '8px 12px' }}
+                        >
+                            تعيين درجة الحضور
+                        </button>
+                        <button
                         className='btn btn-secondary-attendance'
                         onClick={async () => {
                             // Build a temporary DOM node for rendering via html2canvas (ensures Arabic order preserved)
@@ -273,9 +382,10 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
                                 document.body.removeChild(container);
                             }
                         }}
-                    >
+                        >
                         تنزيل PDF
                     </button>
+                    </div>
                 </div>
                 <table>
                     <thead>
@@ -318,6 +428,39 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
                 )}
             </div>
             </div>
+            
+            {showAttendanceGradeModal && (
+                <Modal isOpen={showAttendanceGradeModal} onClose={() => setShowAttendanceGradeModal(false)} title='تعيين درجة الحضور'>
+                    <div className='flex flex-col gap-2 !h-fit !w-fit'>
+                        <div className='flex flex-col gap-5 !mb-5'>
+                            <p className='text-lg'>المحاضرة: {headingText || `المحاضرة رقم ${lectureId}`}</p>
+                            <p className='text-sm text-gray-600'>
+                                سيتم تعيين هذه الدرجة للطلاب الحاضرين فقط
+                            </p>
+                        </div>
+                        <div className='flex gap-2 text-xl items-center'>
+                            <p className='!w-40'>درجة الحضور:</p>
+                            <input 
+                                type='number' 
+                                className='h-10 w-32 !p-2 border border-gray-300 rounded'
+                                value={attendanceGrade}
+                                onChange={(e) => setAttendanceGrade(parseFloat(e.target.value) || 0)}
+                                step="0.1"
+                                min="0"
+                                max="100"
+                                placeholder="0.0"
+                            />
+                        </div>
+                        <button 
+                            className='btn btn-secondary-attendance !w-full'
+                            onClick={handleSetAttendanceGrade}
+                            disabled={loading}
+                        >
+                            {loading ? 'جاري التطبيق...' : 'تطبيق الدرجة'}
+                        </button>
+                    </div>
+                </Modal>
+            )}
         </div>
     );
 };

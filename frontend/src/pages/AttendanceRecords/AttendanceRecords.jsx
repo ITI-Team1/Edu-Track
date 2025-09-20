@@ -249,9 +249,14 @@ export default function AttendanceRecords() {
   return (
     <div className="lecture-page attendance-records-page">
       <div className="page-header">
-               
         <h1>المحاضرات</h1>
-        
+        <Link 
+          to="/instructor-grades" 
+          className="btn-main !px-4 !py-2"
+          title="إدارة درجات الطلاب"
+        >
+          إدارة الدرجات
+        </Link>
       </div>
       {error && (
         <div
@@ -292,7 +297,7 @@ export default function AttendanceRecords() {
                   <td data-label="الحضور">
                   <div className="class-actions justify-center">
                   <Link
-                    to={`/attendance/sheet/${lec.id}`}
+                    to={`/attendance/${lec.id}`}
                     className="btn-main !px-4 !py-2 "
                     title="عرض الحضور لهذه المحاضرة"
                   >

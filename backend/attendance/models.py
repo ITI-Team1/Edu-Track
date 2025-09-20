@@ -47,11 +47,21 @@ class StudentMark(models.Model):
         unique_together = ("student", "lecture")
 
     def calculate_attendance_mark(self):
-        total_lectures = StudentAttendance.objects.filter(attendance__lecture=self.lecture, student=self.student).count()
-        attended = StudentAttendance.objects.filter(attendance__lecture=self.lecture, student=self.student, present=True).count()
-        weight = self.lecture.weight
-        if total_lectures > 0:
-            percentage = attended / total_lectures
+        # Count total attendance sessions for this lecture
+        total_attendance_sessions = Attendance.objects.filter(lecture=self.lecture).count()
+        
+        # Count how many times this student was present in this lecture
+        attended_sessions = StudentAttendance.objects.filter(
+            attendance__lecture=self.lecture, 
+            student=self.student, 
+            present=True
+        ).count()
+        
+        # Get the weight from lecture, default to 10 if not set
+        weight = getattr(self.lecture, 'weight', 10)
+        
+        if total_attendance_sessions > 0:
+            percentage = attended_sessions / total_attendance_sessions
             self.attendance_mark = round(percentage * weight, 2)
         else:
             self.attendance_mark = 0.0

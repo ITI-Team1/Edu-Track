@@ -19,6 +19,7 @@ const Lecture = lazy(() => import('../Lecture/Lecture'));
 const Enrollment = lazy(() => import('../../components/Enrollment'));
 const Courses = lazy(() => import('../../components/Courses'));
 const AttendanceRecords = lazy(() => import('../AttendanceRecords/AttendanceRecords'));
+const InstructorGrades = lazy(() => import('../InstructorGrades/InstructorGrades'));
 
 function Dashboard() {
   const [activeTab, setActiveTab] = useState("overview");
@@ -251,6 +252,18 @@ console.log(permissions);
             <span className="md:text-lg font-medium text-xs ">تقرير الغياب</span>
             </button>
             )}
+
+          {/* إدارة الدرجات - University President, Doctors, System Manager */}
+          {hasAnyGroup([6, 3, 1]) && (
+          <button
+            className={`sidebar-tabs ${activeTab === "instructor-grades" ? 'sidebar-active' : ""}`}
+            onClick={() => setActiveTab("instructor-grades")}
+          >
+            <span className="text-center text-[0.75rem] md:text-xl  min-w-5 ">📝</span>
+            <span className="md:text-lg font-medium text-xs ">إدارة الدرجات</span>
+            </button>
+            )}
+
             {hasAnyGroup([2, 1]) && (
           <button
             className={`sidebar-tabs ${activeTab === "student-degrees" ? 'sidebar-active' : ""}`}
@@ -294,6 +307,7 @@ console.log(permissions);
             {activeTab === "hall" && <Hall  permissions={permissions} facultiesData={facultiesData} />}
             {activeTab === "lecture" && <Lecture  permissions={permissions} facultiesData={facultiesData    } />}
             {activeTab === "attendance-records" && <AttendanceRecords  permissions={permissions} facultiesData={facultiesData} />}
+            {activeTab === "instructor-grades" && <InstructorGrades />}
             {activeTab === "student-degrees" && <StudentDegree   />}
             {activeTab === "exam-table" && <ExamTable   />}
           </Suspense>

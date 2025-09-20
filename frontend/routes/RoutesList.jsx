@@ -20,7 +20,7 @@ import Enrollment from "../src/components/Enrollment";
 import AttendancePage from "../src/pages/Attendance/Attendance";
 import JoinAttendance from "../src/pages/Attendance/JoinAttendance";
 import Activation from "../src/pages/Activation/Activation";
-import AttendanceSheet from "../src/pages/AttendanceSheet/AttendanceSheet";
+import InstructorGrades from "../src/pages/InstructorGrades/InstructorGrades";
 import Survey from "../src/pages/Survey-Pages/Survey";
 import ExamTable from "../src/pages/ExamTable/ExamTable";
 
@@ -115,16 +115,16 @@ const RoutesList = () => {
         }
       />
       <Route
-        path="/attendance/sheet/:attendanceId"
-        element={
-          <ProtectedRoute>
-            <Page title="الحضور"><AttendanceSheet /></Page>
-          </ProtectedRoute>
-        }
-      />
-      <Route
         path="/attendance/join"
         element={<Page title="تسجيل الحضور"><JoinAttendance /></Page>}
+      />
+      <Route
+        path="/instructor-grades"
+        element={
+          <ProtectedRoute>
+            <Page title="إدارة درجات الطلاب"><InstructorGrades /></Page>
+          </ProtectedRoute>
+        }
       />
       <Route
         path="/survey"

@@ -4,12 +4,14 @@ import { fetchLectures } from '../../services/lectureApi';
 import { fetchCourses } from '../../services/courseApi';
 import { fetchLocations } from '../../services/locationApi';
 import { fetchUsers } from '../../services/userApi';
+import { AttendanceAPI } from '../../services/attendanceApi';
 import '../Attendance/attendance.css';
 export default function StudentDegree() {
     const [lectures, setLectures] = useState([]);
     const [courses, setCourses] = useState([]);
     const [locations, setLocations] = useState([]);
     const [users, setUsers] = useState([]);
+    const [studentMarks, setStudentMarks] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const { isAuthenticated, user } = useAuth();
@@ -18,23 +20,24 @@ export default function StudentDegree() {
         const load = async () => {
           setLoading(true);
           try {
-            const [lec, crs, locs, us] = await Promise.all([
+            const [lec, crs, locs, us, marks] = await Promise.all([
               fetchLectures(),
               fetchCourses(),
               fetchLocations(),
               fetchUsers(),
+              AttendanceAPI.getStudentMarksByStudent(user.id),
             ]);
             setLectures(Array.isArray(lec) ? lec : (lec?.results ?? []));
             setCourses(Array.isArray(crs) ? crs : (crs?.results ?? []));
             setLocations(Array.isArray(locs) ? locs : (locs?.results ?? []));
             setUsers(Array.isArray(us) ? us : (us?.results ?? []));
+            setStudentMarks(Array.isArray(marks) ? marks : []);
             setError('');
           } catch (err) {
             setError(err?.message || 'فشل تحميل الجدول');
           } finally {
             setLoading(false);
           }
-          console.log(lectures, courses, locations, user,users);
         };
         load();
       }, [isAuthenticated]);
@@ -127,17 +130,30 @@ export default function StudentDegree() {
                         </tr>
                     </thead>
                     <tbody>
-                        {courses.map((s) => (
-                            <tr key={s.id}>
-                                <td>{s.id}</td>
-                                <td>{s.title}</td>
-                                
-                                
-                                <td>{s.id+5}</td>
-                                <td>{s.id+20}</td>
-                                
-                            </tr>
-                        ))}
+                        {courses.map((course) => {
+                            // Find all lectures for this course
+                            const courseLectures = lectures.filter(lec => 
+                                (typeof lec.course === 'object' ? lec.course.id : lec.course) === course.id
+                            );
+                            
+                            // Find all marks for this course's lectures
+                            const courseMarks = studentMarks.filter(mark => 
+                                courseLectures.some(lec => lec.id === mark.lecture)
+                            );
+                            
+                            // Calculate total attendance and instructor marks
+                            const totalAttendanceMark = courseMarks.reduce((sum, mark) => sum + (mark.attendance_mark || 0), 0);
+                            const totalInstructorMark = courseMarks.reduce((sum, mark) => sum + (mark.instructor_mark || 0), 0);
+                            
+                            return (
+                                <tr key={course.id}>
+                                    <td>{course.id}</td>
+                                    <td>{course.title}</td>
+                                    <td>{totalAttendanceMark.toFixed(1)}</td>
+                                    <td>{totalInstructorMark.toFixed(1)}</td>
+                                </tr>
+                            );
+                        })}
                     </tbody>
                 </table>
             </div>
