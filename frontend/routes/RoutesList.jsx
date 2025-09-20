@@ -22,6 +22,7 @@ import JoinAttendance from "../src/pages/Attendance/JoinAttendance";
 import Activation from "../src/pages/Activation/Activation";
 import AttendanceSheet from "../src/pages/AttendanceSheet/AttendanceSheet";
 import Survey from "../src/pages/Survey-Pages/Survey";
+import ExamTable from "../src/pages/ExamTable/ExamTable";
 
 // Small helper to set the page title per route
 const Page = ({ title, children }) => {
@@ -128,6 +129,10 @@ const RoutesList = () => {
       <Route
         path="/survey"
         element={<Page title="الاستبانة"><Survey /></Page>}
+      />
+      <Route
+        path="/exam-table"
+        element={<Page title="الاستبانة"><ExamTable /></Page>}
       />
     </Routes>
   );

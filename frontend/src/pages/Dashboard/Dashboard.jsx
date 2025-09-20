@@ -7,6 +7,7 @@ import Spinner from '../../components/Spinner';
 import { fetchUserPermissions } from '../../services/userApi';
 import { fetchFaculties } from '../../services/facultyApi';
 import StudentDegree from '../StudentDegrees/StudentDegree';
+import ExamTable from '../ExamTable/ExamTable';
 
 // Lazy load all heavy components
 const Schedule = lazy(() => import('../../components/Schedule'));
@@ -160,9 +161,9 @@ console.log(permissions);
           {/* جدول الأمتحانات - Students, University President, System Manager */}
           {hasAnyGroup([2, 6, 1]) && (
           <button
-            className={`sidebar-tabs ${activeTab === "progress" ? 'sidebar-active' : ""
+            className={`sidebar-tabs ${activeTab === "exam-table" ? 'sidebar-active' : ""
               }`}
-            onClick={() => setActiveTab("progress")}
+            onClick={() => setActiveTab("exam-table")}
           >
             <span className="text-center text-[0.75rem] md:text-xl  min-w-5 ">📈</span>
             <span className="md:text-lg font-medium text-xs ">جدول الأمتحانات</span>
@@ -294,17 +295,10 @@ console.log(permissions);
             {activeTab === "lecture" && <Lecture  permissions={permissions} facultiesData={facultiesData    } />}
             {activeTab === "attendance-records" && <AttendanceRecords  permissions={permissions} facultiesData={facultiesData} />}
             {activeTab === "student-degrees" && <StudentDegree   />}
+            {activeTab === "exam-table" && <ExamTable   />}
           </Suspense>
-          {activeTab === "progress" && (
-            <div className="content-card progress-section-applying">
-              <h2>التقدم الأكاديمي</h2>
-              <div className="progress-chart">
-                <div className="chart-placeholder">
-                  <p>سيتم عرض الرسوم البيانية والتحليلات هنا</p>
-                </div>
-              </div>
-            </div>
-          )}
+        
+        
         </div>
       </main>
     </div>

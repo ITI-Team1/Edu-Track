@@ -48,13 +48,32 @@ class ApiService {
   }
 
   // Helper method to get auth headers
-  getAuthHeaders() {
-    const token = localStorage.getItem('access_token');
-    return {
-      'Content-Type': 'application/json',
-      ...(token && { 'Authorization': `Bearer ${token}` })
-    };
+  // getAuthHeaders() {
+  //   const token = localStorage.getItem('access_token');
+  //   return {
+  //     'Content-Type': 'application/json',
+  //     ...(token && { 'Authorization': `Bearer ${token}` })
+  //   };
+  // }
+// Helper method to get auth headers
+getAuthHeaders(isFormData = false) {
+  const token = localStorage.getItem('access_token');
+  const headers = {};
+
+  if (!isFormData) {
+    headers['Content-Type'] = 'application/json';
   }
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  return headers;
+}
+
+
+
+
 
   // Login user
   async login(credentials) {
