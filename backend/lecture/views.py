@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 from user.models import User
-
+from attendance.models import StudentMark
 
 # Create your views here.
 class ListLecture(ListAPIView):
@@ -52,5 +52,9 @@ class EnrollStudentInCourses(APIView):
                 return Response({"detail": "No lectures found for the given courses."}, status=status.HTTP_404_NOT_FOUND)
             for lecture in lectures:
                 lecture.students.add(student)
+
+                StudentMark.objects.create(student=student, lecture=lecture,
+                    defaults={"attendance_mark": 0.0, "instructor_mark": 0.0, "final_mark": 0.0})
+
             return Response({"student": student.username, "enrolled lectures": [str(lec) for lec in lectures]}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

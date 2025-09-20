@@ -16,6 +16,7 @@ class Lecture(models.Model):
     day = models.CharField(max_length=10, choices=days)
     starttime = models.TimeField()
     endtime = models.TimeField()
+    weight = models.FloatField(default=0.0)
     students = models.ManyToManyField(User, related_name='lectures_attended', null=True)
 
     def __str__(self):

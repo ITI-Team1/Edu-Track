@@ -3,6 +3,7 @@ from lecture.models import Lecture
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from user.models import User
+from lecture.models import Lecture
 
 # Create your models here.
 weekday = {5: 'السبت', 6: 'الأحد', 0: 'الإثنين', 1: 'الثلاثاء', 2: 'الأربعاء', 3: 'الخميس', 4: 'الجمعة'}
@@ -34,3 +35,31 @@ class StudentAttendance(models.Model):
 
     def __str__(self):
         return f"{self.student.username} - {self.attendance.lecture.course.title} ({'Present' if self.present else 'Absent'})"
+    
+
+class StudentMark(models.Model):
+    student = models.ForeignKey(User, on_delete=models.CASCADE, related_name="marks")
+    lecture = models.ForeignKey(Lecture, on_delete=models.CASCADE, related_name="marks")
+    attendance_mark = models.FloatField(default=0.0)
+    instructor_mark = models.FloatField(default=0.0)
+    final_mark = models.FloatField(default=0.0, editable=False)
+    class Meta:
+        unique_together = ("student", "lecture")
+
+    def calculate_attendance_mark(self):
+        total_lectures = StudentAttendance.objects.filter(attendance__lecture=self.lecture, student=self.student).count()
+        attended = StudentAttendance.objects.filter(attendance__lecture=self.lecture, student=self.student, present=True).count()
+        weight = self.lecture.weight
+        if total_lectures > 0:
+            percentage = attended / total_lectures
+            self.attendance_mark = round(percentage * weight, 2)
+        else:
+            self.attendance_mark = 0.0
+
+    def save(self, *args, **kwargs):
+        self.calculate_attendance_mark()
+        self.final_mark = self.attendance_mark + self.instructor_mark
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.student.username} - {self.final_mark}"

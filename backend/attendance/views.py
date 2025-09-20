@@ -1,7 +1,7 @@
 from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView, DestroyAPIView, UpdateAPIView
 from user.permissions import GroupPermission
-from .models import StudentAttendance, Attendance
-from .serializers import StudentAttendanceSerializer, AttendanceSerializer
+from .models import StudentAttendance, Attendance, StudentMark
+from .serializers import StudentAttendanceSerializer, AttendanceSerializer, StudentMarkSerializer
 from rest_framework.response import Response
 from rest_framework import status
 
@@ -49,3 +49,19 @@ class UpdateStudentAttendance(UpdateAPIView):
         instance.save()
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
+
+class ListStudentMark(ListAPIView):
+    queryset =  StudentMark.objects.all()
+    serializer_class = StudentMarkSerializer
+    permission_classes = [type('CustomPerm',(GroupPermission,),{'required_permission': 'attendance.view_studentmark'})]
+
+class RetrieveStudentMark(RetrieveAPIView):
+    queryset =  StudentMark.objects.all()
+    serializer_class = StudentMarkSerializer
+    permission_classes = [type('CustomPerm',(GroupPermission,),{'required_permission': 'attendance.view_studentmark'})]
+
+class UpdateStudentMark(UpdateAPIView):
+    queryset =  StudentMark.objects.all()
+    serializer_class = StudentMarkSerializer
+    permission_classes = [type('CustomPerm',(GroupPermission,),{'required_permission': 'attendance.change_studentmark'})]
+
