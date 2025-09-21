@@ -85,6 +85,15 @@ const Enrollment = () => {
     }, {})
   }), [faculties, programs]);
 
+  // Quick lookup of full program objects by id (to access faculty for each course's programs)
+  const programsById = useMemo(() => {
+    const map = {};
+    (programs || []).forEach(p => {
+      map[String(p.id)] = p;
+    });
+    return map;
+  }, [programs]);
+
   // Filtered programs based on selected faculty
   const filteredPrograms = useMemo(() => {
     if (!filterFaculty) return programs || [];
@@ -236,7 +245,58 @@ const Enrollment = () => {
       setError('الرجاء اختيار طالب واحد على الأقل ومقرر واحد على الأقل.');
       return;
     }
-    
+    // Faculty validation: ensure each selected student belongs to a faculty compatible with selected courses
+    try {
+      // 1) Resolve selected students and courses objects
+      const allStudents = (usersData?.results || usersData || []);
+      const studentsById = new Map((Array.isArray(allStudents) ? allStudents : []).map(s => [String(s.id), s]));
+      const chosenStudents = selectedStudents.map(id => studentsById.get(String(id))).filter(Boolean);
+      const chosenCourses = selectedCourses.map(cid => (Array.isArray(courses) ? courses.find(c => c.id === cid) : null)).filter(Boolean);
+
+      // 2) Compute set of faculty IDs covered by the selected courses (via their programs)
+      const courseFacultyIds = new Set();
+      const getProgramId = (prog) => (prog && typeof prog === 'object') ? prog.id : prog;
+      chosenCourses.forEach(course => {
+        const courseProgramIds = Array.isArray(course?.programs) ? course.programs.map(getProgramId) : [];
+        courseProgramIds.forEach(pid => {
+          const prog = programsById[String(pid)];
+          const facId = (prog && (prog.faculty?.id ?? prog.faculty_id ?? prog.faculty)) ?? null;
+          if (facId != null) courseFacultyIds.add(String(facId));
+        });
+      });
+
+      // If we cannot determine any faculty from the courses, block to avoid cross-faculty enrollment
+      if (courseFacultyIds.size === 0) {
+        setError('تعذر تحديد كلية المقررات المختارة. يرجى التأكد من ربط البرامج بالمقررات أو تحديد مقررات صحيحة.');
+        return;
+      }
+
+      // 3) Check each student's faculty against the course faculties set
+      const getStudentFacultyId = (stu) => (
+        (stu?.faculty && typeof stu.faculty === 'object' ? stu.faculty.id : (stu?.faculty_id ?? stu?.faculty))
+      );
+      const mismatchedStudents = chosenStudents.filter(stu => {
+        const sfid = getStudentFacultyId(stu);
+        if (sfid == null) return true; // no faculty -> treat as mismatch
+        return !courseFacultyIds.has(String(sfid));
+      });
+
+      if (mismatchedStudents.length > 0) {
+        // Build a readable Arabic message listing first few names/usernames
+        const names = mismatchedStudents.slice(0, 5).map(stu => {
+          const name = `${stu?.first_name || ''} ${stu?.last_name || ''}`.trim();
+          return name || stu?.username || `ID ${stu?.id}`;
+        }).join('، ');
+        const more = mismatchedStudents.length > 5 ? ` و${mismatchedStudents.length - 5} آخرين` : '';
+        setError(`لا يمكن تسجيل الطلاب في مقررات من كلية مختلفة. الطلاب غير المتوافقين: ${names}${more}. يرجى اختيار مقررات من نفس كلية الطالب.`);
+        return;
+      }
+    } catch (_e) {
+      // Fallback: if validation itself fails, show a safe error and stop
+      setError('حدث خطأ أثناء التحقق من الكليات. يرجى المحاولة مرة أخرى.');
+      return;
+    }
+
     try {
       setError(null);
       setSuccess('');

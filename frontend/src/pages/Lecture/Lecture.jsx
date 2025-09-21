@@ -133,6 +133,29 @@ if(user.faculty){
     endtime: "", // HH:MM
   });
 
+  // Compute selected course object and its program IDs
+  const selectedCourse = useMemo(() => {
+    const cid = Number(form.course);
+    return Array.isArray(courses) ? courses.find(c => Number(c.id) === cid) : null;
+  }, [courses, form.course]);
+
+  const selectedCourseProgramIds = useMemo(() => {
+    if (!selectedCourse) return [];
+    const getId = (p) => (p && typeof p === 'object') ? p.id : p;
+    return Array.isArray(selectedCourse.programs)
+      ? selectedCourse.programs.map(getId).map(id => String(id))
+      : [];
+  }, [selectedCourse]);
+
+  // Filter doctors by selected course program(s). If course has no programs, show all doctors.
+  const filteredDoctors = useMemo(() => {
+    if (!selectedCourseProgramIds.length) return doctors;
+    return doctors.filter(d => {
+      const pid = (d.program && typeof d.program === 'object') ? d.program.id : (d.program_id ?? d.program);
+      return selectedCourseProgramIds.includes(String(pid));
+    });
+  }, [doctors, selectedCourseProgramIds]);
+
   // Helper to add minutes in 24h string HH:MM -> HH:MM
   const addMinutes = (time, mins) => {
     if (!time) return time;
@@ -418,7 +441,10 @@ if(user.faculty){
               المقرر:
               <Select
                 value={form.course}
-                onChange={(val) => setForm({ ...form, course: val })}
+                onChange={(val) => {
+                  // When course changes, reset instructor to avoid mismatches
+                  setForm({ ...form, course: val, instructor: "" });
+                }}
                 placeholder="اختر المقرر"
                 options={courses.map(c=>({value:c.id, label:c.title}))}
               />
@@ -426,14 +452,14 @@ if(user.faculty){
             <label>
               المٌحاضر:
               <Select
-  value={form.instructor}
-  onChange={(val) => setForm({ ...form, instructor: val })}
-  placeholder="اختر المحاضر"
-  options={doctors.map(u => ({
-    value: u.id, 
-    label: `${u.first_name} ${u.last_name} ${u.faculty?.name ? ` - ${u.faculty.name}` : ''}${u.program?.name ? ` - ${u.program.name}` : ''}`
-  }))}                
-/>
+                value={form.instructor}
+                onChange={(val) => setForm({ ...form, instructor: val })}
+                placeholder="اختر المحاضر"
+                options={filteredDoctors.map(u => ({
+                  value: u.id,
+                  label: `${u.first_name} ${u.last_name} ${u.faculty?.name ? ` - ${u.faculty.name}` : ''}${u.program?.name ? ` - ${u.program.name}` : ''}`
+                }))}
+              />
             </label>
             <label>
               القاعة:
