@@ -98,26 +98,41 @@ function Schedule() {
   }), []);
   const normalizeDay = useCallback((d) => dayMap[(d || '').trim()] || d, [dayMap]);
 
-  // Filter lectures for current user (by enrolled courses) and selected course
+  // Determine role from user groups (IDs/names): 3 = Doctor/TA, 2 = Student
+  const { isDoctor, isStudent } = useMemo(() => {
+    const groups = Array.isArray(user?.groups) ? user.groups : [];
+    const getId = (g) => (g && typeof g === 'object') ? g.id : g;
+    const getName = (g) => (g && typeof g === 'object') ? (g.name || '') : '';
+    const isDoc = groups.some(g => getId(g) === 3 || getName(g).includes('دكاترة'));
+    const isStu = groups.some(g => getId(g) === 2 || getName(g).includes('طلاب'));
+    return { isDoctor: isDoc, isStudent: isStu };
+  }, [user?.groups]);
+
+  // Filter lectures for current user by role
   const userLectures = useMemo(() => {
     if (!user?.id) return [];
-    // 1) Find courses where this user already appears in at least one lecture.students
-    const courseIdsSet = new Set(
-      lectures
-        .filter(lec => {
-          const st = Array.isArray(lec.students) ? lec.students : [];
-          const ids = st.map(s => (typeof s === 'object' && s !== null) ? s.id : s).map(Number);
-          return ids.includes(Number(user.id));
-        })
-        .map(lec => (typeof lec.course === 'object' ? lec.course?.id : lec.course))
-        .map(Number)
-    );
-    // 2) Include ALL lectures whose course is in that set, even if students list wasn't updated yet
-    let filtered = lectures.filter(lec => {
-      const cid = Number(typeof lec.course === 'object' ? lec.course?.id : lec.course);
-      return courseIdsSet.has(cid);
-    });
-    // 3) Optional course dropdown filter
+    const uidNum = Number(user.id);
+
+    let filtered = [];
+    if (isDoctor) {
+      // Doctors: only lectures where they are the instructor
+      filtered = lectures.filter(lec => {
+        const instructorId = Number(typeof lec.instructor === 'object' ? lec.instructor?.id : lec.instructor);
+        return instructorId === uidNum;
+      });
+    } else if (isStudent) {
+      // Students: lectures where they appear in the students list
+      filtered = lectures.filter(lec => {
+        const st = Array.isArray(lec.students) ? lec.students : [];
+        const ids = st.map(s => (typeof s === 'object' && s !== null) ? s.id : s).map(Number);
+        return ids.includes(uidNum);
+      });
+    } else {
+      // Fallback (unknown role): show none
+      filtered = [];
+    }
+
+    // Optional course dropdown filter applies to both roles
     if (selectedCourse) {
       const cid = Number(selectedCourse);
       filtered = filtered.filter(lec => (
@@ -125,7 +140,7 @@ function Schedule() {
       ));
     }
     return filtered;
-  }, [lectures, user?.id, selectedCourse]);
+  }, [lectures, user?.id, selectedCourse, isDoctor, isStudent]);
 
   // Build "today" and "week" schedules
   const daysOrder = canonicalDays; // use canonical ordering starting with Saturday per backend choices

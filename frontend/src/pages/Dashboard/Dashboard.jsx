@@ -97,43 +97,42 @@ console.log(permissions);
       {/* Sidebar */}
       <aside className="
       flex flex-col 
-    w-full h-auto relative top-0 left-0 
-    border-b border-[rgba(100,108,255,0.2)]
-    bg-[linear-gradient(180deg,#1e1e2e_0%,#282c4e_50%,#2d3748_100%)]
-    overflow-visible 
-    z-[1000]
-    shadow-[4px_0_20px_rgba(0,0,0,0.1)]
-    md:fixed md:h-screen md:w-[240px] md:border-b-0 md:border-r
-    lg:w-[280px]
-  
+      w-full h-auto relative top-0 left-0 
+      border-b border-[rgba(100,108,255,0.2)]
+      bg-[linear-gradient(180deg,#1e1e2e_0%,#282c4e_50%,#2d3748_100%)]
+      overflow-visible 
+      z-[1000]
+      shadow-[4px_0_20px_rgba(0,0,0,0.1)]
+      md:fixed md:h-screen md:w-[240px] md:border-b-0 md:border-r
+      lg:w-[280px]
       ">
-        <nav className="    flex flex-row
-    !w-full !order-2
-    !gap-[0.3rem] !p-[0.3rem]      
-    !overflow-x-auto !overflow-y-visible
-    !min-h-0
-    !mt-0
-    ![scrollbar-width:thin]
-    ![scrollbar-color:rgba(100,108,255,0.3)_transparent]
-    sm:!gap-[0.4rem] sm:!p-[0.4rem]   
-    md:flex-col md:overflow-y-auto md:overflow-x-hidden
-    md:!gap-[0.5rem] md:!p-2 md:!mt-12 md:!order-none
-    md:![scrollbar-width:none] ">
+        <nav className="flex flex-row
+          !w-full !order-2
+          !gap-[0.4rem] !p-[0.4rem]      
+          !overflow-x-auto !overflow-y-visible
+          !min-h-0
+          !mt-0
+          [scrollbar-width:thin]
+          [scrollbar-color:rgba(100,108,255,0.3)_transparent]
+          sm:!gap-[0.5rem] sm:!p-[0.5rem]   
+          md:flex-col md:overflow-y-auto md:overflow-x-hidden
+          md:!gap-[0.75rem] md:!p-3 md:!mt-14 md:!order-none
+          md:[scrollbar-width:none]">
           {/* 2 طالب */}
           {/* 4 مدير القسم */}
           {/* 3 دكتور معيد */}
           {/* 6 مدير الجامعة */}
           {/* 5 مدير الكليه */}
 
-          <h3 className='hidden md:block !m-3.5' >لوحة التحكم</h3>
+          <h3 className='hidden md:block !m-4 text-xl font-bold text-white' >لوحة التحكم</h3>
           <button
             className={`sidebar-tabs 
               ${activeTab === "overview" ? "sidebar-active" : ""
               }`}
             onClick={() => setActiveTab("overview")}
           >
-            <span className="text-center text-[0.75rem] md:text-xl  min-w-5 ">📊</span>
-            <span className="md:text-lg font-medium text-xs ">نظرة عامة</span>
+            <span className="text-center text-lg md:text-2xl min-w-7">📊</span>
+            <span className="text-sm md:text-lg font-medium">نظرة عامة</span>
           </button>
           
           {/* التسجيل الإكاديمي - Students, University President, System Manager */}
@@ -142,8 +141,8 @@ console.log(permissions);
             className={`sidebar-tabs ${activeTab === "courses" ? 'sidebar-active' : ""}`}
             onClick={() => setActiveTab("courses")}
           >
-            <span className="text-center text-[0.75rem] md:text-xl  min-w-5 ">📚</span>
-            <span className="md:text-lg font-medium text-xs ">التسجيل الإكاديمي</span>
+            <span className="text-center text-lg md:text-2xl min-w-7">📚</span>
+            <span className="text-sm md:text-lg font-medium">التسجيل الإكاديمي</span>
           </button>
           )}
           
@@ -294,10 +293,12 @@ console.log(permissions);
           {activeTab === "overview" && (
            <Overview />
           )}
-  <Suspense fallback={ <div className="flex flex-col !translate-y-1/2 !translate-x-1/2 !absolute !top-1/3 !left-1/2 " >
-            <Spinner size="large" color="blue" />
-            <div className="text-blue-500 font-bold">جارٍ التحميل...</div>
-          </div>}>
+  <Suspense fallback={
+    <div className="loading-container">
+    <span className='text-blue-700 text-lg'>تحميل المزيد</span>
+    <Spinner size='lg' color='primary' />
+  </div>
+          }>
             {activeTab === "enroll" && <Enrollment  permissions={permissions} facultiesData={facultiesData} />}
             {activeTab === "courses" && <Courses  permissions={permissions} facultiesData={facultiesData} />}
             {activeTab === "facultyManagement" && <FacultyManage  permissions={permissions} facultiesData={facultiesData} />}
