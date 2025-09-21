@@ -92,7 +92,12 @@ class CreateStudentMark(CreateAPIView):
                 if 'instructor_mark' in request.data:
                     existing_mark.instructor_mark = float(request.data['instructor_mark'])
                 if 'attendance_mark' in request.data:
-                    existing_mark.attendance_mark = float(request.data['attendance_mark'])
+                    # Make attendance cumulative: add provided amount to existing
+                    try:
+                        add_amount = float(request.data['attendance_mark'])
+                    except (TypeError, ValueError):
+                        add_amount = 0.0
+                    existing_mark.attendance_mark = float(existing_mark.attendance_mark or 0.0) + add_amount
                 existing_mark.save()
                 serializer = self.get_serializer(existing_mark)
                 return Response(serializer.data, status=status.HTTP_200_OK)
@@ -107,6 +112,23 @@ class UpdateStudentMark(UpdateAPIView):
     serializer_class = StudentMarkSerializer
     permission_classes = [type('CustomPerm',(GroupPermission,),{'required_permission': 'attendance.change_studentmark'})]
 
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', True)
+        instance = self.get_object()
+        data = request.data.copy()
+        # Attendance should be cumulative: add to existing if provided
+        if 'attendance_mark' in data:
+            try:
+                add_amount = float(data.get('attendance_mark') or 0)
+            except (TypeError, ValueError):
+                add_amount = 0.0
+            data['attendance_mark'] = float(instance.attendance_mark or 0.0) + add_amount
+        # Instructor mark remains as-set if provided (no change needed)
+        serializer = self.get_serializer(instance, data=data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
+
 class RecalculateAttendanceMarks(APIView):
     permission_classes = [type('CustomPerm',(GroupPermission,),{'required_permission': 'attendance.change_studentmark'})]
     
@@ -119,11 +141,16 @@ class RecalculateAttendanceMarks(APIView):
             # Get all StudentMark records for this lecture
             marks = StudentMark.objects.filter(lecture_id=lecture_id)
             
-            # Recalculate attendance marks only for records that haven't been manually set
+            # Recalculate new attendance component and ADD it cumulatively to existing values
             for mark in marks:
-                # Only auto-calculate if attendance_mark is 0.0 (not manually set)
-                if mark.attendance_mark == 0.0:
-                    mark.calculate_attendance_mark()
+                # Compute fresh attendance based on current sessions
+                previous = float(mark.attendance_mark or 0.0)
+                # Temporarily compute new auto value without overwriting previous
+                tmp = StudentMark(student=mark.student, lecture=mark.lecture)
+                tmp.calculate_attendance_mark()
+                new_component = float(tmp.attendance_mark or 0.0)
+                # Add new component to previous for cumulative behavior
+                mark.attendance_mark = previous + new_component
                 mark.final_mark = mark.attendance_mark + mark.instructor_mark
                 mark.save()
             

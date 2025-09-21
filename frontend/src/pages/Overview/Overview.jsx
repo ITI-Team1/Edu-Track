@@ -9,6 +9,7 @@ import { fetchLocations } from '../../services/locationApi';
 
 
 import { fetchUsers } from '../../services/userApi';
+import { fetchUserPermissions } from '../../services/userApi';
 
 export default function Overview() {
   const [viewDate, setViewDate] = useState(new Date()); 
@@ -62,6 +63,7 @@ export default function Overview() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [permissions, setPermissions] = useState([]);
 
   // Filters
   const [selectedCourse, setSelectedCourse] = useState('');
@@ -72,6 +74,15 @@ export default function Overview() {
       navigate('/');
     }
   }, [isAuthenticated, navigate]);
+
+  // Get user permissions
+  useEffect(() => {
+    if (user) {
+      fetchUserPermissions(user).then(permissions => {
+        setPermissions(permissions);
+      });
+    }
+  }, [user]);
 
   // Load real data
   useEffect(() => {
@@ -101,91 +112,116 @@ export default function Overview() {
 
   // Helpers to resolve display names
   const getCourseTitle = useCallback((lec) => {
+    if (!lec) return '';
     if (lec.course && typeof lec.course === 'object') return lec.course.title;
     const c = courses.find(c => c.id === lec.course);
-    return c ? c.title : lec.course;
+    return c ? c.title : lec.course || '';
   }, [courses]);
+
   const getInstructorName = useCallback((lec) => {
-    if (lec.instructor && typeof lec.instructor === 'object') return `${lec.instructor.first_name} ${lec.instructor.last_name}`;
+    if (!lec) return '';
+    if (lec.instructor && typeof lec.instructor === 'object') {
+      return `${lec.instructor.first_name || ''} ${lec.instructor.last_name || ''}`.trim();
+    }
     const u = users.find(u => u.id === lec.instructor);
-    return u ? `${u.first_name} ${u.last_name}` : lec.instructor;
+    return u ? `${u.first_name || ''} ${u.last_name || ''}`.trim() : lec.instructor || '';
   }, [users]);
+
   const getRoomName = useCallback((lec) => {
-    if (lec.location && typeof lec.location === 'object') return lec.location.name || lec.location.title || lec.location.slug;
+    if (!lec) return '';
+    if (lec.location && typeof lec.location === 'object') {
+      return lec.location.name || lec.location.title || lec.location.slug || '';
+    }
     const l = locations.find(l => l.id === lec.location || l.slug === lec.location);
-    return l ? l.name : lec.location;
+    return l ? (l.name || '') : (lec.location || '');
   }, [locations]);
 
-  // Normalize Arabic day names to canonical forms (match backend choices)
-  const canonicalDays = ['السبت','الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس'];
-  const dayMap = useMemo(() => ({
-    'الاحد': 'الأحد', 'الأحد': 'الأحد', 'اﻷحد': 'الأحد',
-    'السبت': 'السبت',
-    'الاثنين': 'الإثنين', 'الإثنين': 'الإثنين',
-    'الثلاثاء': 'الثلاثاء',
-    'الاربعاء': 'الأربعاء', 'الأربعاء': 'الأربعاء',
-    'الخميس': 'الخميس',
-    'الجمعة': 'الجمعة',
-  }), []);
-  const normalizeDay = useCallback((d) => dayMap[(d || '').trim()] || d, [dayMap]);
+  // Determine role from user groups (IDs/names): 3 = Doctor/TA, 2 = Student
+  const { isDoctor, isStudent } = useMemo(() => {
+    if (!user) return { isDoctor: false, isStudent: false };
+    const groups = Array.isArray(user.groups) ? user.groups : [];
+    const getId = (g) => (g && typeof g === 'object') ? g.id : g;
+    const getName = (g) => (g && typeof g === 'object') ? (g.name || '') : '';
+    const isDoc = groups.some(g => getId(g) === 3 || getName(g).includes('دكاترة'));
+    const isStu = groups.some(g => getId(g) === 2 || getName(g).includes('طلاب'));
+    return { isDoctor: isDoc, isStudent: isStu };
+  }, [user]);
 
-  // Filter lectures for current user (by enrolled courses) and selected course
+  // Filter lectures for current user by role
   const userLectures = useMemo(() => {
-    if (!user?.id) return [];
-    // 1) Find courses where this user already appears in at least one lecture.students
-    const courseIdsSet = new Set(
-      lectures
-        .filter(lec => {
-          const st = Array.isArray(lec.students) ? lec.students : [];
-          const ids = st.map(s => (typeof s === 'object' && s !== null) ? s.id : s).map(Number);
-          return ids.includes(Number(user.id));
-        })
-        .map(lec => (typeof lec.course === 'object' ? lec.course?.id : lec.course))
-        .map(Number)
-    );
-    // 2) Include ALL lectures whose course is in that set, even if students list wasn't updated yet
-    let filtered = lectures.filter(lec => {
-      const cid = Number(typeof lec.course === 'object' ? lec.course?.id : lec.course);
-      return courseIdsSet.has(cid);
-    });
-    // 3) Optional course dropdown filter
+    if (!user?.id || !Array.isArray(lectures)) return [];
+    const uidNum = Number(user.id);
+
+    let filtered = [];
+    if (isDoctor) {
+      // Doctors: only lectures where they are the instructor
+      filtered = lectures.filter(lec => {
+        if (!lec) return false;
+        const instructorId = Number(
+          (lec.instructor && typeof lec.instructor === 'object') 
+            ? lec.instructor.id 
+            : lec.instructor
+        );
+        return instructorId === uidNum;
+      });
+    } else if (isStudent) {
+      // Students: lectures where they appear in the students list
+      filtered = lectures.filter(lec => {
+        if (!lec) return false;
+        const st = Array.isArray(lec.students) ? lec.students : [];
+        const ids = st
+          .filter(s => s != null)
+          .map(s => (typeof s === 'object' ? s.id : s))
+          .map(Number);
+        return ids.includes(uidNum);
+      });
+    }
+
+    // Optional course dropdown filter applies to both roles
     if (selectedCourse) {
       const cid = Number(selectedCourse);
-      filtered = filtered.filter(lec => (
-        lec.course === cid || (typeof lec.course === 'object' && lec.course?.id === cid)
-      ));
+      filtered = filtered.filter(lec => {
+        if (!lec) return false;
+        return (
+          lec.course === cid || 
+          (typeof lec.course === 'object' && lec.course?.id === cid)
+        );
+      });
     }
-    return filtered;
-  }, [lectures, user?.id, selectedCourse]);
+    
+    return filtered.filter(Boolean); // Remove any null/undefined entries
+  }, [lectures, user?.id, selectedCourse, isDoctor, isStudent]);
 
-  // Build "today" and "week" schedules
-  const daysOrder = canonicalDays; // use canonical ordering starting with Saturday per backend choices
-  const jsToArabic = ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت']; // 0..6
+  // Build "today" schedule
+  const daysOrder = ['السبت', 'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس'];
+  const jsToArabic = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
   const todayIndex = new Date().getDay();
-  const todayName = normalizeDay(jsToArabic[todayIndex]);
+  const todayName = jsToArabic[todayIndex];
 
   // Time formatting helpers
-  const formatTime24 = (t) => (t || '').slice(0,5);
   const formatTime12 = (t) => {
     if (!t) return '';
     const [hhStr, mmStr] = t.split(':');
     let hh = parseInt(hhStr, 10);
-    const mm = (mmStr || '00').slice(0,2);
+    if (isNaN(hh)) return '';
+    const mm = (mmStr || '00').slice(0, 2);
     const suffix = hh >= 12 ? 'م' : 'ص';
     hh = hh % 12;
     if (hh === 0) hh = 12;
     return `${hh}:${mm} ${suffix}`;
   };
+
   const durationMinutes = (s, e) => {
     if (!s || !e) return 90;
     const [sh, sm] = s.split(':').map(Number);
     const [eh, em] = e.split(':').map(Number);
-    return Math.max(0, (eh*60+em) - (sh*60+sm));
+    return Math.max(0, (eh * 60 + em) - (sh * 60 + sm));
   };
 
   const todaySchedule = useMemo(() => {
-    const list = userLectures.filter(lec => normalizeDay(lec.day) === todayName)
-      .sort((a,b) => (a.starttime||'').localeCompare(b.starttime||''))
+    const list = userLectures
+      .filter(lec => lec && lec.day === todayName)
+      .sort((a, b) => (a.starttime || '').localeCompare(b.starttime || ''))
       .map(lec => ({
         id: lec.id,
         time: formatTime12(lec.starttime),
@@ -196,8 +232,7 @@ export default function Overview() {
         type: 'محاضرة',
       }));
     return list;
-  }, [userLectures, todayName, getCourseTitle, getInstructorName, getRoomName, normalizeDay]);
-
+  }, [userLectures, todayName, getCourseTitle, getInstructorName, getRoomName]);
 
   return (
     <div className="flex flex-col">

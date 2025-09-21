@@ -152,6 +152,13 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
         [lectureId, readPresentSet, fetchStudents]
     );
 
+    // Mark all as absent locally by clearing the present set
+    const markAllAbsent = useCallback(() => {
+        if (!lectureId) return;
+        localStorage.setItem(`attend:lec:${lectureId}`, JSON.stringify([]));
+        fetchStudents();
+    }, [lectureId, fetchStudents]);
+
     // Initial load
     useEffect(() => {
         fetchStudents();
@@ -318,6 +325,14 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
                 <div className='students-toolbar'>
                     <h3 style={{ color: '#2c3649' }}>الطلاب</h3>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button
+                            className='btn btn-secondary-attendance'
+                            onClick={markAllAbsent}
+                            disabled={loading}
+                            style={{ fontSize: '14px', padding: '8px 12px' }}
+                        >
+                            اعادة الغياب 
+                        </button>
                         <button
                             className='btn btn-secondary-attendance'
                             onClick={() => setShowAttendanceGradeModal(true)}

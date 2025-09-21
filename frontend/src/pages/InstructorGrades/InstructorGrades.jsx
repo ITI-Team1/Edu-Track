@@ -119,6 +119,7 @@ export default function InstructorGrades() {
 
     const handleEditStudent = (student) => {
         setEditingStudent(student);
+        // Restore original behavior: edit value is the total instructor mark to set
         setEditValue(student.instructorMark.toFixed(1));
         setShowModal(true);
     };
@@ -128,13 +129,18 @@ export default function InstructorGrades() {
 
         setLoading(true);
         try {
-            const newInstructorMark = parseFloat(editValue) || 0;
+            // Treat entered value as the NEW total to set (will be distributed across marks)
+            const newInstructorMarkTotal = parseFloat(editValue);
+            if (!Number.isFinite(newInstructorMarkTotal)) {
+                throw new Error('قيمة غير صالحة');
+            }
             
             if (editingStudent.marksData.length > 0) {
-                // Update existing marks
+                // Distribute the NEW total evenly across existing marks (overwrite)
+                const perMark = newInstructorMarkTotal / editingStudent.marksData.length;
                 const updatePromises = editingStudent.marksData.map(mark => 
                     AttendanceAPI.updateStudentMark(mark.id, {
-                        instructor_mark: newInstructorMark / editingStudent.marksData.length // Distribute evenly
+                        instructor_mark: perMark,
                     })
                 );
                 await Promise.all(updatePromises);
@@ -148,7 +154,7 @@ export default function InstructorGrades() {
                     AttendanceAPI.createStudentMark({
                         student: editingStudent.id,
                         lecture: lecture.id,
-                        instructor_mark: newInstructorMark / courseLectures.length // Distribute evenly
+                        instructor_mark: newInstructorMarkTotal / courseLectures.length // Distribute evenly
                     })
                 );
                 await Promise.all(createPromises);
@@ -281,22 +287,58 @@ export default function InstructorGrades() {
                                             const courseLectures = lectures.filter(lec => 
                                                 (typeof lec.course === 'object' ? lec.course.id : lec.course) === Number(selectedCourse)
                                             );
-                                            
+                                            const lectureIdSet = new Set(courseLectures.map(l => l.id));
+
+                                            // Snapshot current attendance marks per (student,lecture)
+                                            const beforeResp = await AttendanceAPI.listStudentMarks();
+                                            const beforeMarks = Array.isArray(beforeResp.data) ? beforeResp.data : [];
+                                            const beforeAttendanceByKey = new Map(); // key: `${student}:${lecture}` -> attendance_mark
+                                            beforeMarks.forEach(m => {
+                                                if (lectureIdSet.has(m.lecture)) {
+                                                    const key = `${m.student}:${m.lecture}`;
+                                                    const prev = Number(m.attendance_mark || 0);
+                                                    beforeAttendanceByKey.set(key, prev);
+                                                }
+                                            });
+
                                             // Recalculate attendance marks for all lectures in this course
                                             const recalculatePromises = courseLectures.map(lecture => 
                                                 AttendanceAPI.recalculateAttendanceMarks(lecture.id)
                                             );
-                                            
                                             await Promise.all(recalculatePromises);
-                                            
-                                            // Refresh data
+
+                                            // Fetch after recalculation
+                                            const afterResp = await AttendanceAPI.listStudentMarks();
+                                            const afterMarks = Array.isArray(afterResp.data) ? afterResp.data : [];
+
+                                            // For marks in this course, set attendance_mark = previous + new
+                                            const updatePromises = afterMarks
+                                                .filter(m => lectureIdSet.has(m.lecture))
+                                                .map(m => {
+                                                    const key = `${m.student}:${m.lecture}`;
+                                                    const prev = beforeAttendanceByKey.get(key) || 0;
+                                                    const now = Number(m.attendance_mark || 0);
+                                                    const combined = prev + now;
+                                                    // Only update if combined differs from current to avoid extra writes
+                                                    if (Number.isFinite(combined) && combined !== now) {
+                                                        return AttendanceAPI.updateStudentMark(m.id, { attendance_mark: combined });
+                                                    }
+                                                    return null;
+                                                })
+                                                .filter(Boolean);
+
+                                            if (updatePromises.length) {
+                                                await Promise.all(updatePromises);
+                                            }
+
+                                            // Refresh data in UI
                                             const marksData = await AttendanceAPI.listStudentMarks();
                                             setStudentMarks(Array.isArray(marksData.data) ? marksData.data : []);
                                             
-                                            alert('تم إعادة حساب درجات الحضور بنجاح');
+                                            alert('تم إضافة درجات الحضور الجديدة إلى الدرجات الحالية بنجاح');
                                         } catch (error) {
                                             console.error('Failed to recalculate attendance marks:', error);
-                                            alert('فشل في إعادة حساب درجات الحضور');
+                                            alert('فشل في إضافة درجات الحضور');
                                         } finally {
                                             setLoading(false);
                                         }
@@ -380,7 +422,7 @@ export default function InstructorGrades() {
                             </div>
                         </div>
                         <div className='flex gap-2 text-2xl'>
-                            <p className='!w-50'>درجة أعمال السنة الجديدة:</p>
+                            <p className='!w-50'>أضف مقدارًا إلى أعمال السنة:</p>
                             <input 
                                 type='number' 
                                 className='h-8 w-40 !p-2'
@@ -388,6 +430,7 @@ export default function InstructorGrades() {
                                 onChange={(e) => setEditValue(e.target.value)}
                                 step="0.1"
                                 min="0"
+                                placeholder="مثال: 3 لإضافة ثلاث درجات"
                             />
                         </div>
                         <button 
