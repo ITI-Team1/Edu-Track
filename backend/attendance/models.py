@@ -27,7 +27,7 @@ class Attendance(models.Model):
 class StudentAttendance(models.Model):
     attendance = models.ForeignKey(Attendance, on_delete=models.CASCADE, related_name="student_attendances")
     student = models.ForeignKey(User, on_delete=models.CASCADE, related_name="student_attendances")
-    ip = models.GenericIPAddressField(protocol="both", unpack_ipv4=True, unique=True, null=True)
+    ip = models.GenericIPAddressField(protocol="both", unpack_ipv4=True, null=True, blank=True)
     present = models.BooleanField(default=False)
 
     class Meta:
@@ -67,7 +67,10 @@ class StudentMark(models.Model):
             self.attendance_mark = 0.0
 
     def save(self, *args, **kwargs):
-        self.calculate_attendance_mark()
+        # Only auto-calculate attendance_mark if it's 0.0 (default value)
+        # This allows manual assignment while preserving auto-calculation for new records
+        if self.attendance_mark == 0.0:
+            self.calculate_attendance_mark()
         self.final_mark = self.attendance_mark + self.instructor_mark
         super().save(*args, **kwargs)
 

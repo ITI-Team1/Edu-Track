@@ -36,6 +36,11 @@ export const AttendanceAPI = {
       response.data.filter(attendance => attendance.lecture === lectureId)
     ),
 
+  getStudentAttendancesByAttendance: (attendanceId) =>
+    apiClient.get('attendance/students/').then(response =>
+      response.data.filter(attendance => attendance.attendance === attendanceId)
+    ),
+
   // Legacy methods (keeping for backward compatibility)
   getMe: (attendanceId) => apiClient.get(`attendance/${attendanceId}/students/me/`),
   markPresent: (studentAttendanceId, payload) => apiClient.patch(`attendance/students/${studentAttendanceId}/update/`, payload)

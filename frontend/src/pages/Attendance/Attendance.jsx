@@ -215,32 +215,34 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
             const presentSet = readPresentSet();
             const presentStudents = students.filter(student => presentSet.has(student.id));
             
-            // Create StudentAttendance records for present students
-            const createPromises = presentStudents.map(async (student) => {
+            // Update StudentAttendance records for present students (they are auto-created by signal)
+            const updatePromises = presentStudents.map(async (student) => {
                 try {
-                    await AttendanceAPI.createStudentAttendance({
-                        attendance: attendanceId,
-                        student: student.id,
-                        present: true
-                    });
-                } catch (error) {
-                    // If record already exists, update it
-                    if (error.response?.status === 400) {
-                        // Try to find and update existing record
-                        const existingAttendances = await AttendanceAPI.listStudentAttendances();
-                        const existingRecord = existingAttendances.data.find(att => 
-                            att.attendance === attendanceId && att.student === student.id
-                        );
-                        if (existingRecord) {
-                            await AttendanceAPI.updateStudentAttendance(existingRecord.id, {
-                                present: true
-                            });
-                        }
+                    // Find the existing record created by the signal
+                    const existingAttendances = await AttendanceAPI.getStudentAttendancesByAttendance(attendanceId);
+                    const existingRecord = existingAttendances.find(att => 
+                        att.student === student.id
+                    );
+                    
+                    if (existingRecord) {
+                        // Update the existing record to mark as present
+                        await AttendanceAPI.updateStudentAttendance(existingRecord.id, {
+                            present: true
+                        });
+                    } else {
+                        // If for some reason the record doesn't exist, create it
+                        await AttendanceAPI.createStudentAttendance({
+                            attendance: attendanceId,
+                            student: student.id,
+                            present: true
+                        });
                     }
+                } catch (error) {
+                    console.error(`Failed to update attendance for student ${student.id}:`, error);
                 }
             });
             
-            await Promise.all(createPromises);
+            await Promise.all(updatePromises);
             
             // Create StudentMark records for present students with attendance grade
             const markPromises = presentStudents.map(async (student) => {
@@ -248,7 +250,7 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
                     await AttendanceAPI.createStudentMark({
                         student: student.id,
                         lecture: Number(lectureId),
-                        instructor_mark: 0 // Only attendance grade, no year work grade
+                        attendance_mark: Number(attendanceGrade) // Set the attendance grade manually
                     });
                 } catch (error) {
                     // If record already exists, update it
@@ -260,7 +262,7 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
                         );
                         if (existingRecord) {
                             await AttendanceAPI.updateStudentMark(existingRecord.id, {
-                                instructor_mark: 0 // Keep year work grade as 0
+                                attendance_mark: Number(attendanceGrade) // Set the attendance grade manually
                             });
                         }
                     }
