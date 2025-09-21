@@ -53,7 +53,7 @@ class EnrollStudentInCourses(APIView):
             for lecture in lectures:
                 lecture.students.add(student)
 
-                StudentMark.objects.create(student=student, lecture=lecture,
+                StudentMark.objects.get_or_create(student=student, lecture=lecture,
                     defaults={"attendance_mark": 0.0, "instructor_mark": 0.0, "final_mark": 0.0})
 
             return Response({"student": student.username, "enrolled lectures": [str(lec) for lec in lectures]}, status=status.HTTP_200_OK)

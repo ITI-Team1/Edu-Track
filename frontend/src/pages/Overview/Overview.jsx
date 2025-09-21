@@ -280,13 +280,13 @@ export default function Overview() {
                   <span className="class-type">{class_.type}</span>
                 </div>
                 <div className="class-actions">
-                  <Link
+                  {/* <Link
                     to={`/attendance/${class_.id}`}
                     className="btn"
                     title="عرض الحضور لهذه المحاضرة"
                   >
                     الحضور
-                  </Link>
+                  </Link> */}
                 </div>
               </div>
             ))}

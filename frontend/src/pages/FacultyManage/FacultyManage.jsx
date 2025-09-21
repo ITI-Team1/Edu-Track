@@ -5,16 +5,13 @@ import {
   fetchFaculties,
   createFaculty,
   updateFaculty,
-  deleteFaculty,
+  deleteFaculty
 } from "../../services/facultyApi";
 import "./FacultyManage.css";
 import Modal from "../../components/ui/Modal";
 import Button from "../../components/ui/Button";
 import { useAuth } from "../../context/AuthContext";
 const initialForm = { name: "", slug: "", logo: null, university: 1 };
-
-
-
 
 // Form validation function
 const validateForm = (form) => {
@@ -59,7 +56,7 @@ const AddEditForm = memo(
           <h3>{editSlug ? "تعديل كلية" : "إضافة كلية"}</h3>
 
           <form onSubmit={onSubmit} dir="rtl" autoComplete="off">
-            <div >
+            <div>
               <label htmlFor="faculty-name" className="themed-label">
                 اسم الكلية
               </label>
@@ -77,7 +74,7 @@ const AddEditForm = memo(
               <small className="input-helper">{form.name.length}/30</small>
             </div>
 
-            <div >
+            <div>
               <label htmlFor="faculty-slug" className="themed-label">
                 الاسم المختصر
               </label>
@@ -95,7 +92,7 @@ const AddEditForm = memo(
               />
             </div>
 
-            <div >
+            <div>
               <label htmlFor="faculty-logo" className="themed-label">
                 شعار الكلية
               </label>
@@ -144,12 +141,12 @@ AddEditForm.propTypes = {
   form: PropTypes.shape({
     name: PropTypes.string,
     slug: PropTypes.string,
-    logo: PropTypes.any,
+    logo: PropTypes.any
   }).isRequired,
   error: PropTypes.string,
   onClose: PropTypes.func.isRequired,
   onSubmit: PropTypes.func.isRequired,
-  onChange: PropTypes.func.isRequired,
+  onChange: PropTypes.func.isRequired
 };
 
 // Memoized FacultyList component
@@ -172,18 +169,12 @@ const FacultyList = memo(
       <div className="faculty-list-container">
         <div className="header-actions">
           <h1>إدارة الكليات</h1>
-          {permissions.includes('Can add faculty') &&
-          <Button onClick={onAdd} className="add-button-faculty">
-            <span
-             className="text-2xl"
-            >
-              +
-            </span>
-            <span className="text-lg">
-              إضافة كلية
-            </span>
-          </Button>
-          }
+          {permissions.includes("Can add faculty") && (
+            <Button onClick={onAdd} className="add-button-faculty">
+              <span className="text-2xl">+</span>
+              <span className="text-lg">إضافة كلية</span>
+            </Button>
+          )}
         </div>
         {isLoading ? (
           <div className="loading">جاري التحميل...</div>
@@ -191,45 +182,48 @@ const FacultyList = memo(
           <div className="error">حدث خطأ في تحميل البيانات</div>
         ) : (
           <div className="faculty-grid">
-       dasdsa
-       dasdasddsa
-       dsa {(Array.isArray(faculties) ? faculties : [faculties])?.map((faculty) => (
-  <div key={faculty.slug} className="faculty-card content-card">
-    {faculty.logo && (
-      <div className="faculty-logo">
-        <img src={faculty.logo} alt={faculty.name} />
-      </div>
-    )}
-    <div className="faculty-info">
-      <h3>{faculty.name}</h3>
-      <p>{faculty.slug}</p>
-    </div>
-    <div className="faculty-actions">
-      <Button onClick={() => onEdit(faculty)} className="btn update btn-lg" variant="update">
-        تعديل
-      </Button>
-      <Button
-        onClick={() => openDeleteModal(faculty)}
-        className="btn delete btn-lg"
-        variant="delete"
-      >
-        <span className="btn-icon-left" aria-hidden="true">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="18"
-            height="18"
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M3 6h18v2H3V6zm2 3h14v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V9zm5 2v7h2v-7h-2zm-4 0v7h2v-7H6zm8 0v7h2v-7h-2z" />
-          </svg>
-        </span>
-        حذف
-      </Button>
-    </div>
-  </div>
-))}
-
+            {(Array.isArray(faculties) ? faculties : [faculties])?.map(
+              (faculty) => (
+                <div key={faculty.slug} className="faculty-card content-card">
+                  {faculty.logo && (
+                    <div className="faculty-logo">
+                      <img src={faculty.logo} alt={faculty.name} />
+                    </div>
+                  )}
+                  <div className="faculty-info">
+                    <h3>{faculty.name}</h3>
+                    <p>{faculty.slug}</p>
+                  </div>
+                  <div className="faculty-actions">
+                    <Button
+                      onClick={() => onEdit(faculty)}
+                      className="btn update btn-lg"
+                      variant="update"
+                    >
+                      تعديل
+                    </Button>
+                    <Button
+                      onClick={() => openDeleteModal(faculty)}
+                      className="btn delete btn-lg"
+                      variant="delete"
+                    >
+                      <span className="btn-icon-left" aria-hidden="true">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="18"
+                          height="18"
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M3 6h18v2H3V6zm2 3h14v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V9zm5 2v7h2v-7h-2zm-4 0v7h2v-7H6zm8 0v7h2v-7h-2z" />
+                        </svg>
+                      </span>
+                      حذف
+                    </Button>
+                  </div>
+                </div>
+              )
+            )}
           </div>
         )}
         {/* Custom Delete Confirmation Modal */}
@@ -246,7 +240,7 @@ const FacultyList = memo(
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                gap: "0.5rem",
+                gap: "0.5rem"
               }}
             >
               <span style={{ color: "#d32f2f", fontSize: "1.5rem" }}>
@@ -271,10 +265,14 @@ const FacultyList = memo(
                 display: "flex",
                 justifyContent: "center",
                 gap: "1rem",
-                marginTop: "1.5rem",
+                marginTop: "1.5rem"
               }}
             >
-              <Button className="btn delete btn-lg" variant="delete" onClick={confirmDelete}>
+              <Button
+                className="btn delete btn-lg"
+                variant="delete"
+                onClick={confirmDelete}
+              >
                 <span className="btn-icon-left" aria-hidden="true">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -294,7 +292,7 @@ const FacultyList = memo(
                 style={{
                   background: "#eee",
                   color: "#333",
-                  border: "1px solid #bbb",
+                  border: "1px solid #bbb"
                 }}
                 onClick={() => {
                   setShowDeleteModal(false);
@@ -324,10 +322,10 @@ FacultyList.propTypes = {
   isError: PropTypes.bool,
   onAdd: PropTypes.func.isRequired,
   onEdit: PropTypes.func.isRequired,
-  onDelete: PropTypes.func.isRequired,
+  onDelete: PropTypes.func.isRequired
 };
 
-const FacultyManage = ({permissions, facultiesData}) => {  
+const FacultyManage = ({ permissions, facultiesData }) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   // console.log(permissions);
@@ -336,7 +334,7 @@ const FacultyManage = ({permissions, facultiesData}) => {
     editSlug: null,
     error: "",
     isOpen: false,
-    isClosing: false,
+    isClosing: false
   });
 
   const handleCloseForm = useCallback(() => {
@@ -352,7 +350,7 @@ const FacultyManage = ({permissions, facultiesData}) => {
           editSlug: null,
           error: "",
           isOpen: false,
-          isClosing: false,
+          isClosing: false
         });
       }, 300);
     }
@@ -361,24 +359,21 @@ const FacultyManage = ({permissions, facultiesData}) => {
     };
   }, [formState.isClosing]);
 
-  
-  
-
-let facultySlug='' ;
-if (user.faculty) {
-  facultySlug = user.faculty.slug;
-}
+  let facultySlug = "";
+  if (user.faculty) {
+    facultySlug = user.faculty.slug;
+  }
 
   const {
     data: faculties,
     isLoading,
-    isError,
+    isError
   } = useQuery({
     queryKey: ["faculties", facultySlug], // <--- include slug in key
     queryFn: ({ queryKey }) => {
       const [, slug] = queryKey; // destructure the slug
       return fetchFaculties(slug); // pass it to the function
-    },
+    }
   });
 
   const createMutation = useMutation({
@@ -390,8 +385,8 @@ if (user.faculty) {
     onError: (error) =>
       setFormState((prev) => ({
         ...prev,
-        error: error?.message || "فشل في إنشاء الكلية",
-      })),
+        error: error?.message || "فشل في إنشاء الكلية"
+      }))
   });
 
   const updateMutation = useMutation({
@@ -403,8 +398,8 @@ if (user.faculty) {
     onError: (error) =>
       setFormState((prev) => ({
         ...prev,
-        error: error?.message || "فشل في تحديث الكلية",
-      })),
+        error: error?.message || "فشل في تحديث الكلية"
+      }))
   });
 
   const deleteMutation = useMutation({
@@ -415,8 +410,8 @@ if (user.faculty) {
     onError: (error) =>
       setFormState((prev) => ({
         ...prev,
-        error: error?.message || "فشل في حذف الكلية",
-      })),
+        error: error?.message || "فشل في حذف الكلية"
+      }))
   });
 
   // Optimized handleChange with useCallback and proper dependencies
@@ -434,7 +429,7 @@ if (user.faculty) {
 
       return {
         ...prev,
-        form: newForm,
+        form: newForm
       };
     });
   }, []); // Empty dependencies since we're using functional updates
@@ -466,7 +461,7 @@ if (user.faculty) {
       } catch (error) {
         setFormState((prev) => ({
           ...prev,
-          error: error.response?.data?.message || "حدث خطأ أثناء حفظ البيانات",
+          error: error.response?.data?.message || "حدث خطأ أثناء حفظ البيانات"
         }));
       }
     },
@@ -484,7 +479,7 @@ if (user.faculty) {
       },
       editSlug: fac.slug,
       isOpen: true,
-      error: "",
+      error: ""
     }));
   }, []);
 
@@ -494,7 +489,7 @@ if (user.faculty) {
       form: initialForm,
       editSlug: null,
       isOpen: true,
-      error: "",
+      error: ""
     }));
   }, []);
 
@@ -514,7 +509,7 @@ if (user.faculty) {
       error: formState.error,
       onClose: handleCloseForm,
       onSubmit: handleSubmit,
-      onChange: handleChange,
+      onChange: handleChange
     }),
     [
       formState.isClosing,
@@ -523,7 +518,7 @@ if (user.faculty) {
       formState.error,
       handleCloseForm,
       handleSubmit,
-      handleChange,
+      handleChange
     ]
   );
 
@@ -534,7 +529,7 @@ if (user.faculty) {
       isError,
       onAdd: handleAdd,
       onEdit: handleEdit,
-      onDelete: handleDelete,
+      onDelete: handleDelete
     }),
     [faculties, isLoading, isError, handleAdd, handleEdit, handleDelete]
   );
