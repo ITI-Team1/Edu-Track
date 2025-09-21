@@ -11,6 +11,8 @@ import { AttendanceAPI } from '../../services/attendanceApi';
 import Modal from '../../components/ui/Modal';
 import '../Attendance/attendance.css';
 
+import './instructorgrades.css';
+
 export default function InstructorGrades() {
     const { user } = useAuth();
     const navigate = useNavigate();
@@ -232,7 +234,7 @@ export default function InstructorGrades() {
     };
 
     return (
-        <div className='attendance-page'>
+        <div className='attendance-page instructor-grades'>
             <div className='attendance-header'>
                 <button className='btn btn-secondary-attendance !m-10' onClick={() => navigate('/dashboard')}>
                     لوحة التحكم
@@ -254,7 +256,7 @@ export default function InstructorGrades() {
                             <select 
                                 value={selectedCourse}
                                 onChange={(e) => setSelectedCourse(e.target.value)}
-                                className="h-10 px-3 border border-gray-300 rounded"
+                                className="h-14 px-20 border border-gray-300 rounded bg-white"
                                 style={{ minWidth: '200px' }}
                             >
                                 <option value="">-- اختر المقرر --</option>

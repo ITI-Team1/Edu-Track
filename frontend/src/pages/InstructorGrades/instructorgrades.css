@@ -1,0 +1,54 @@
+/* Page-scoped styles for InstructorGrades */
+.instructor-grades {
+  direction: rtl;
+  color-scheme: light; /* force light native form controls */
+  color: #1f2937; /* default text color for this page */
+}
+
+/* Headings on this page should be dark */
+.instructor-grades h2,
+.instructor-grades h3,
+.instructor-grades .attendance-title {
+  color: #2c3649 !important;
+}
+
+/* Ensure native select shows readable value regardless of global overrides */
+.instructor-grades .students-toolbar select,
+.instructor-grades select {
+  color: #1f2937 !important;            /* slate-800 */
+  background-color: #ffffff !important; /* white */
+  -webkit-text-fill-color: #1f2937 !important; /* Safari override */
+  text-shadow: none !important;
+  background-image: none !important;
+  appearance: auto; /* use native rendering */
+  border-color: #d1d5db; /* gray-300 */
+
+}
+
+.instructor-grades select option {
+  color: #1f2937 !important;
+  background-color: #ffffff !important;
+}
+
+.instructor-grades select:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.2);
+  border-color: #3182ce; /* blue-600-ish */
+}
+
+/* Buttons in toolbar (small tweak for consistency) */
+.instructor-grades .students-toolbar .btn {
+  font-size: 14px;
+  padding: 8px 12px;
+}
+
+/* Table tweaks to ensure readability on light bg */
+.instructor-grades table {
+  background: #fff;
+  color: #1f2937;
+  border-collapse: collapse;
+}
+.instructor-grades table th,
+.instructor-grades table td {
+  border: 1px solid #e5e7eb; /* gray-200 */
+}
