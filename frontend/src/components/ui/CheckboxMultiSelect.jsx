@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import '../../styles/select.css';
 
-// Simple checkbox-based multi-select
+// Checkbox-based multi-select with dropdown
 // Props:
 // - options: [{ value, label }]
 // - value: array of selected values (numbers/strings)
@@ -22,6 +22,31 @@ export default function CheckboxMultiSelect({
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
   const wrapRef = useRef(null);
+  const panelRef = useRef(null);
+  const justOpenedRef = useRef(false);
+  const [panelStyle, setPanelStyle] = useState({});
+
+  // Compute panel position relative to trigger. Uses fixed positioning to avoid clipping.
+  const computePanelStyle = () => {
+    if (!wrapRef.current) return {};
+    const rect = wrapRef.current.getBoundingClientRect();
+    const gap = 6;
+    const left = Math.round(rect.left);
+    const width = Math.round(rect.width);
+    const topBelow = Math.round(rect.bottom + gap);
+    const spaceBelow = window.innerHeight - topBelow - 12;
+    const spaceAbove = Math.round(rect.top) - 12;
+    const targetMax = Math.floor(window.innerHeight * 0.8);
+    // Prefer below, but flip above if not enough space
+    if (spaceBelow >= 180 || spaceBelow >= spaceAbove) {
+      const maxHeight = Math.max(140, Math.min(targetMax, spaceBelow));
+      return { position: 'fixed', top: topBelow, left, width, maxHeight, zIndex: 2001 };
+    } else {
+      const bottom = Math.max(12, window.innerHeight - Math.round(rect.top) + gap);
+      const maxHeight = Math.max(140, Math.min(targetMax, spaceAbove));
+      return { position: 'fixed', bottom, left, width, maxHeight, zIndex: 2001 };
+    }
+  };
 
   const normalized = useMemo(() => {
     const arr = options.map(opt => {
@@ -67,11 +92,36 @@ export default function CheckboxMultiSelect({
   // Close dropdown on outside click
   useEffect(() => {
     const onDoc = (e) => {
-      if (!wrapRef.current) return;
-      if (!wrapRef.current.contains(e.target)) setOpen(false);
+      if (!open) return;
+      if (justOpenedRef.current) return; // ignore the click that opened it
+      const root = wrapRef.current;
+      const panel = panelRef.current;
+      if (!root) return;
+      const target = e.target;
+      const insideRoot = root.contains(target);
+      const insidePanel = panel ? panel.contains(target) : false;
+      if (!insideRoot && !insidePanel) setOpen(false);
     };
-    if (open) document.addEventListener('mousedown', onDoc);
-    return () => document.removeEventListener('mousedown', onDoc);
+    document.addEventListener('mousedown', onDoc, true);
+    return () => document.removeEventListener('mousedown', onDoc, true);
+  }, [open]);
+
+  // Compute and update dropdown panel position/size to avoid clipping
+  useEffect(() => {
+    if (!open) return;
+
+    const updatePanel = () => {
+      const st = computePanelStyle();
+      if (st && Object.keys(st).length) setPanelStyle(st);
+    };
+
+    updatePanel();
+    window.addEventListener('resize', updatePanel);
+    window.addEventListener('scroll', updatePanel, true);
+    return () => {
+      window.removeEventListener('resize', updatePanel);
+      window.removeEventListener('scroll', updatePanel, true);
+    };
   }, [open]);
 
   const selectedLabels = useMemo(() => {
@@ -87,7 +137,26 @@ export default function CheckboxMultiSelect({
       <button
         type="button"
         disabled={disabled}
-        onClick={() => setOpen(o => !o)}
+        onMouseDown={(e) => {
+          e.preventDefault();
+          // toggle open ASAP on mousedown to precede document capture listeners
+          // Precompute and set panel style immediately to avoid initial misposition
+          const st = computePanelStyle();
+          if (st && Object.keys(st).length) setPanelStyle(st);
+          setOpen((o) => {
+            const next = !o;
+            if (next) {
+              justOpenedRef.current = true;
+              setTimeout(() => { justOpenedRef.current = false; }, 200);
+            }
+            return next;
+          });
+          // Ensure a second pass after render for precision
+          requestAnimationFrame(() => {
+            const st2 = computePanelStyle();
+            if (st2 && Object.keys(st2).length) setPanelStyle(st2);
+          });
+        }}
         className="sel-control"
         style={{
           width: '100%',
@@ -114,17 +183,21 @@ export default function CheckboxMultiSelect({
       {open && (
         <div
           className="sel-dropdown"
+          ref={panelRef}
+          onMouseDown={(e) => {
+            // prevent immediate outside-close when interacting inside the panel
+            e.stopPropagation();
+          }}
           style={{
-            position: 'absolute',
-            right: 0,
-            left: 0,
-            top: 'calc(100% + 6px)',
             background: '#fff',
             border: '1px solid #e2e8f0',
             borderRadius: 10,
             boxShadow: '0 10px 25px rgba(0,0,0,0.08)',
-            padding: 10,
-            zIndex: 50,
+            padding: '10px 10px 8px 10px',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+            ...panelStyle,
           }}
         >
           {searchable && (
@@ -136,12 +209,13 @@ export default function CheckboxMultiSelect({
                 onChange={(e) => setQuery(e.target.value)}
                 disabled={disabled}
                 style={{ width: '100%', padding: '6px 10px', border: '1px solid #cbd5e1', borderRadius: 8 }}
+                autoFocus
               />
             </div>
           )}
 
           {/* Options list */}
-          <div style={{ maxHeight: 280, overflowY: 'auto', paddingRight: 2 }}>
+          <div style={{ overflowY: 'auto', padding: '0 2px 14px 0', scrollbarWidth: 'thin' }}>
             {/* Select all row */}
             {filtered.length > 0 && (
               <label
@@ -183,7 +257,7 @@ export default function CheckboxMultiSelect({
                       padding: '8px 10px', borderRadius: 8,
                       background: selected ? '#eef6ff' : 'transparent',
                       border: selected ? '1px solid #60a5fa' : '1px solid transparent',
-                      marginBottom: 4,
+                      marginBottom: 6,
                       cursor: disabled ? 'not-allowed' : 'pointer',
                       userSelect: 'none',
                     }}
@@ -200,6 +274,8 @@ export default function CheckboxMultiSelect({
                 );
               })
             )}
+            {/* bottom spacer to avoid clipping last item */}
+            <div style={{ height: 8 }} />
           </div>
         </div>
       )}

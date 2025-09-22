@@ -157,7 +157,7 @@
     min-width: 320px;
     max-width: 480px;
     /* Make sure full form and actions are reachable */
-    max-height: calc(100vh - 150px);
+    max-height: calc(100vh - 120px);
     overflow-y: auto;
     box-shadow: 0 4px 20px rgba(0,0,0,0.08);
     display: flex;
