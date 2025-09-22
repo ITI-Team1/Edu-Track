@@ -255,8 +255,8 @@ export default function Hall() {
               <tr>
                 <th>اسم القاعة</th>
                 <th>اسم الكلية</th>
-                <th>slug</th>
-                <th>مساحه القاعة</th>
+                <th>الكود</th>
+                <th>سعة القاعة</th>
                 <th>تعديل القاعة</th>
                 <th>مسح القاعة</th>
               </tr>
@@ -266,8 +266,8 @@ export default function Hall() {
                 <tr key={hall.slug} className="hall-row">
                   <td data-label="اسم القاعة">{hall.name}</td>
                   <td data-label="اسم الكلية">{getFacultyNames(hall).join(', ')}</td>
-                  <td data-label="Slug">{hall.slug}</td>
-                  <td data-label="مساحة القاعة">{hall.capacity}</td>
+                  <td data-label="الكود">{hall.slug}</td>
+                  <td data-label="سعة القاعة">{hall.capacity}</td>
                   <td data-label="تعديل">
                     <Button
                       className="btn update"
@@ -372,7 +372,7 @@ export default function Hall() {
               />
             </label>
             <label>
-              مساحه القاعة:
+              سعة القاعة:
               <input
                 name="capacity"
                 type="number"
