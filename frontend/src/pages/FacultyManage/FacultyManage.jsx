@@ -26,6 +26,11 @@ const validateForm = (form) => {
     errors.slug = "الاسم المختصر مطلوب";
   } else if (form.slug.length > 30) {
     errors.slug = "الاسم المختصر يجب أن لا يتجاوز 30 حرف";
+  } else {
+    const slugPattern = /^[A-Za-z0-9_-]+$/;
+    if (!slugPattern.test(form.slug)) {
+      errors.slug = "الاسم المختصر يجب أن يحتوي على أحرف إنجليزية أو أرقام أو - أو _ فقط";
+    }
   }
 
   if (form.logo && form.logo.size > 5 * 1024 * 1024) {
@@ -325,7 +330,7 @@ FacultyList.propTypes = {
   onDelete: PropTypes.func.isRequired
 };
 
-const FacultyManage = ({ permissions, facultiesData }) => {
+const FacultyManage = ({ permissions, facultiesData: _facultiesData }) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   // console.log(permissions);

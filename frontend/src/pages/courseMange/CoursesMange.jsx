@@ -24,18 +24,7 @@ export default function CoursesMange() {
   const [programs, setPrograms] = useState([]);
   const [programsLoaded, setProgramsLoaded] = useState(false);
 
-  // MOCK DATA FOR DEMO/DEV - REMOVE THIS BLOCK FOR PRODUCTION
-  // To show mock data, uncomment the following and comment out the useEffect below
-  /*
-  useEffect(() => {
-    setCourses([
-      { slug: 'math-101', name: 'الرياضيات 101', code: 'MATH101', credits: 3 },
-      { slug: 'phys-lab', name: 'معمل الفيزياء', code: 'PHYS201', credits: 2 },
-      { slug: 'eng-lit', name: 'الأدب الإنجليزي', code: 'ENG301', credits: 2 },
-    ]);
-  }, []);
-  */
-  // END MOCK DATA
+  // NOTE: All data below is now fully dynamic via API (no mock fallbacks)
 
   useEffect(() => {
     loadPrograms();
@@ -60,58 +49,16 @@ export default function CoursesMange() {
     setLoading(true);
     try {
       const data = await fetchCourses();
-      // If no real data, show mock data for demo
-      setCourses(
-        data.length
-          ? data
-          : [
-              {
-                slug: "math-101",
-                name: "الرياضيات 101",
-                code: "MATH101",
-                credits: 3,
-              },
-              {
-                slug: "phys-lab",
-                name: "معمل الفيزياء",
-                code: "PHYS201",
-                credits: 2,
-              },
-              {
-                slug: "eng-lit",
-                name: "الأدب الإنجليزي",
-                code: "ENG301",
-                credits: 2,
-              },
-            ]
-      );
+      setCourses(Array.isArray(data) ? data : []);
       setError(null);
     } catch (err) {
-      setCourses([
-        {
-          slug: "math-101",
-          name: "الرياضيات 101",
-          code: "MATH101",
-          credits: 3,
-        },
-        {
-          slug: "phys-lab",
-          name: "معمل الفيزياء",
-          code: "PHYS201",
-          credits: 2,
-        },
-        {
-          slug: "eng-lit",
-          name: "الأدب الإنجليزي",
-          code: "ENG301",
-          credits: 2,
-        },
-      ]);
+      setCourses([]);
       const msg = 'فشل تحميل المقررات';
       setError(msg);
       toast.apiError(err, msg);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleDelete = async (slug) => {
@@ -245,7 +192,7 @@ export default function CoursesMange() {
             <thead>
               <tr>
                 <th>اسم المقرر</th>
-                <th>المعرف (Slug)</th>
+                <th>الكود</th>
                 <th>البرامج المرتبطة</th>
                 <th>تعديل</th>
                 <th>حذف</th>

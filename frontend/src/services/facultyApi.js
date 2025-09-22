@@ -1,5 +1,31 @@
 import api from './api';
 
+// Helper to translate common backend/Django messages to Arabic
+const translate = (msg) => api.translateError(String(msg || ''));
+
+// Extract readable error message from a JSON error object
+const extractErrorMessage = (data, fallback) => {
+  if (!data || typeof data !== 'object') return fallback;
+  if (data.detail) return translate(data.detail);
+  // Collect field errors into lines
+  const parts = [];
+  for (const [key, val] of Object.entries(data)) {
+    if (key === 'detail' || key === 'non_field_errors') continue;
+    if (Array.isArray(val)) {
+      const line = val.map((v) => translate(v)).join('، ');
+      parts.push(line);
+    } else if (typeof val === 'string') {
+      parts.push(translate(val));
+    }
+  }
+  if (data.non_field_errors) {
+    const nfe = Array.isArray(data.non_field_errors) ? data.non_field_errors : [data.non_field_errors];
+    parts.push(nfe.map((v) => translate(v)).join('، '));
+  }
+  const message = parts.filter(Boolean).join(' \n ');
+  return message || fallback;
+};
+
 export const fetchFaculties = async (facultySlug) => {
   const url = facultySlug ? `${api.baseURL}/faculty/${facultySlug}` : `${api.baseURL}/faculty/`;
   const res = await fetch(url, {
@@ -22,7 +48,7 @@ export const createFaculty = async (formData) => {
     let msg = 'فشل في إنشاء الكلية';
     try {
       const data = await res.json();
-      msg = data?.detail || Object.values(data).flat().join(' \n ') || msg;
+      msg = extractErrorMessage(data, msg);
     } catch (_) {}
     throw new Error(msg);
   }
@@ -41,7 +67,7 @@ export const updateFaculty = async ({ slug, formData }) => {
     let msg = 'فشل في تحديث الكلية';
     try {
       const data = await res.json();
-      msg = data?.detail || Object.values(data).flat().join(' \n ') || msg;
+      msg = extractErrorMessage(data, msg);
     } catch (_) {}
     throw new Error(msg);
   }
@@ -57,7 +83,7 @@ export const deleteFaculty = async (slug) => {
     let msg = 'فشل في حذف الكلية';
     try {
       const data = await res.json();
-      msg = data?.detail || Object.values(data).flat().join(' \n ') || msg;
+      msg = extractErrorMessage(data, msg);
     } catch (_) {}
     throw new Error(msg);
   }

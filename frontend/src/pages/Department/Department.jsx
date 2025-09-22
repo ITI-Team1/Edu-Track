@@ -32,54 +32,39 @@ export default function Department({_permissions, _facultiesData}) {
 
   // slugify removed because not used in this module
 
-  // Mock data for style testing (memoized)
-  const mockFaculties = React.useMemo(
-    () => [
-      { id: 1, name: "كلية الهندسة" },
-      { id: 2, name: "كلية العلوم" },
-      { id: 3, name: "كلية التجارة" },
-    ],
-    []
-  );
-  const mockDepartments = React.useMemo(
-    () => [
-      { slug: "cs", name: "قسم الحاسبات", faculty: mockFaculties[0] },
-      { slug: "physics", name: "قسم الفيزياء", faculty: mockFaculties[1] },
-      { slug: "chemistry", name: "قسم الكيمياء", faculty: mockFaculties[1] },
-      {
-        slug: "business",
-        name: "قسم إدارة الأعمال",
-        faculty: mockFaculties[2],
-      },
-    ],
-    [mockFaculties]
-  );
+  // Note: data is fully dynamic now (no mock fallbacks)
 
   // Wrap loaders in useCallback and include them as deps to satisfy hooks lint rules
   const loadDepartmentsCb = React.useCallback(async () => {
     setLoading(true);
     try {
       const data = await fetchPrograms();
-      const patched = data.map(dept => ({
+      const list = Array.isArray(data) ? data : (data?.results ?? []);
+      const patched = list.map((dept) => ({
         ...dept,
-        faculty: typeof dept.faculty === 'object' ? dept.faculty : faculties.find(fac => fac.id === dept.faculty) || dept.faculty,
+        faculty:
+          typeof dept.faculty === "object"
+            ? dept.faculty
+            : faculties.find((fac) => fac.id === dept.faculty) || dept.faculty,
       }));
-      setDepartments(patched.length ? patched : mockDepartments);
+      setDepartments(patched);
       setError(null);
     } catch (err) {
-      setDepartments(mockDepartments);
+      setDepartments([]);
       const msg = 'فشل تحميل الأقسام';
       setError(msg);
       toast.apiError(err, msg);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-  }, [mockDepartments, faculties]);
+  }, [faculties]);
 
   const loadFacultiesCb = React.useCallback(async () => {
     try {
       const data = await fetchFaculties();
-      setFaculties(data.length ? data : mockFaculties);
-      setFacultiesLoaded(!!data.length);
+      const list = Array.isArray(data) ? data : (data?.results ?? []);
+      setFaculties(list);
+      setFacultiesLoaded(!!(list && list.length));
     } catch (err) {
       setFaculties([]);
       setFacultiesLoaded(false);
@@ -87,7 +72,7 @@ export default function Department({_permissions, _facultiesData}) {
       setError(msg);
       toast.apiError(err, msg);
     }
-  }, [mockFaculties]);
+  }, []);
 
   useEffect(() => {
     loadFacultiesCb();

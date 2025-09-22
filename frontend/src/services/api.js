@@ -119,23 +119,38 @@ getAuthHeaders(isFormData = false) {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        let errorMessage = 'فشل إنشاء الحساب';
-        
-        // Handle field-specific errors
-        if (errorData.username) {
-          errorMessage = this.translateError(errorData.username[0]);
-        } else if (errorData.email) {
-          errorMessage = this.translateError(errorData.email[0]);
-        } else if (errorData.password) {
-          errorMessage = this.translateError(errorData.password[0]);
-        } else if (errorData.non_field_errors) {
-          errorMessage = this.translateError(errorData.non_field_errors[0]);
-        } else if (errorData.detail) {
-          errorMessage = this.translateError(errorData.detail);
+        const errorData = await response.json().catch(() => ({}));
+        // Build field-specific error map
+        const fields = ['username','email','password','re_password','first_name','last_name'];
+        const fieldErrors = {};
+
+        const normalize = (val) => {
+          if (!val) return null;
+          if (Array.isArray(val)) {
+            return val.map((m) => this.translateError(String(m))).join('، ');
+          }
+          if (typeof val === 'string') return this.translateError(val);
+          return this.translateError(JSON.stringify(val));
+        };
+
+        for (const f of fields) {
+          if (f in errorData) {
+            const msg = normalize(errorData[f]);
+            if (msg) fieldErrors[f] = msg;
+          }
         }
-        
-        throw new Error(errorMessage);
+
+        // Non-field or detail errors
+        let globalMessage = normalize(errorData.non_field_errors) || normalize(errorData.detail) || 'فشل إنشاء الحساب';
+        // If there are field errors but no global message, provide a generic prompt
+        if (Object.keys(fieldErrors).length > 0 && (!globalMessage || globalMessage === 'فشل إنشاء الحساب')) {
+          // show the first field error as global headline for visibility
+          const firstMsg = fieldErrors[Object.keys(fieldErrors)[0]];
+          globalMessage = firstMsg || 'يرجى تصحيح الأخطاء في الحقول';
+        }
+
+        // Throw a structured error so UI can map per-field
+        throw { message: globalMessage, fieldErrors };
       }
 
       const data = await response.json();
@@ -212,7 +227,14 @@ getAuthHeaders(isFormData = false) {
       'This email address is already in use.': 'عنوان البريد الإلكتروني مستخدم بالفعل',
       'A user with that username already exists.': 'يوجد مستخدم بهذا الاسم بالفعل',
       'This field may not be blank.': 'هذا الحقل لا يمكن أن يكون فارغاً',
-      'This field is required.': 'هذا الحقل مطلوب'
+      'This field is required.': 'هذا الحقل مطلوب',
+      // DRF/Slug related messages
+      'Enter a valid "slug" consisting of letters, numbers, underscores or hyphens.': 'أدخل قيمة صالحة للاسم المختصر (slug) تتكون من أحرف إنجليزية أو أرقام أو شرطات سفلية (_) أو شرطات (-).',
+      'Enter a valid slug consisting of letters, numbers, underscores or hyphens.': 'أدخل قيمة صالحة للاسم المختصر (slug) تتكون من أحرف إنجليزية أو أرقام أو شرطات سفلية (_) أو شرطات (-).',
+      'Ensure this field has no more than 30 characters.': 'تأكد أن هذا الحقل لا يحتوي على أكثر من 30 حرفًا.',
+      'A user with that email already exists.': 'يوجد مستخدم بهذا البريد الإلكتروني بالفعل',
+      'user with this email already exists.': 'يوجد مستخدم بهذا البريد الإلكتروني بالفعل',
+      'user with this username already exists.': 'يوجد مستخدم بهذا الاسم بالفعل'
     };
 
     // Check for exact match first

@@ -60,23 +60,6 @@ export default function Hall() {
     return [];
   };
 
-  // MOCK DATA FOR DEMO/DEV - REMOVE THIS BLOCK FOR PRODUCTION
-  // To show mock data, uncomment the following and comment out the useEffect below
-  /*
-  useEffect(() => {
-    setHalls([
-      { slug: 'hall-101', name: 'قاعة 101', faculty: { id: 1, name: 'كلية الهندسة' }, capacity: 120 },
-      { slug: 'hall-202', name: 'قاعة 202', faculty: { id: 2, name: 'كلية العلوم' }, capacity: 80 },
-      { slug: 'hall-303', name: 'قاعة 303', faculty: { id: 3, name: 'كلية التجارة' }, capacity: 60 },
-    ]);
-    setFaculties([
-      { id: 1, name: 'كلية الهندسة' },
-      { id: 2, name: 'كلية العلوم' },
-      { id: 3, name: 'كلية التجارة' },
-    ]);
-  });
-  */
-  // END MOCK DATA
 
   useEffect(() => {
     loadHalls();
@@ -87,58 +70,16 @@ export default function Hall() {
     setLoading(true);
     try {
       const data = await fetchLocations();
-      // If no real data, show mock data for demo
-      setHalls(
-        data.length
-          ? data
-          : [
-              {
-                slug: "hall-101",
-                name: "قاعة 101",
-                faculty: { id: 1, name: "كلية الهندسة" },
-                capacity: 120,
-              },
-              {
-                slug: "hall-202",
-                name: "قاعة 202",
-                faculty: { id: 2, name: "كلية العلوم" },
-                capacity: 80,
-              },
-              {
-                slug: "hall-303",
-                name: "قاعة 303",
-                faculty: { id: 3, name: "كلية التجارة" },
-                capacity: 60,
-              },
-            ]
-      );
+      setHalls(Array.isArray(data) ? data : []);
       setError(null);
     } catch (err) {
-      setHalls([
-        {
-          slug: "hall-101",
-          name: "قاعة 101",
-          faculty: { id: 1, name: "كلية الهندسة" },
-          capacity: 120,
-        },
-        {
-          slug: "hall-202",
-          name: "قاعة 202",
-          faculty: { id: 2, name: "كلية العلوم" },
-          capacity: 80,
-        },
-        {
-          slug: "hall-303",
-          name: "قاعة 303",
-          faculty: { id: 3, name: "كلية التجارة" },
-          capacity: 60,
-        },
-      ]);
+      setHalls([]);
       const msg = 'فشل تحميل القاعات';
       setError(msg);
       toast.apiError(err, msg);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const loadFaculties = async () => {

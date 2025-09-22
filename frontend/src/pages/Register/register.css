@@ -161,6 +161,14 @@
   font-size: 0.9rem;
 }
 
+/* Field-level error styling */
+.register-field-error {
+  color: #c62828;
+  font-size: 0.85rem;
+  margin-top: 4px;
+  line-height: 1.2;
+}
+
 /* Button Styles */
 .register-form .register-btn {
   margin-top: 1.2rem;
