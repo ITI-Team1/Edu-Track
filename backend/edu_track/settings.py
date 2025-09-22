@@ -198,6 +198,9 @@ DJOSER = {
     'SERIALIZERS': {
         "user": "user.serializers.UserSerializer",
         "current_user": "user.serializers.UserSerializer",
+        # Ensure first_name/last_name are accepted on registration
+        "user_create": "user.serializers.UserCreateSerializer",
+        "user_create_password_retype": "user.serializers.UserCreatePasswordRetypeSerializer",
     },
     'EMAIL': {
         'password_reset': 'djoser.email.PasswordResetEmail',
