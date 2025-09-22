@@ -9,6 +9,7 @@ import {
   deleteCourse,
 } from "../../services/courseApi";
 import { fetchPrograms } from "../../services/programApi";
+import toast from '../../utils/toast';
 
 export default function CoursesMange() {
   const [courses, setCourses] = useState([]);
@@ -49,10 +50,9 @@ export default function CoursesMange() {
     } catch (err) {
       setPrograms([]);
       setProgramsLoaded(false);
-      setError(
-        err?.message ||
-          "تعذر تحميل الاقسام الأكاديمية (البرامج). لا يمكن إضافة/تعديل مقرّر بدون الاقسام."
-      );
+      const msg = "تعذر تحميل الاقسام الأكاديمية (البرامج). لا يمكن إضافة/تعديل مقرّر بدون الاقسام.";
+      setError(msg);
+      toast.apiError(err, msg);
     }
   };
 
@@ -107,7 +107,9 @@ export default function CoursesMange() {
           credits: 2,
         },
       ]);
-      setError(err?.message || null);
+      const msg = 'فشل تحميل المقررات';
+      setError(msg);
+      toast.apiError(err, msg);
     }
     setLoading(false);
   };
@@ -119,8 +121,11 @@ export default function CoursesMange() {
       await loadCourses();
       setShowDeleteModal(false);
       setCourseToDelete(null);
+      toast.success('تم حذف المقرر بنجاح');
     } catch (err) {
-      setError(err.message);
+      const msg = 'فشل حذف المقرر';
+      setError(msg);
+      toast.apiError(err, msg);
     }
     setLoading(false);
   };
@@ -152,26 +157,34 @@ export default function CoursesMange() {
     e.preventDefault();
     setError(null);
     if (!programsLoaded) {
-      setError(
-        "تعذر تحميل الأقسام الأكاديمية. يرجى إعادة تحميل الصفحة أو التأكد من تشغيل السيرفر."
-      );
+      const msg = "تعذر تحميل الأقسام الأكاديمية. يرجى إعادة تحميل الصفحة أو التأكد من تشغيل السيرفر.";
+      setError(msg);
+      toast.error(msg);
       return;
     }
     if (!form.title?.trim()) {
-      setError("اسم المقرر مطلوب");
+      const msg = "اسم المقرر مطلوب";
+      setError(msg);
+      toast.error(msg);
       return;
     }
     if (!form.slug?.trim()) {
-      setError("الاسم المختصر مطلوب");
+      const msg = "الاسم المختصر مطلوب";
+      setError(msg);
+      toast.error(msg);
       return;
     }
     const slugPattern = /^[A-Za-z0-9_-]+$/;
     if (!slugPattern.test(form.slug)) {
-      setError("الاسم المختصر يجب أن يحتوي على أحرف إنجليزية أو أرقام أو - أو _ فقط");
+      const msg = "الاسم المختصر يجب أن يحتوي على أحرف إنجليزية أو أرقام أو - أو _ فقط";
+      setError(msg);
+      toast.error(msg);
       return;
     }
     if (!Array.isArray(form.programs) || form.programs.length === 0) {
-      setError("يجب اختيار برنامج واحد على الأقل");
+      const msg = "يجب اختيار برنامج واحد على الأقل";
+      setError(msg);
+      toast.error(msg);
       return;
     }
     setLoading(true);
@@ -183,13 +196,17 @@ export default function CoursesMange() {
       };
       if (modalType === "create") {
         await createCourse(payload);
+        toast.success('تم إنشاء المقرر بنجاح');
       } else if (modalType === "update" && selectedCourse) {
         await updateCourse(selectedCourse.slug, payload);
+        toast.success('تم تحديث المقرر بنجاح');
       }
       setShowModal(false);
       await loadCourses();
     } catch (err) {
-      setError(err.message);
+      const msg = 'فشل حفظ المقرر';
+      setError(msg);
+      toast.apiError(err, msg);
     }
     setLoading(false);
   };
@@ -217,13 +234,7 @@ export default function CoursesMange() {
           </span>
         </Button>
       </div>
-      {error && (
-        <div
-          style={{ color: "red", textAlign: "center", marginBottom: "1rem" }}
-        >
-          {error}
-        </div>
-      )}
+      {/* Toasts now handle error feedback globally */}
       <div className="courses-mange-table-wrapper">
         {loading ? (
           <div style={{ textAlign: "center", color: "#646cff" }}>

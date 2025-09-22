@@ -9,6 +9,7 @@ import {
   deleteLocation,
 } from "../../services/locationApi";
 import { fetchFaculties } from "../../services/facultyApi";
+import toast from '../../utils/toast';
 
 export default function Hall() {
   const [halls, setHalls] = useState([]);
@@ -133,7 +134,9 @@ export default function Hall() {
           capacity: 60,
         },
       ]);
-      setError(err?.message || null);
+      const msg = 'فشل تحميل القاعات';
+      setError(msg);
+      toast.apiError(err, msg);
     }
     setLoading(false);
   };
@@ -146,10 +149,9 @@ export default function Hall() {
     } catch (err) {
       setFaculties([]);
       setFacultiesLoaded(false);
-      setError(
-        err?.message ||
-          "تعذر تحميل قائمة الكليات. لا يمكن إضافة/تعديل قاعة بدون الكليات."
-      );
+      const msg = "تعذر تحميل قائمة الكليات. لا يمكن إضافة/تعديل قاعة بدون الكليات.";
+      setError(msg);
+      toast.apiError(err, msg);
     }
   };
 
@@ -160,8 +162,11 @@ export default function Hall() {
       await loadHalls();
       setShowDeleteModal(false);
       setHallToDelete(null);
+      toast.success('تم حذف القاعة بنجاح');
     } catch (err) {
-      setError(err?.message);
+      const msg = 'فشل حذف القاعة';
+      setError(msg);
+      toast.apiError(err, msg);
     }
     setLoading(false);
   };
@@ -195,33 +200,43 @@ export default function Hall() {
     e.preventDefault();
     setError(null);
     if (!facultiesLoaded) {
-      setError(
-        "تعذر تحميل الكليات. يرجى إعادة تحميل الصفحة أو التأكد من تشغيل السيرفر."
-      );
+      const msg = "تعذر تحميل الكليات. يرجى إعادة تحميل الصفحة أو التأكد من تشغيل السيرفر.";
+      setError(msg);
+      toast.error(msg);
       return;
     }
     // Client-side validations to prevent 500 from NOT NULL at DB level
     if (!form.name?.trim()) {
-      setError("اسم القاعة مطلوب");
+      const msg = "اسم القاعة مطلوب";
+      setError(msg);
+      toast.error(msg);
       return;
     }
     if (!form.slug?.trim()) {
-      setError("الاسم المختصر مطلوب");
+      const msg = "الاسم المختصر مطلوب";
+      setError(msg);
+      toast.error(msg);
       return;
     }
     const slugPattern = /^[A-Za-z0-9_-]+$/;
     if (!slugPattern.test(form.slug)) {
-      setError("الاسم المختصر يجب أن يحتوي على أحرف إنجليزية أو أرقام أو - أو _ فقط");
+      const msg = "الاسم المختصر يجب أن يحتوي على أحرف إنجليزية أو أرقام أو - أو _ فقط";
+      setError(msg);
+      toast.error(msg);
       return;
     }
     const selectedFacultyIds = Array.isArray(form.faculties) ? form.faculties.map(Number).filter(Number.isFinite) : [];
     if (selectedFacultyIds.length === 0) {
-      setError("يجب اختيار كلية واحدة على الأقل");
+      const msg = "يجب اختيار كلية واحدة على الأقل";
+      setError(msg);
+      toast.error(msg);
       return;
     }
     const cap = Number(form.capacity ?? 1);
     if (!Number.isFinite(cap) || cap <= 0) {
-      setError("مساحة القاعة يجب أن تكون رقمًا أكبر من 0");
+      const msg = "مساحة القاعة يجب أن تكون رقمًا أكبر من 0";
+      setError(msg);
+      toast.error(msg);
       return;
     }
     setLoading(true);
@@ -233,6 +248,7 @@ export default function Hall() {
           capacity: cap,
           faculties: selectedFacultyIds,
         });
+        toast.success('تم إنشاء القاعة بنجاح');
       } else {
         await updateLocation(selectedHall.slug, {
           name: form.name.trim(),
@@ -240,11 +256,14 @@ export default function Hall() {
           capacity: cap,
           faculties: selectedFacultyIds,
         });
+        toast.success('تم تحديث القاعة بنجاح');
       }
       setShowModal(false);
       await loadHalls();
     } catch (err) {
-      setError(err?.message);
+      const msg = 'فشل حفظ القاعة';
+      setError(msg);
+      toast.apiError(err, msg);
     }
     setLoading(false);
   };
@@ -283,13 +302,7 @@ export default function Hall() {
           </span>
         </div>
       </div>
-      {error && (
-        <div
-          style={{ color: "red", textAlign: "center", marginBottom: "1rem" }}
-        >
-          {error}
-        </div>
-      )}
+      {/* Toasts handle feedback globally */}
       <div className="hall-table-wrapper">
         {loading ? (
           <div style={{ textAlign: "center", color: "#646cff" }}>

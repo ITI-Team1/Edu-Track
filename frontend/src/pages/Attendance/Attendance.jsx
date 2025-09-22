@@ -11,6 +11,7 @@ import { fetchUsers } from '../../services/userApi';
 import { AttendanceAPI } from '../../services/attendanceApi';
 import Modal from '../../components/ui/Modal';
 import './attendance.css';
+import toast from '../../utils/toast';
 
 // Instructor view (QR + students). Frontend-only QR rotation; no DB storage.
 // Treat route param as lectureId. Optional prop to override.
@@ -157,6 +158,7 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
         if (!lectureId) return;
         localStorage.setItem(`attend:lec:${lectureId}`, JSON.stringify([]));
         fetchStudents();
+        toast.info('تم تعيين جميع الطلاب كغياب (محليًا)');
     }, [lectureId, fetchStudents]);
 
     // Initial load
@@ -198,7 +200,7 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
     // Handle setting attendance grade for the lecture
     const handleSetAttendanceGrade = async () => {
         if (!attendanceGrade || attendanceGrade <= 0) {
-            alert('يرجى إدخال درجة صحيحة للحضور');
+            toast.error('يرجى إدخال درجة صحيحة للحضور');
             return;
         }
 
@@ -283,10 +285,10 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
             
             setShowAttendanceGradeModal(false);
             setAttendanceGrade(0);
-            alert(`تم تعيين درجة الحضور ${attendanceGrade} للطلاب الحاضرين`);
+            toast.success(`تم تعيين درجة الحضور ${attendanceGrade} للطلاب الحاضرين`);
         } catch (error) {
             console.error('Failed to set attendance grade:', error);
-            alert('فشل في تعيين درجة الحضور');
+            toast.error('فشل في تعيين درجة الحضور');
         } finally {
             setLoading(false);
         }

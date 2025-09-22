@@ -11,6 +11,7 @@ import Modal from "../../components/ui/Modal";
 import Button from "../../components/ui/Button";
 import { useAuth } from "../../context/AuthContext";
 import Select from "../../components/ui/Select";
+import toast from '../../utils/toast';
 
 export default function Department({_permissions, _facultiesData}) {
   const { user: _user } = useAuth();
@@ -67,7 +68,9 @@ export default function Department({_permissions, _facultiesData}) {
       setError(null);
     } catch (err) {
       setDepartments(mockDepartments);
-      setError(err?.message || null);
+      const msg = 'فشل تحميل الأقسام';
+      setError(msg);
+      toast.apiError(err, msg);
     }
     setLoading(false);
   }, [mockDepartments, faculties]);
@@ -80,10 +83,9 @@ export default function Department({_permissions, _facultiesData}) {
     } catch (err) {
       setFaculties([]);
       setFacultiesLoaded(false);
-      setError(
-        err?.message ||
-          "تعذر تحميل قائمة الكليات. لا يمكن إضافة/تعديل قسم بدون الكليات."
-      );
+      const msg = "تعذر تحميل قائمة الكليات. لا يمكن إضافة/تعديل قسم بدون الكليات.";
+      setError(msg);
+      toast.apiError(err, msg);
     }
   }, [mockFaculties]);
 
@@ -105,8 +107,11 @@ export default function Department({_permissions, _facultiesData}) {
       await loadDepartmentsCb();
       setShowDeleteModal(false);
       setDeptToDelete(null);
+      toast.success('تم حذف القسم بنجاح');
     } catch (err) {
-      setError(err.message);
+      const msg = 'فشل حذف القسم';
+      setError(msg);
+      toast.apiError(err, msg);
     }
     setLoading(false);
   };
@@ -134,28 +139,36 @@ export default function Department({_permissions, _facultiesData}) {
     e.preventDefault();
     setError(null);
     if (!facultiesLoaded) {
-      setError(
-        "تعذر تحميل الكليات. يرجى إعادة تحميل الصفحة أو التأكد من تشغيل السيرفر."
-      );
+      const msg = "تعذر تحميل الكليات. يرجى إعادة تحميل الصفحة أو التأكد من تشغيل السيرفر.";
+      setError(msg);
+      toast.error(msg);
       return;
     }
     // Client-side validation
     if (!form.name?.trim()) {
-      setError("اسم القسم مطلوب");
+      const msg = "اسم القسم مطلوب";
+      setError(msg);
+      toast.error(msg);
       return;
     }
     if (!form.slug?.trim()) {
-      setError("الاسم المختصر مطلوب");
+      const msg = "الاسم المختصر مطلوب";
+      setError(msg);
+      toast.error(msg);
       return;
     }
     // Slug must be ASCII letters/numbers/-/_ to match Django SlugField default
     const slugPattern = /^[A-Za-z0-9_-]+$/;
     if (!slugPattern.test(form.slug)) {
-      setError("الاسم المختصر يجب أن يحتوي على أحرف إنجليزية أو أرقام أو - أو _ فقط");
+      const msg = "الاسم المختصر يجب أن يحتوي على أحرف إنجليزية أو أرقام أو - أو _ فقط";
+      setError(msg);
+      toast.error(msg);
       return;
     }
     if (!form.faculty) {
-      setError("يجب اختيار الكلية");
+      const msg = "يجب اختيار الكلية";
+      setError(msg);
+      toast.error(msg);
       return;
     }
     setLoading(true);
@@ -168,6 +181,7 @@ export default function Department({_permissions, _facultiesData}) {
           faculty: Number(form.faculty),
         };
         await createProgram(payload);
+        toast.success('تم إنشاء القسم بنجاح');
       } else if (modalType === "update" && selectedDept) {
         const payload = {
           name: form.name,
@@ -175,11 +189,14 @@ export default function Department({_permissions, _facultiesData}) {
           faculty: Number(form.faculty),
         };
         await updateProgram(selectedDept.slug, payload);
+        toast.success('تم تحديث القسم بنجاح');
       }
       setShowModal(false);
       await loadDepartmentsCb();
     } catch (err) {
-      setError(err.message || "حدث خطأ أثناء حفظ القسم");
+      const msg = "حدث خطأ أثناء حفظ القسم";
+      setError(msg);
+      toast.apiError(err, msg);
     }
     setLoading(false);
     setSubmitting(false);
@@ -206,13 +223,7 @@ export default function Department({_permissions, _facultiesData}) {
           </span>
         </Button>
       </div>
-      {error && (
-        <div
-          style={{ color: "red", textAlign: "center", marginBottom: "1rem" }}
-        >
-          {error}
-        </div>
-      )}
+      {/* Toasts handle feedback globally */}
       <div className="department-grid">
         {/* Department Cards */}
         {loading ? (

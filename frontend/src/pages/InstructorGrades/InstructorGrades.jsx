@@ -12,6 +12,7 @@ import Modal from '../../components/ui/Modal';
 import '../Attendance/attendance.css';
 
 import './instructorgrades.css';
+import toast from '../../utils/toast';
 
 export default function InstructorGrades() {
     const { user } = useAuth();
@@ -46,7 +47,9 @@ export default function InstructorGrades() {
                 setStudentMarks(Array.isArray(marksData.data) ? marksData.data : []);
                 setError('');
             } catch (err) {
-                setError(err?.message || 'فشل في تحميل البيانات');
+                const msg = err?.message || 'فشل في تحميل البيانات';
+                setError(msg);
+                toast.error(msg);
             } finally {
                 setLoading(false);
             }
@@ -110,6 +113,7 @@ export default function InstructorGrades() {
         } catch (error) {
             console.error('Failed to load course students:', error);
             setCourseStudents([]);
+            toast.error('فشل في تحميل طلاب المقرر');
         }
     }, [selectedCourse, lectures, users, studentMarks]);
 
@@ -169,7 +173,7 @@ export default function InstructorGrades() {
             setEditingStudent(null);
         } catch (error) {
             console.error('Failed to update student marks:', error);
-            alert('فشل في تحديث الدرجة. يرجى المحاولة مرة أخرى.');
+            toast.error('فشل في تحديث الدرجة. يرجى المحاولة مرة أخرى.');
         } finally {
             setLoading(false);
         }
@@ -335,10 +339,10 @@ export default function InstructorGrades() {
                                             const marksData = await AttendanceAPI.listStudentMarks();
                                             setStudentMarks(Array.isArray(marksData.data) ? marksData.data : []);
                                             
-                                            alert('تم إضافة درجات الحضور الجديدة إلى الدرجات الحالية بنجاح');
+                                            toast.success('تم إضافة درجات الحضور الجديدة إلى الدرجات الحالية بنجاح');
                                         } catch (error) {
                                             console.error('Failed to recalculate attendance marks:', error);
-                                            alert('فشل في إضافة درجات الحضور');
+                                            toast.error('فشل في إضافة درجات الحضور');
                                         } finally {
                                             setLoading(false);
                                         }

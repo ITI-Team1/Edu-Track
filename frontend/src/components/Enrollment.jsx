@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import '../styles/enrollment.css';
+import toast from '../utils/toast';
 
 // API imports
 import { fetchCourses } from '../services/courseApi';
@@ -242,7 +243,9 @@ const Enrollment = () => {
     e.preventDefault();
     
     if (selectedStudents.length === 0 || selectedCourses.length === 0) {
-      setError('الرجاء اختيار طالب واحد على الأقل ومقرر واحد على الأقل.');
+      const msg = 'الرجاء اختيار طالب واحد على الأقل ومقرر واحد على الأقل.';
+      setError(msg);
+      toast.error(msg);
       return;
     }
     // Faculty validation: ensure each selected student belongs to a faculty compatible with selected courses
@@ -267,7 +270,9 @@ const Enrollment = () => {
 
       // If we cannot determine any faculty from the courses, block to avoid cross-faculty enrollment
       if (courseFacultyIds.size === 0) {
-        setError('تعذر تحديد كلية المقررات المختارة. يرجى التأكد من ربط البرامج بالمقررات أو تحديد مقررات صحيحة.');
+        const msg = 'تعذر تحديد كلية المقررات المختارة. يرجى التأكد من ربط البرامج بالمقررات أو تحديد مقررات صحيحة.';
+        setError(msg);
+        toast.error(msg);
         return;
       }
 
@@ -288,12 +293,16 @@ const Enrollment = () => {
           return name || stu?.username || `ID ${stu?.id}`;
         }).join('، ');
         const more = mismatchedStudents.length > 5 ? ` و${mismatchedStudents.length - 5} آخرين` : '';
-        setError(`لا يمكن تسجيل الطلاب في مقررات من كلية مختلفة. الطلاب غير المتوافقين: ${names}${more}. يرجى اختيار مقررات من نفس كلية الطالب.`);
+        const msg = `لا يمكن تسجيل الطلاب في مقررات من كلية مختلفة. الطلاب غير المتوافقين: ${names}${more}. يرجى اختيار مقررات من نفس كلية الطالب.`;
+        setError(msg);
+        toast.error(msg);
         return;
       }
     } catch (_e) {
       // Fallback: if validation itself fails, show a safe error and stop
-      setError('حدث خطأ أثناء التحقق من الكليات. يرجى المحاولة مرة أخرى.');
+      const msg = 'حدث خطأ أثناء التحقق من الكليات. يرجى المحاولة مرة أخرى.';
+      setError(msg);
+      toast.error(msg);
       return;
     }
 
@@ -307,16 +316,21 @@ const Enrollment = () => {
       
       if (failed.length === 0) {
         setSuccess('تم تسجيل جميع الطلاب بنجاح');
+        toast.success('تم تسجيل جميع الطلاب بنجاح');
       } else if (failed.length === results.length) {
         throw new Error('فشل التسجيل لجميع الطلاب المحددين');
       } else {
-        setSuccess(`تم بعض التسجيلات بنجاح. فشل: ${failed.length}/${results.length}`);
+        const msg = `تم بعض التسجيلات بنجاح. فشل: ${failed.length}/${results.length}`;
+        setSuccess(msg);
+        toast.warn(msg);
       }
       
       setSelectedStudents([]);
       setSelectedCourses([]);
     } catch (err) {
-      setError(translateToArabic(err.message) || 'فشل التسجيل');
+      const msg = translateToArabic(err.message) || 'فشل التسجيل';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setSubmitting(false);
     }
@@ -367,13 +381,17 @@ const Enrollment = () => {
   };
 
   const handleUploadSuccess = (message) => {
-    setSuccess(message || 'تم رفع الملف بنجاح');
+    const msg = message || 'تم رفع الملف بنجاح';
+    setSuccess(msg);
+    toast.success(msg);
     refetchCourses?.();
     refetchStudents?.();
   };
 
   const handleUploadError = (error) => {
-    setError(error || 'حدث خطأ أثناء رفع الملف');
+    const msg = error || 'حدث خطأ أثناء رفع الملف';
+    setError(msg);
+    toast.error(msg);
   };
 
   // ===== EFFECTS =====
@@ -393,7 +411,9 @@ const Enrollment = () => {
         setFaculties(facultiesData.results || facultiesData);
         setPrograms(programsData.results || programsData);
       } catch (err) {
-        setError(err.message || 'حدث خطأ غير متوقع');
+        const msg = err.message || 'حدث خطأ غير متوقع';
+        setError(msg);
+        toast.error(msg);
       } finally {
         setLoading(false);
       }
@@ -542,17 +562,7 @@ const Enrollment = () => {
     <div className="enrollment-page" dir="rtl">
       <h1>تسجيل الطلاب و المقررات</h1>
       
-      {success && (
-        <div className="success-message" role="status">
-          {success}
-        </div>
-      )}
-      
-      {combinedError && (
-        <div className="error-message" role="alert">
-          خطأ: {translateToArabic(combinedError)}
-        </div>
-      )}
+      {/* Toastify handles success/error feedback globally */}
       
       {/* Filters Section */}
       <div className="filters section-card">

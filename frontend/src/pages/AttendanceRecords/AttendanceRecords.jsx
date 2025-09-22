@@ -13,6 +13,7 @@ import { fetchLocations } from "../../services/locationApi";
 import { fetchCourses } from "../../services/courseApi"
 import { fetchUsers } from "../../services/userApi"
 import './style.css';
+import toast from '../../utils/toast';
 export default function AttendanceRecords() {
   const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
@@ -44,7 +45,9 @@ export default function AttendanceRecords() {
       setError(null);
     } catch (err) {
       setLectures([]);
-      setError(err?.message || "");
+      const msg = err?.message || "فشل تحميل المحاضرات";
+      setError(msg);
+      toast.error(msg);
     }
     setLoading(false);
   };
@@ -55,7 +58,9 @@ export default function AttendanceRecords() {
       setLocations(Array.isArray(data) ? data : []);
     } catch (err) {
       setLocations([]);
-      setError(err?.message || "");
+      const msg = err?.message || "فشل تحميل القاعات";
+      setError(msg);
+      toast.error(msg);
     }
   };
 
@@ -65,7 +70,9 @@ export default function AttendanceRecords() {
       setCourses(Array.isArray(data) ? data : []);
     } catch (err) {
       setCourses([]);
-      setError(err?.message || "");
+      const msg = err?.message || "فشل تحميل المقررات";
+      setError(msg);
+      toast.error(msg);
     }
   };
 
@@ -75,7 +82,9 @@ export default function AttendanceRecords() {
       setUsers(Array.isArray(data) ? data : []);
     } catch (err) {
       setUsers([]);
-      setError(err?.message || "");
+      const msg = err?.message || "فشل تحميل المستخدمين";
+      setError(msg);
+      toast.error(msg);
     }
   };
 
@@ -107,8 +116,11 @@ export default function AttendanceRecords() {
       await loadLectures();
       setShowDeleteModal(false);
       setLectureToDelete(null);
+      toast.success('تم حذف المحاضرة بنجاح');
     } catch (err) {
-      setError(err?.message || "");
+      const msg = err?.message || 'فشل في حذف المحاضرة';
+      setError(msg);
+      toast.error(msg);
     }
     setLoading(false);
   };
@@ -156,20 +168,24 @@ export default function AttendanceRecords() {
     const courseId = Number(form.course);
     if (!Number.isFinite(courseId) || courseId <= 0) {
       setError("المقرر مطلوب");
+      toast.error('المقرر مطلوب');
       return;
     }
     const instructorId = Number(form.instructor);
     if (!Number.isFinite(instructorId) || instructorId <= 0) {
       setError("المٌحاضر مطلوب");
+      toast.error('المٌحاضر مطلوب');
       return;
     }
     const locationId = Number(form.location);
     if (!Number.isFinite(locationId) || locationId <= 0) {
       setError("القاعه مطلوبة");
+      toast.error('القاعه مطلوبة');
       return;
     }
     if (!form.day) {
       setError("اليوم مطلوب");
+      toast.error('اليوم مطلوب');
       return;
     }
     setLoading(true);
@@ -177,7 +193,9 @@ export default function AttendanceRecords() {
       const startDate = new Date(`1970-01-01T${form.starttime}:00`);
       const endDate = new Date(`1970-01-01T${form.endtime}:00`);
       if (!(startDate < endDate)) {
-        setError("وقت البدء يجب أن يكون قبل وقت الانتهاء");
+        const msg = "وقت البدء يجب أن يكون قبل وقت الانتهاء";
+        setError(msg);
+        toast.error(msg);
         setLoading(false);
         return;
       }
@@ -193,15 +211,19 @@ export default function AttendanceRecords() {
 
       if (modalType === "create") {
         await createLecture(payload);
+        toast.success('تم إنشاء المحاضرة بنجاح');
       } else if (modalType === "update" && selectedLecture) {
         await updateLecture(selectedLecture.id, payload);
+        toast.success('تم تحديث المحاضرة بنجاح');
       }
       setShowModal(false);
       resetForm();
       await loadLectures();
       setError(null);
     } catch (err) {
-      setError(err?.message);
+      const msg = err?.message || 'حدث خطأ أثناء الحفظ';
+      setError(msg);
+      toast.error(msg);
     }
     setLoading(false);
   };
@@ -258,9 +280,10 @@ export default function AttendanceRecords() {
           إدارة الدرجات
         </Link>
       </div>
+      {/* Keep minimal inline error, but primary channel is toast */}
       {error && (
         <div
-          style={{ color: "red", textAlign: "center", marginBottom: "1rem" }}
+          style={{ color: "#ef4444", textAlign: "center", marginBottom: "1rem" }}
         >
           {error}
         </div>

@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import Spinner from "./Spinner";
+import toast from '../utils/toast';
 
 export default function UploadExcel({ onUploadComplete, onError }) {
   const navigate = useNavigate();
@@ -56,7 +57,12 @@ export default function UploadExcel({ onUploadComplete, onError }) {
       const errorMsg = "الرجاء اختيار ملف Excel أولاً";
       setStatus(errorMsg);
       setStatusType('error');
-      if (onError) onError(errorMsg);
+      // Only toast if no parent error handler is provided
+      if (onError) {
+        onError(errorMsg);
+      } else {
+        toast.error(errorMsg);
+      }
       return;
     }
     const formData = new FormData();
@@ -88,6 +94,10 @@ export default function UploadExcel({ onUploadComplete, onError }) {
         const msg = successMsg(data.success);
         setStatus(msg);
         setStatusType('success');
+        // Only toast if no parent success handler is provided
+        if (!onUploadComplete) {
+          toast.success(msg);
+        }
         setFile(null);
         
         // Call the success callback if provided
@@ -104,11 +114,21 @@ export default function UploadExcel({ onUploadComplete, onError }) {
         const errorMsg = "فشل الرفع: " + (data.error || arabicStatus(res.status, res.statusText));
         setStatus(errorMsg);
         setStatusType('error');
-        if (onError) onError(errorMsg);
+        if (onError) {
+          onError(errorMsg);
+        } else {
+          toast.error(errorMsg);
+        }
       }
     } catch (_err) {
-      setStatus("فشل الرفع: " + ("خطأ في الشبكة أو الخادم"));
+      const errorMsg = "فشل الرفع: " + ("خطأ في الشبكة أو الخادم");
+      setStatus(errorMsg);
       setStatusType('error');
+      if (onError) {
+        onError(errorMsg);
+      } else {
+        toast.error(errorMsg);
+      }
     } finally {
       setUploading(false);
     }

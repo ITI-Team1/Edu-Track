@@ -1,4 +1,7 @@
 import React from 'react';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import './styles/toastify-overrides.css';
 import { AuthProvider } from './context/AuthContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Navbar from './components/Navbar.jsx';
@@ -20,6 +23,19 @@ function AppContent() {
         <RoutesList />
         <Footer />
       </main>
+      {/* Global toast container so any page can show toasts */}
+      <ToastContainer
+        position="top-right"
+        autoClose={4000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+      />
     </div>
   );
 }

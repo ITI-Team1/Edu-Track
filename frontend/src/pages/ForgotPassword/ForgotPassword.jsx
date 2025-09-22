@@ -73,7 +73,7 @@ function ForgotPassword() {
               />
             </div>
 
-            <button type="submit" className="btn-main " disabled={loading}>
+            <button type="submit" className="btn-main align-middle text-center m-auto h-10 " disabled={loading}>
               {loading ? 'جاري الإرسال...' : 'إرسال رابط إعادة التعيين'}
             </button>
           </form>

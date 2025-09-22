@@ -92,7 +92,7 @@ function ResetPassword() {
           <form onSubmit={handleSubmit} className="reset-password-form">
             <div className="form-group">
               <label htmlFor="new_password">كلمة المرور الجديدة</label>
-              <div className="password-input-wrapper">
+              <div className="password-input-wrapper ">
                 <input
                   type={showPassword.new ? 'text' : 'password'}
                   id="new_password"
@@ -102,6 +102,7 @@ function ResetPassword() {
                   placeholder="على الأقل 8 أحرف"
                   required
                   className="password-input"
+                  dir="ltr"
                 />
                 <button
                   type="button"

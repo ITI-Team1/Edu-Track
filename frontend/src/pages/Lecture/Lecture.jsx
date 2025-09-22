@@ -14,6 +14,7 @@ import { fetchLocations } from "../../services/locationApi";
 import { fetchCourses } from "../../services/courseApi"
 import { fetchUsers } from "../../services/userApi"
 import { useAuth } from "../../context/AuthContext";
+import toast from '../../utils/toast';
 
 export default function Lecture() {
   const [lectures, setLectures] = useState([]);
@@ -45,7 +46,9 @@ export default function Lecture() {
       setError(null);
     } catch (err) {
       setLectures([]);
-      setError(err?.message || "");
+      const msg = 'فشل تحميل المحاضرات';
+      setError(msg);
+      toast.apiError(err, msg);
     }
     setLoading(false);
   };
@@ -56,7 +59,9 @@ export default function Lecture() {
       setLocations(Array.isArray(data) ? data : []);
     } catch (err) {
       setLocations([]);
-      setError(err?.message || "");
+      const msg = 'فشل تحميل القاعات';
+      setError(msg);
+      toast.apiError(err, msg);
     }
   };
 
@@ -66,7 +71,9 @@ export default function Lecture() {
       setCourses(Array.isArray(data) ? data : []);
     } catch (err) {
       setCourses([]);
-      setError(err?.message || "");
+      const msg = 'فشل تحميل المقررات';
+      setError(msg);
+      toast.apiError(err, msg);
     }
   };
 //check  which user  has the same faculty
@@ -86,7 +93,9 @@ if(user.faculty){
       
     } catch (err) {
       setDoctors([]);
-      setError(err?.message || "");
+      const msg = 'فشل تحميل قائمة الدكاترة';
+      setError(msg);
+      toast.apiError(err, msg);
     }
   };
 
@@ -118,8 +127,11 @@ if(user.faculty){
       await loadLectures();
       setShowDeleteModal(false);
       setLectureToDelete(null);
+      toast.success('تم حذف المحاضرة بنجاح');
     } catch (err) {
-      setError(err?.message || "");
+      const msg = 'فشل حذف المحاضرة';
+      setError(msg);
+      toast.apiError(err, msg);
     }
     setLoading(false);
   };
@@ -224,21 +236,29 @@ if(user.faculty){
     // Basic client-side validations
     const courseId = Number(form.course);
     if (!Number.isFinite(courseId) || courseId <= 0) {
-      setError("المقرر مطلوب");
+      const msg = "المقرر مطلوب";
+      setError(msg);
+      toast.error(msg);
       return;
     }
     const instructorId = Number(form.instructor);
     if (!Number.isFinite(instructorId) || instructorId <= 0) {
-      setError("المٌحاضر مطلوب");
+      const msg = "المٌحاضر مطلوب";
+      setError(msg);
+      toast.error(msg);
       return;
     }
     const locationId = Number(form.location);
     if (!Number.isFinite(locationId) || locationId <= 0) {
-      setError("القاعه مطلوبة");
+      const msg = "القاعه مطلوبة";
+      setError(msg);
+      toast.error(msg);
       return;
     }
     if (!form.day) {
-      setError("اليوم مطلوب");
+      const msg = "اليوم مطلوب";
+      setError(msg);
+      toast.error(msg);
       return;
     }
     setLoading(true);
@@ -246,7 +266,9 @@ if(user.faculty){
       const startDate = new Date(`1970-01-01T${form.starttime}:00`);
       const endDate = new Date(`1970-01-01T${form.endtime}:00`);
       if (!(startDate < endDate)) {
-        setError("وقت البدء يجب أن يكون قبل وقت الانتهاء");
+        const msg = "وقت البدء يجب أن يكون قبل وقت الانتهاء";
+        setError(msg);
+        toast.error(msg);
         setLoading(false);
         return;
       }
@@ -262,15 +284,19 @@ if(user.faculty){
 
       if (modalType === "create") {
         await createLecture(payload);
+        toast.success('تم إنشاء المحاضرة بنجاح');
       } else if (modalType === "update" && selectedLecture) {
         await updateLecture(selectedLecture.id, payload);
+        toast.success('تم تحديث المحاضرة بنجاح');
       }
       setShowModal(false);
       resetForm();
       await loadLectures();
       setError(null);
     } catch (err) {
-      setError(err?.message);
+      const msg = 'فشل حفظ المحاضرة';
+      setError(msg);
+      toast.apiError(err, msg);
     }
     setLoading(false);
   };
@@ -344,23 +370,16 @@ if(user.faculty){
           >
             +
           </span>
-          <span style={{ fontWeight: "bold", fontSize: "1rem" }}>
-            اضافة محاضرة
-          </span>
-        </div>
-      </div>
-      {error && (
-        <div
-          style={{ color: "red", textAlign: "center", marginBottom: "1rem" }}
-        >
-          {error}
-        </div>
-      )}
+      <span style={{ fontWeight: "bold", fontSize: "1rem" }}>
+        اضافة محاضرة
+      </span>
+    </div>
+  </div>
 
-      <div className="lecture-table-wrapper">
-        {loading ? (
-          <div style={{ textAlign: "center", color: "#646cff" }}>
-            جاري التحميل...
+  <div className="lecture-table-wrapper">
+    {loading ? (
+      <div style={{ textAlign: "center", color: "#646cff" }}>
+        جاري التحميل...
           </div>
         ) : (
           <table className="lecture-table">
