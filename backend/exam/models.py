@@ -12,3 +12,4 @@ class ExamTable(models.Model):
 
     def __str__(self):
         return f'exam - {self.faculty.name} - {self.program.name}'
+        
