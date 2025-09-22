@@ -37,11 +37,33 @@ export default function AttendanceRecords() {
     loadUsers();
   }, []);
 
+
+  const hasGroup = (groupId) => {
+    if (!user?.groups) return false;
+    return user.groups.some(group => {
+      const id = typeof group === 'object' ? group.id : group;
+      return id === groupId;
+    });
+  };
+
+  // Helper function to check if user has any of the specified groups
+  const hasAnyGroup = (groupIds) => {
+    return groupIds.some(groupId => hasGroup(groupId));
+  };
+
   const loadLectures = async () => {
     setLoading(true);
     try {
       const data = await fetchLectures();
+      //   // check if user has program only set the courses that the user has program
+      
+        if(hasAnyGroup([3])){
+          
+          const currentDoctorLectures = data.filter(l => l.instructor.map(i => i).includes(user.id));
+          setLectures(currentDoctorLectures);
+      }else{
       setLectures(Array.isArray(data) ? data : []);
+      }
       setError(null);
     } catch (err) {
       setLectures([]);

@@ -121,6 +121,20 @@ export default function ExamTable() {
       setLoading(false);
     }
   };
+    // Helper function to check if user has a specific group
+    const hasGroup = (groupId) => {
+      if (!user?.groups) return false;
+      return user.groups.some(group => {
+        const id = typeof group === 'object' ? group.id : group;
+        return id === groupId;
+      });
+    };
+
+
+  // Helper function to check if user has any of the specified groups
+  const hasAnyGroup = (groupIds) => {
+    return groupIds.some(groupId => hasGroup(groupId));
+  };
 
   const handleEdit = async (examId) => {
     try {
@@ -182,7 +196,8 @@ export default function ExamTable() {
       )}
 
       <div className="exam-table-chart">
-        <div className='flex gap-2 justify-end mb-4'>
+        {hasAnyGroup([6, 5, 4, 1]) && (
+          <div className='flex gap-2 justify-end mb-4'>
           <button
             onClick={openCreateModal}
             className='btn-main !px-4 !py-3 text-lg'
@@ -191,7 +206,7 @@ export default function ExamTable() {
             {loading ? 'جاري التحميل...' : 'اضافة جدول الامتحانات'}
           </button>
         </div>
-
+        )}
         {/* Loading State */}
         {loading && examTables.length === 0 && (
           <div className="text-center py-8">
@@ -215,7 +230,8 @@ export default function ExamTable() {
                     <p><strong>الكلية:</strong> {examTable.faculty_data?.name || examTable.faculty?.name}</p>
                     <p><strong>القسم:</strong> {examTable.program_data?.name || examTable.program?.name}</p>
                   </div>
-                  <div className="flex gap-2">
+                  
+                  {hasAnyGroup([6, 5, 4, 1]) && ( <div className="flex gap-2">
                     <button
                       onClick={() => handleEdit(examTable.id)}
                       className="btn-main !px-3 !py-2 text-sm"
@@ -231,7 +247,9 @@ export default function ExamTable() {
                       حذف
                     </button>
                   </div>
+                  )}
                 </div>
+
                 <div className='flex justify-center'>
                   <img 
                     className='!h-[200px] !w-[200px] !object-cover rounded' 
@@ -308,10 +326,8 @@ export default function ExamTable() {
             >
               <option value="">اختر القسم</option>
               {(() => {
-                const filteredPrograms = programs.filter(program => program.faculty?.id == formData.faculty);
-                console.log('Filtering programs for faculty:', formData.faculty);
-                console.log('Filtered programs:', filteredPrograms);
-                return filteredPrograms.map((program) => (
+                
+                return programs.map((program) => (
                   <option key={program.id} value={program.id}>
                     {program.name}
                   </option>

@@ -27,7 +27,7 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
     const [attendanceGrade, setAttendanceGrade] = useState(0);
     const [showAttendanceGradeModal, setShowAttendanceGradeModal] = useState(false);
     const [loading, setLoading] = useState(false);
-
+    const [search, setSearch] = useState('');
     // Build present set from localStorage (same-origin, cross-tab)
     const readPresentSet = useCallback(() => {
         try {
@@ -324,8 +324,20 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
             {/* Two-column content: students left, QR right */}
             <div className='attendance-wrapper'>
             <div className='students-section'>
-                <div className='students-toolbar'>
                     <h3 style={{ color: '#2c3649' }}>الطلاب</h3>
+                <div className='students-toolbar'>
+                    <div>
+        {/* display number of students */}
+        <span style={{ color: '#2c3649', fontSize: '14px' }}>({students.length})طالب</span>
+                        {/* display number of students who are present */}
+        <div style={{ color: '#2c3649', fontSize: '14px' }}>عدد الطلاب الحاضرين: {students.filter(s => s.present).length}</div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        {/* search for students by name */}
+                        <input onChange={(e) => setSearch(e.target.value)} type="text" placeholder='ابحث عن طالب' style={{ width: '100%', padding: '8px 12px', border: '1px solid #2c3649', borderRadius: '5px' }} />
+                        
+                    </div>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
                         <button
                             className='btn btn-secondary-attendance'
@@ -359,6 +371,8 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
                                         <div style="font-size:26px;font-weight:700;color:#2c3649;">جامعة بورسعيد</div>
                                         <div style="font-size:18px;margin-top:4px;color:#2c3649;">${headingText || `تقرير حضور المحاضرة رقم ${lectureId}`}</div>
                                         <div style="font-size:12px;color:#555;margin-top:4px;">تاريخ التوليد: ${new Date().toLocaleString('ar-EG')}</div>
+                                        <div style="font-size:12px;color:#555;margin-top:4px;">عدد الطلاب: ${students.length}</div>
+                                        <div style="font-size:12px;color:#555;margin-top:4px;">عدد الطلاب الحاضرين: ${students.filter(s => s.present).length}</div>
                                     </div>
                                 </div>
                                 <table style="border-collapse:collapse;width:100%;font-size:13px;">
@@ -406,7 +420,9 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
                     </button>
                     </div>
                 </div>
-                <table>
+                <table
+                
+                >
                     <thead>
                         <tr>
                             <th>الكود</th>
@@ -414,8 +430,8 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
                             <th>الحالة</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        {students.map((s) => (
+                    <tbody className=' !h-[100px] !overflow-y-auto'>
+                        {students.filter(s => s.username.toLowerCase().includes(search.toLowerCase())).map((s) => (
                             <tr key={s.id}>
                                 <td>{s.student_id}</td>
                                 <td>{s.username}</td>

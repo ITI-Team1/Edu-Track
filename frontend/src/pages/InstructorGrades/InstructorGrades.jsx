@@ -28,8 +28,23 @@ export default function InstructorGrades() {
     const [editValue, setEditValue] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-
+    const [search, setSearch] = useState('');
+console.log(user,lectures);
     // Load initial data
+      // Helper function to check if user has a specific group
+  const hasGroup = (groupId) => {
+    if (!user?.groups) return false;
+    return user.groups.some(group => {
+      const id = typeof group === 'object' ? group.id : group;
+      return id === groupId;
+    });
+  };
+
+  // Helper function to check if user has any of the specified groups
+  const hasAnyGroup = (groupIds) => {
+    return groupIds.some(groupId => hasGroup(groupId));
+  };
+
     useEffect(() => {
         const loadData = async () => {
             setLoading(true);
@@ -42,7 +57,29 @@ export default function InstructorGrades() {
                 ]);
                 
                 setLectures(Array.isArray(lecturesData) ? lecturesData : []);
-                setCourses(Array.isArray(coursesData) ? coursesData : []);
+                // check if user has program only set the courses that the user has program
+
+                if(hasAnyGroup([3])){
+                    
+                    const currentDoctorLectures = lectures.filter(l => l.instructor.map(i => i).includes(user.id));
+                    // convert the currentDoctorLectures to courses to show the name of the course
+                    const courseByName = coursesData.filter(c => currentDoctorLectures.map(l => l.course).includes(c.id));
+                    
+                    
+                    
+                    setCourses(courseByName);
+                    
+                }else{
+                    setCourses(Array.isArray(coursesData) ? coursesData : []);
+                }
+
+
+                
+                
+                
+               
+
+
                 setUsers(Array.isArray(usersData) ? usersData : []);
                 setStudentMarks(Array.isArray(marksData.data) ? marksData.data : []);
                 setError('');
@@ -276,11 +313,14 @@ export default function InstructorGrades() {
                                     </option>
                                 ))}
                             </select>
+                            {/* search students  by name */}
+                            <input type="text" placeholder='ابحث عن طالب' onChange={(e) => setSearch(e.target.value)} />
+
                         </div>
                         
                         {selectedCourse && courseStudents.length > 0 && (
                             <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                <button
+                                {/* <button
                                     className='btn btn-secondary-attendance'
                                     onClick={async () => {
                                         if (!selectedCourse) return;
@@ -351,7 +391,7 @@ export default function InstructorGrades() {
                                     style={{ fontSize: '14px', padding: '8px 12px' }}
                                 >
                                     إعادة حساب درجات الحضور
-                                </button>
+                                </button> */}
                                 <button
                                     className='btn btn-secondary-attendance'
                                     onClick={generatePDF}
@@ -380,13 +420,14 @@ export default function InstructorGrades() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {courseStudents.map((student) => (
+                                {courseStudents.filter(s => s.username.toLowerCase().includes(search.toLowerCase())).map((student) => (
                                     <tr key={student.id}>
                                         <td>{student.id}</td>
                                         <td>{student.username}</td>
                                         <td>{student.attendanceMark.toFixed(1)}</td>
                                         <td>{student.instructorMark.toFixed(1)}</td>
                                         <td>{student.finalMark.toFixed(1)}</td>
+                                        {hasAnyGroup([3]) && (
                                         <td>
                                             <button 
                                                 className='btn btn-secondary-attendance'
@@ -396,6 +437,12 @@ export default function InstructorGrades() {
                                                 تعديل
                                             </button>
                                         </td>
+                                        )}
+                                        {!hasAnyGroup([3]) && (
+                                            <td>
+                                                لا يمكن التعديل
+                                            </td>
+                                        )}
                                     </tr>
                                 ))}
                             </tbody>
