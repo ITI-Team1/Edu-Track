@@ -11,7 +11,7 @@ days = [
 
 class Lecture(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="lectures")
-    instructor = models.ForeignKey(User, on_delete=models.CASCADE, related_name="lectures_taught")
+    instructor = models.ManyToManyField(User, related_name="lectures_taught", blank=True)
     location = models.ForeignKey(Location, on_delete=models.CASCADE, related_name="lectures")
     day = models.CharField(max_length=10, choices=days)
     starttime = models.TimeField()

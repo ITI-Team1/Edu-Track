@@ -100,7 +100,9 @@ export default function AttendanceRecords() {
     setSelectedLecture(lec);
     setForm({
       course: lec.course || "",
-      instructor: lec.instructor || "",
+      instructorIds: Array.isArray(lec.instructor)
+        ? lec.instructor.map((ins) => (typeof ins === 'object' ? ins.id : ins))
+        : (lec.instructor ? [ (typeof lec.instructor === 'object' ? lec.instructor.id : lec.instructor) ] : []),
       location: lec.location || lec.location_id || "",
       day: lec.day || "",
       starttime: (lec.starttime || "").slice(0, 5),
@@ -127,7 +129,7 @@ export default function AttendanceRecords() {
 
   const [form, setForm] = useState({
     course: "",
-    instructor: "", // user name
+    instructorIds: [], // array of user ids
     location: "", // location id
     day: "",
     starttime: "", // HH:MM
@@ -149,7 +151,7 @@ export default function AttendanceRecords() {
   const resetForm = () => {
     setForm({
       course: "",
-      instructor: "",
+      instructorIds: [],
       location: "",
       day: "",
       starttime: "",
@@ -171,8 +173,7 @@ export default function AttendanceRecords() {
       toast.error('المقرر مطلوب');
       return;
     }
-    const instructorId = Number(form.instructor);
-    if (!Number.isFinite(instructorId) || instructorId <= 0) {
+    if (!Array.isArray(form.instructorIds) || form.instructorIds.length === 0) {
       setError("المٌحاضر مطلوب");
       toast.error('المٌحاضر مطلوب');
       return;
@@ -202,7 +203,7 @@ export default function AttendanceRecords() {
 
       const payload = {
         course: courseId,
-        instructor: instructorId,
+        instructor: form.instructorIds.map((id) => Number(id)),
         location: locationId,
         day: form.day,
         starttime: form.starttime,
@@ -247,10 +248,14 @@ export default function AttendanceRecords() {
   };
 
   const getUserName = (lec) => {
-    if (lec.instructor && typeof lec.instructor === "object")
-      return `${lec.instructor.first_name} ${lec.instructor.last_name}`;
-    const user = users.find((u) => u.id === lec.instructor);
-    return user ? `${user.first_name} ${user.last_name}` : lec.instructor;
+    const ids = Array.isArray(lec.instructor)
+      ? lec.instructor.map((ins) => (typeof ins === 'object' ? ins.id : ins))
+      : (lec.instructor ? [ (typeof lec.instructor === 'object' ? lec.instructor.id : lec.instructor) ] : []);
+    const names = ids.map((id) => {
+      const user = users.find((u) => u.id === id);
+      return user ? `${user.first_name} ${user.last_name}` : String(id);
+    });
+    return names.join(', ');
   };
 
   // Format time (HH:MM or HH:MM:SS) into Arabic 12-hour with suffixes: ص for AM, م for PM

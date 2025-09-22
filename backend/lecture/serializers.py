@@ -8,13 +8,23 @@ class LectureSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         pk = self.instance.pk if self.instance else None 
-        instructor = data.get('instructor')
+        # With ManyToMany, 'instructor' may be a queryset/list or absent on update
+        instructors = data.get('instructor')
+        if instructors is None and self.instance is not None:
+            instructors = self.instance.instructor.all()
         location = data.get('location')
         day = data.get('day')
         start = data.get('starttime')
         end = data.get('endtime')
-        if Lecture.objects.filter(instructor=instructor, day=day, starttime__lt=end, endtime__gt=start).exclude(pk=pk).exists():
-            raise serializers.ValidationError("Instructor has another lecture at this time.")
+        # Validate instructor time conflicts: any of the given instructors cannot overlap
+        if instructors:
+            if Lecture.objects.filter(
+                instructor__in=instructors,
+                day=day,
+                starttime__lt=end,
+                endtime__gt=start
+            ).exclude(pk=pk).exists():
+                raise serializers.ValidationError("One or more instructors have another lecture at this time.")
         if Lecture.objects.filter(location=location, day=day, starttime__lt=end, endtime__gt=start).exclude(pk=pk).exists():
             raise serializers.ValidationError("Location is occupied at this time.")
         return data

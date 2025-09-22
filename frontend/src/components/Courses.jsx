@@ -48,10 +48,16 @@ function Courses() {
   });
 
   // Helpers copied from Schedule.jsx for names
-  const getInstructorName = useCallback((lec) => {
-    if (lec.instructor && typeof lec.instructor === 'object') return `${lec.instructor.first_name} ${lec.instructor.last_name}`;
-    const u = users.find(u => u.id === lec.instructor);
-    return u ? `${u.first_name} ${u.last_name}` : lec.instructor;
+  const getInstructorNames = useCallback((lec) => {
+    if (!lec) return '';
+    const ids = Array.isArray(lec.instructor)
+      ? lec.instructor.map(ins => (typeof ins === 'object' ? ins.id : ins))
+      : (lec.instructor ? [ (typeof lec.instructor === 'object' ? lec.instructor.id : lec.instructor) ] : []);
+    const names = ids.map(id => {
+      const u = users.find(u => u.id === id);
+      return u ? `${u.first_name} ${u.last_name}` : String(id);
+    });
+    return names.join(', ');
   }, [users]);
   const getRoomName = useCallback((lec) => {
     if (lec.location && typeof lec.location === 'object') return lec.location.name || lec.location.title || lec.location.slug;
@@ -87,13 +93,13 @@ function Courses() {
       return {
         id: c.id,
         name: c.title || c.name || c.slug,
-        instructor: firstLec ? getInstructorName(firstLec) : '—',
+        instructor: firstLec ? getInstructorNames(firstLec) : '—',
         room: firstLec ? getRoomName(firstLec) : '—',
         nextClass,
         sessionsCount: relatedLectures.length,
       };
     });
-  }, [allCourses, lectures, enrolledCourseIds, getInstructorName, getRoomName]);
+  }, [allCourses, lectures, enrolledCourseIds, getInstructorNames, getRoomName]);
 
   // New: total number of lectures across the user's enrolled courses
   const totalLecturesCount = React.useMemo(() => {
@@ -125,7 +131,7 @@ function Courses() {
       day: lec.day,
       time: String(lec.starttime || '').slice(0,5),
       room: getRoomName(lec),
-      instructor: getInstructorName(lec),
+      instructor: getInstructorNames(lec),
     });
     return {
       id: course.id,
@@ -134,7 +140,7 @@ function Courses() {
       programs: Array.isArray(course.programs) ? course.programs : [],
       lectures: relatedLectures.map(mapLecture),
     };
-  }, [modalCourseId, allCourses, lectures, getInstructorName, getRoomName]);
+  }, [modalCourseId, allCourses, lectures, getInstructorNames, getRoomName]);
 
   // ESC key closes modal
   useEffect(() => {

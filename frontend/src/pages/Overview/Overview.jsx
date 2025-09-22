@@ -118,13 +118,16 @@ export default function Overview() {
     return c ? c.title : lec.course || '';
   }, [courses]);
 
-  const getInstructorName = useCallback((lec) => {
+  const getInstructorNames = useCallback((lec) => {
     if (!lec) return '';
-    if (lec.instructor && typeof lec.instructor === 'object') {
-      return `${lec.instructor.first_name || ''} ${lec.instructor.last_name || ''}`.trim();
-    }
-    const u = users.find(u => u.id === lec.instructor);
-    return u ? `${u.first_name || ''} ${u.last_name || ''}`.trim() : lec.instructor || '';
+    const ids = Array.isArray(lec.instructor)
+      ? lec.instructor.map(ins => (typeof ins === 'object' ? ins.id : ins))
+      : (lec.instructor ? [ (typeof lec.instructor === 'object' ? lec.instructor.id : lec.instructor) ] : []);
+    const names = ids.map(id => {
+      const u = users.find(u => u.id === id);
+      return u ? `${u.first_name || ''} ${u.last_name || ''}`.trim() : String(id);
+    });
+    return names.join(', ');
   }, [users]);
 
   const getRoomName = useCallback((lec) => {
@@ -154,15 +157,13 @@ export default function Overview() {
 
     let filtered = [];
     if (isDoctor) {
-      // Doctors: only lectures where they are the instructor
+      // Doctors: only lectures where they are among the instructors
       filtered = lectures.filter(lec => {
         if (!lec) return false;
-        const instructorId = Number(
-          (lec.instructor && typeof lec.instructor === 'object') 
-            ? lec.instructor.id 
-            : lec.instructor
-        );
-        return instructorId === uidNum;
+        const ids = Array.isArray(lec.instructor)
+          ? lec.instructor.map(ins => (typeof ins === 'object' ? ins.id : ins)).map(Number)
+          : (lec.instructor ? [Number(typeof lec.instructor === 'object' ? lec.instructor.id : lec.instructor)] : []);
+        return ids.includes(uidNum);
       });
     } else if (isStudent) {
       // Students: lectures where they appear in the students list
@@ -226,13 +227,13 @@ export default function Overview() {
         id: lec.id,
         time: formatTime12(lec.starttime),
         course: getCourseTitle(lec),
-        instructor: getInstructorName(lec),
+        instructor: getInstructorNames(lec),
         room: getRoomName(lec),
         duration: `${durationMinutes(lec.starttime, lec.endtime)} دقيقة`,
         type: 'محاضرة',
       }));
     return list;
-  }, [userLectures, todayName, getCourseTitle, getInstructorName, getRoomName]);
+  }, [userLectures, todayName, getCourseTitle, getInstructorNames, getRoomName]);
 
   return (
     <div className="flex flex-col">

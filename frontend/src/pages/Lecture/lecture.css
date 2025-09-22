@@ -154,11 +154,11 @@
     background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
     border: 1px solid rgba(100, 108, 255, 0.1);
     border-radius: 16px;
-    padding: 1.25rem; /* more compact */
     min-width: 320px;
     max-width: 480px;
-    max-height: calc(105vh - 220px);
-    overflow: hidden;
+    /* Make sure full form and actions are reachable */
+    max-height: calc(100vh - 150px);
+    overflow-y: auto;
     box-shadow: 0 4px 20px rgba(0,0,0,0.08);
     display: flex;
     flex-direction: column;

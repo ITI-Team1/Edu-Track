@@ -74,10 +74,16 @@ function Schedule() {
     const c = courses.find(c => c.id === lec.course);
     return c ? c.title : lec.course;
   }, [courses]);
-  const getInstructorName = useCallback((lec) => {
-    if (lec.instructor && typeof lec.instructor === 'object') return `${lec.instructor.first_name} ${lec.instructor.last_name}`;
-    const u = users.find(u => u.id === lec.instructor);
-    return u ? `${u.first_name} ${u.last_name}` : lec.instructor;
+  const getInstructorNames = useCallback((lec) => {
+    if (!lec) return '';
+    const ids = Array.isArray(lec.instructor)
+      ? lec.instructor.map(ins => (typeof ins === 'object' ? ins.id : ins))
+      : (lec.instructor ? [ (typeof lec.instructor === 'object' ? lec.instructor.id : lec.instructor) ] : []);
+    const names = ids.map(id => {
+      const u = users.find(u => u.id === id);
+      return u ? `${u.first_name} ${u.last_name}` : String(id);
+    });
+    return names.join(', ');
   }, [users]);
   const getRoomName = useCallback((lec) => {
     if (lec.location && typeof lec.location === 'object') return lec.location.name || lec.location.title || lec.location.slug;
@@ -115,10 +121,12 @@ function Schedule() {
 
     let filtered = [];
     if (isDoctor) {
-      // Doctors: only lectures where they are the instructor
+      // Doctors: only lectures where they are among the instructors
       filtered = lectures.filter(lec => {
-        const instructorId = Number(typeof lec.instructor === 'object' ? lec.instructor?.id : lec.instructor);
-        return instructorId === uidNum;
+        const ids = Array.isArray(lec.instructor)
+          ? lec.instructor.map(ins => (typeof ins === 'object' ? ins.id : ins)).map(Number)
+          : (lec.instructor ? [Number(typeof lec.instructor === 'object' ? lec.instructor.id : lec.instructor)] : []);
+        return ids.includes(uidNum);
       });
     } else if (isStudent) {
       // Students: lectures where they appear in the students list
@@ -174,13 +182,13 @@ function Schedule() {
         id: lec.id,
         time: formatTime12(lec.starttime),
         course: getCourseTitle(lec),
-        instructor: getInstructorName(lec),
+        instructor: getInstructorNames(lec),
         room: getRoomName(lec),
         duration: `${durationMinutes(lec.starttime, lec.endtime)} دقيقة`,
         type: 'محاضرة',
       }));
     return list;
-  }, [userLectures, todayName, getCourseTitle, getInstructorName, getRoomName, normalizeDay]);
+  }, [userLectures, todayName, getCourseTitle, getInstructorNames, getRoomName, normalizeDay]);
 
   const weekCards = useMemo(() => {
     // First, collect day -> class entries

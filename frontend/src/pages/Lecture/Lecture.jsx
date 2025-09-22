@@ -4,6 +4,7 @@ import Modal from "../../components/ui/Modal";
 import Button from "../../components/ui/Button";
 import TimePicker from "../../components/ui/TimePicker";
 import Select from "../../components/ui/Select";
+import CheckboxMultiSelect from "../../components/ui/CheckboxMultiSelect";
 import {
   fetchLectures,
   createLecture,
@@ -80,7 +81,10 @@ export default function Lecture() {
   const loadDoctors = async () => {
     try {
       const allUsers = await fetchUsers();
-      const doctors = allUsers.filter(u => u.groups.map(g => g.name).includes('دكاترة - معيدين'));
+      const allUsersArr = Array.isArray(allUsers) ? allUsers : (allUsers?.results ?? []);
+      // keep a full users list so table can resolve instructor names
+      setUsers(allUsersArr);
+      const doctors = allUsersArr.filter(u => u.groups.map(g => g.name).includes('دكاترة - معيدين'));
 //check if the doctor has the same faculty
 if(user.faculty){
       const doctorsWithSameFaculty = doctors.filter(d => d.faculty?.id == user.faculty?.id );
@@ -111,7 +115,9 @@ if(user.faculty){
     setSelectedLecture(lec);
     setForm({
       course: lec.course || "",
-      instructor: lec.instructor || "",
+      instructorIds: Array.isArray(lec.instructor)
+        ? lec.instructor.map((ins) => (typeof ins === 'object' ? ins.id : ins))
+        : (lec.instructor ? [ (typeof lec.instructor === 'object' ? lec.instructor.id : lec.instructor) ] : []),
       location: lec.location || lec.location_id || "",
       day: lec.day || "",
       starttime: (lec.starttime || "").slice(0, 5),
@@ -138,7 +144,7 @@ if(user.faculty){
 
   const [form, setForm] = useState({
     course: "",
-    instructor: "", // user name
+    instructorIds: [], // array of user ids
     location: "", // location id
     day: "",
     starttime: "", // HH:MM
@@ -218,7 +224,7 @@ if(user.faculty){
   const resetForm = () => {
     setForm({
       course: "",
-      instructor: "",
+      instructorIds: [],
       location: "",
       day: "",
       starttime: "",
@@ -241,8 +247,7 @@ if(user.faculty){
       toast.error(msg);
       return;
     }
-    const instructorId = Number(form.instructor);
-    if (!Number.isFinite(instructorId) || instructorId <= 0) {
+    if (!Array.isArray(form.instructorIds) || form.instructorIds.length === 0) {
       const msg = "المٌحاضر مطلوب";
       setError(msg);
       toast.error(msg);
@@ -275,7 +280,7 @@ if(user.faculty){
 
       const payload = {
         course: courseId,
-        instructor: instructorId,
+        instructor: form.instructorIds.map((id) => Number(id)),
         location: locationId,
         day: form.day,
         starttime: form.starttime,
@@ -319,11 +324,15 @@ if(user.faculty){
     return course ? course.title : lec.course;
   };
 
-  const getUserName = (lec) => {
-    if (lec.instructor && typeof lec.instructor === "object")
-      return `${lec.instructor.first_name} ${lec.instructor.last_name}`;
-    const user = users.find((u) => u.id === lec.instructor);
-    return user ? `${user.first_name} ${user.last_name}` : lec.instructor;
+  const getInstructorNames = (lec) => {
+    const ids = Array.isArray(lec.instructor)
+      ? lec.instructor.map((ins) => (typeof ins === 'object' ? ins.id : ins))
+      : (lec.instructor ? [ (typeof lec.instructor === 'object' ? lec.instructor.id : lec.instructor) ] : []);
+    const names = ids.map((id) => {
+      const u = users.find((uu) => uu.id === id);
+      return u ? `${u.first_name} ${u.last_name}` : String(id);
+    });
+    return names.join(', ');
   };
 
   // Format time (HH:MM or HH:MM:SS) into Arabic 12-hour with suffixes: ص for AM, م for PM
@@ -398,7 +407,7 @@ if(user.faculty){
               {lectures.map((lec) => (
                 <tr key={lec.id} className="lecture-row">
                   <td data-label="المقرر">{getCourseName(lec)}</td>
-                  <td data-label="المحاضر">{getUserName(lec)}</td>
+                  <td data-label="المحاضر">{getInstructorNames(lec)}</td>
                   <td data-label="القاعة">{getLocationName(lec)}</td>
                   <td data-label="اليوم">{lec.day}</td>
                   <td data-label="الوقت">
@@ -461,8 +470,8 @@ if(user.faculty){
               <Select
                 value={form.course}
                 onChange={(val) => {
-                  // When course changes, reset instructor to avoid mismatches
-                  setForm({ ...form, course: val, instructor: "" });
+                  // When course changes, reset instructors to avoid mismatches
+                  setForm({ ...form, course: val, instructorIds: [] });
                 }}
                 placeholder="اختر المقرر"
                 options={courses.map(c=>({value:c.id, label:c.title}))}
@@ -470,14 +479,14 @@ if(user.faculty){
             </label>
             <label>
               المٌحاضر:
-              <Select
-                value={form.instructor}
-                onChange={(val) => setForm({ ...form, instructor: val })}
-                placeholder="اختر المحاضر"
+              <CheckboxMultiSelect
                 options={filteredDoctors.map(u => ({
                   value: u.id,
-                  label: `${u.first_name} ${u.last_name} ${u.faculty?.name ? ` - ${u.faculty.name}` : ''}${u.program?.name ? ` - ${u.program.name}` : ''}`
+                  label: `${u.first_name} ${u.last_name}${u.faculty?.name ? ` - ${u.faculty.name}` : ''}${u.program?.name ? ` - ${u.program.name}` : ''}`
                 }))}
+                value={form.instructorIds}
+                onChange={(vals) => setForm({ ...form, instructorIds: vals.map(Number) })}
+                placeholder="اختر المحاضرين"
               />
             </label>
             <label>
