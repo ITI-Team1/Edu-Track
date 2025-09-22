@@ -551,7 +551,7 @@ const Enrollment = () => {
 
   if (combinedLoading) {
     return <div className="loading-container">
-    <span className='text-blue-800'>اخميل المزيد</span>
+    <span className='text-blue-800'>تحميل المزيد</span>
         <Spinner size='lg' color='primary' />
       </div>;
   }

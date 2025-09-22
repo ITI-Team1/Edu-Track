@@ -8,6 +8,9 @@ from rest_framework import status
 from django.shortcuts import get_object_or_404
 from user.models import User
 from attendance.models import StudentMark
+from django.db import transaction
+from django.db.utils import OperationalError
+import time
 
 # Create your views here.
 class ListLecture(ListAPIView):
@@ -50,11 +53,33 @@ class EnrollStudentInCourses(APIView):
             lectures = Lecture.objects.filter(course__in=courseids)
             if not lectures.exists():
                 return Response({"detail": "No lectures found for the given courses."}, status=status.HTTP_404_NOT_FOUND)
-            for lecture in lectures:
-                lecture.students.add(student)
-
-                StudentMark.objects.get_or_create(student=student, lecture=lecture,
-                    defaults={"attendance_mark": 0.0, "instructor_mark": 0.0, "final_mark": 0.0})
+            # Retry loop to handle sqlite 'database is locked' under concurrent access
+            max_retries = 5
+            delay = 0.15
+            for attempt in range(max_retries):
+                try:
+                    with transaction.atomic():
+                        for lecture in lectures:
+                            # Add student to lecture
+                            lecture.students.add(student)
+                            # Ensure a StudentMark row exists
+                            StudentMark.objects.get_or_create(
+                                student=student,
+                                lecture=lecture,
+                                defaults={
+                                    "attendance_mark": 0.0,
+                                    "instructor_mark": 0.0,
+                                    "final_mark": 0.0,
+                                },
+                            )
+                    break
+                except OperationalError as e:
+                    # Handle sqlite locking with backoff
+                    if 'database is locked' in str(e).lower() and attempt < max_retries - 1:
+                        time.sleep(delay)
+                        delay *= 1.5
+                        continue
+                    raise
 
             return Response({"student": student.username, "enrolled lectures": [str(lec) for lec in lectures]}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

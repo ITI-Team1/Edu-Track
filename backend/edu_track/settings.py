@@ -103,8 +103,15 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
+        # Increase SQLite timeout to reduce 'database is locked' under concurrent writes
+        'OPTIONS': {
+            'timeout': 20,
+        },
     }
 }
+
+# Keep DB connections open briefly to reuse and reduce reconnect overhead
+CONN_MAX_AGE = 60
 
 
 # Password validation
