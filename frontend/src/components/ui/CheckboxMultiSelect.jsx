@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import '../../styles/select.css';
 
 // Simple checkbox-based multi-select
@@ -20,6 +20,8 @@ export default function CheckboxMultiSelect({
   className = '',
 }) {
   const [query, setQuery] = useState('');
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef(null);
 
   const normalized = useMemo(() => {
     const arr = options.map(opt => {
@@ -62,94 +64,145 @@ export default function CheckboxMultiSelect({
     }
   };
 
-  // Styles for pill-like chips
-  const pillBase = {
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
-    padding: '8px 12px',
-    borderRadius: 12,
-    border: '1px solid #cbd5e1',
-    background: '#fff',
-    color: '#1f2937',
-    minWidth: 140,
-    userSelect: 'none',
-    cursor: disabled ? 'not-allowed' : 'pointer',
-    boxShadow: '0 1px 1px rgba(0,0,0,0.03)',
-  };
-  const pillSelected = {
-    border: '1px solid #60a5fa',
-    background: '#eef6ff',
-    color: '#0f172a',
-    fontWeight: 600,
-  };
+  // Close dropdown on outside click
+  useEffect(() => {
+    const onDoc = (e) => {
+      if (!wrapRef.current) return;
+      if (!wrapRef.current.contains(e.target)) setOpen(false);
+    };
+    if (open) document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [open]);
+
+  const selectedLabels = useMemo(() => {
+    if (!Array.isArray(value) || value.length === 0) return '';
+    const setVals = value.map(v => String(v));
+    const labels = normalized.filter(o => setVals.includes(String(o.value))).map(o => o.label);
+    return labels.slice(0, 2).join(', ') + (labels.length > 2 ? ` +${labels.length - 2}` : '');
+  }, [normalized, value]);
 
   return (
-    <div className={className} dir="rtl">
-      <div style={{ marginBottom: 6, fontSize: 13, color: '#334155' }}>
-        {selectedCount === 0 ? placeholder : `مختار: ${selectedCount}`}
-      </div>
-      {searchable && (
-        <div style={{ marginBottom: 8 }}>
-          <input
-            type="text"
-            placeholder="ابحث..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            disabled={disabled}
-            style={{ width: '100%', padding: '6px 10px', border: '1px solid #cbd5e1', borderRadius: 8 }}
-          />
-        </div>
-      )}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-        {/* Select all chip */}
-        {filtered.length > 0 && (
-          <label
-            style={{
-              ...pillBase,
-              ...(someChecked ? pillSelected : {}),
-            }}
-            title={allChecked ? 'إلغاء تحديد الكل' : 'تحديد الكل'}
-          >
-            <span style={{ flex: 1 }}>تحديد الكل</span>
-            <input
-              type="checkbox"
-              checked={allChecked}
-              ref={(el) => { if (el) el.indeterminate = !allChecked && someChecked; }}
-              onChange={toggleAll}
-              disabled={disabled}
-              style={{ width: 18, height: 18 }}
-            />
-          </label>
-        )}
+    <div ref={wrapRef} className={className} dir="rtl" style={{ position: 'relative' }}>
+      {/* Control */}
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => setOpen(o => !o)}
+        className="sel-control"
+        style={{
+          width: '100%',
+          textAlign: 'right',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 8,
+          padding: '8px 12px',
+          borderRadius: 8,
+          border: '1px solid #cbd5e1',
+          background: disabled ? '#f5f5f5' : '#fff',
+          color: '#1f2937',
+          cursor: disabled ? 'not-allowed' : 'pointer',
+        }}
+      >
+        <span style={{ color: selectedCount ? '#0f172a' : '#64748b' }}>
+          {selectedCount === 0 ? placeholder : selectedLabels || `مختار: ${selectedCount}`}
+        </span>
+        <span aria-hidden="true" style={{ opacity: 0.8 }}>▾</span>
+      </button>
 
-        {filtered.length === 0 ? (
-          <div className="sel-empty">لا توجد خيارات</div>
-        ) : (
-          filtered.map(opt => {
-            const selected = Array.isArray(value) && value.some(v => String(v) === String(opt.value));
-            return (
+      {/* Dropdown */}
+      {open && (
+        <div
+          className="sel-dropdown"
+          style={{
+            position: 'absolute',
+            right: 0,
+            left: 0,
+            top: 'calc(100% + 6px)',
+            background: '#fff',
+            border: '1px solid #e2e8f0',
+            borderRadius: 10,
+            boxShadow: '0 10px 25px rgba(0,0,0,0.08)',
+            padding: 10,
+            zIndex: 50,
+          }}
+        >
+          {searchable && (
+            <div style={{ marginBottom: 8 }}>
+              <input
+                type="text"
+                placeholder="ابحث بالاسم..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                disabled={disabled}
+                style={{ width: '100%', padding: '6px 10px', border: '1px solid #cbd5e1', borderRadius: 8 }}
+              />
+            </div>
+          )}
+
+          {/* Options list */}
+          <div style={{ maxHeight: 280, overflowY: 'auto', paddingRight: 2 }}>
+            {/* Select all row */}
+            {filtered.length > 0 && (
               <label
-                key={String(opt.value)}
+                className="sel-row"
                 style={{
-                  ...pillBase,
-                  ...(selected ? pillSelected : {}),
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  padding: '8px 10px', borderRadius: 8,
+                  background: someChecked ? '#eef6ff' : 'transparent',
+                  border: someChecked ? '1px solid #60a5fa' : '1px solid transparent',
+                  marginBottom: 6,
+                  cursor: disabled ? 'not-allowed' : 'pointer',
+                  userSelect: 'none',
                 }}
+                title={allChecked ? 'إلغاء تحديد الكل' : 'تحديد الكل'}
               >
-                <span style={{ flex: 1 }}>{opt.label}</span>
                 <input
                   type="checkbox"
-                  checked={selected}
-                  onChange={() => toggle(opt.value)}
+                  checked={allChecked}
+                  ref={(el) => { if (el) el.indeterminate = !allChecked && someChecked; }}
+                  onChange={toggleAll}
                   disabled={disabled}
                   style={{ width: 18, height: 18 }}
                 />
+                <span>تحديد الكل</span>
               </label>
-            );
-          })
-        )}
-      </div>
+            )}
+
+            {filtered.length === 0 ? (
+              <div className="sel-empty" style={{ padding: 10, color: '#64748b' }}>لا توجد خيارات</div>
+            ) : (
+              filtered.map(opt => {
+                const selected = Array.isArray(value) && value.some(v => String(v) === String(opt.value));
+                return (
+                  <label
+                    key={String(opt.value)}
+                    className="sel-row"
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 10,
+                      padding: '8px 10px', borderRadius: 8,
+                      background: selected ? '#eef6ff' : 'transparent',
+                      border: selected ? '1px solid #60a5fa' : '1px solid transparent',
+                      marginBottom: 4,
+                      cursor: disabled ? 'not-allowed' : 'pointer',
+                      userSelect: 'none',
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selected}
+                      onChange={() => toggle(opt.value)}
+                      disabled={disabled}
+                      style={{ width: 18, height: 18 }}
+                    />
+                    <span style={{ flex: 1 }}>{opt.label}</span>
+                  </label>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
