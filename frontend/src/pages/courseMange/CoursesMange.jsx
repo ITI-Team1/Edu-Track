@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "./coursesMange.css";
+import "../../styles/tableScroll.css"; // shared table scrollbar
 import Modal from "../../components/ui/Modal";
 import Button from "../../components/ui/Button";
 import {
@@ -183,11 +184,15 @@ export default function CoursesMange() {
       </div>
       {/* Toasts now handle error feedback globally */}
       <div className="courses-mange-table-wrapper">
+        {error && (
+          <div style={{ color: 'red', textAlign: 'center', marginBottom: '0.75rem' }}>{error}</div>
+        )}
         {loading ? (
           <div style={{ textAlign: "center", color: "#646cff" }}>
             جاري التحميل...
           </div>
         ) : (
+          <div className="students-table-scroll !h-[480px] !overflow-y-auto">
           <table className="courses-mange-table">
             <thead>
               <tr>
@@ -245,6 +250,7 @@ export default function CoursesMange() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
       {/* Modal for Create/Update */}

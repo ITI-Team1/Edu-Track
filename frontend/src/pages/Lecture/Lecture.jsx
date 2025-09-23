@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import "./lecture.css";
+import "../../styles/tableScroll.css"; // shared table scrollbar
 import Modal from "../../components/ui/Modal";
 import Button from "../../components/ui/Button";
 import TimePicker from "../../components/ui/TimePicker";
@@ -32,12 +33,15 @@ export default function Lecture() {
   const {user} = useAuth()
   const [doctors, setDoctors] = useState([])
   // Loaders and CRUD handlers (restored)
+  // Initial load for lookup data and table
+  /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
     loadLectures();
     loadLocations();
     loadCourses();
     loadDoctors();
-  }, []);
+  }, []); // safe: one-time bootstrap
+  /* eslint-enable react-hooks/exhaustive-deps */
 
   const loadLectures = async () => {
     setLoading(true);
@@ -386,11 +390,15 @@ if(user.faculty){
   </div>
 
   <div className="lecture-table-wrapper">
+    {error && (
+      <div style={{ color: 'red', textAlign: 'center', marginBottom: '0.75rem' }}>{error}</div>
+    )}
     {loading ? (
       <div style={{ textAlign: "center", color: "#646cff" }}>
         جاري التحميل...
           </div>
         ) : (
+          <div className="students-table-scroll !h-[480px] !overflow-y-auto">
           <table className="lecture-table">
             <thead>
               <tr>
@@ -446,6 +454,7 @@ if(user.faculty){
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
       {showModal && (

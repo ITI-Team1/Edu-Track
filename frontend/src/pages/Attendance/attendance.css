@@ -258,24 +258,4 @@
   }
 }
 
-/* Match table scroll area scrollbar to the main page scrollbar */
-.students-table-scroll {
-  --sb-track-color: transparent;
-  --sb-thumb-color: #6696c7;
-  --sb-size: 7px;
-}
-.students-table-scroll::-webkit-scrollbar {
-  width: var(--sb-size);
-}
-.students-table-scroll::-webkit-scrollbar-track {
-  background: var(--sb-track-color);
-}
-.students-table-scroll::-webkit-scrollbar-thumb {
-  background: var(--sb-thumb-color);
-}
-@supports not selector(::-webkit-scrollbar) {
-  .students-table-scroll {
-    scrollbar-color: var(--sb-thumb-color) var(--sb-track-color);
-    scrollbar-width: thin;
-  }
-}
+/* Table scroll styling was moved to src/styles/tableScroll.css */

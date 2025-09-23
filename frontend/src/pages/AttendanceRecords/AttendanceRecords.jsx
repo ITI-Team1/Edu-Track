@@ -12,7 +12,8 @@ import {
 import { fetchLocations } from "../../services/locationApi";
 import { fetchCourses } from "../../services/courseApi"
 import { fetchUsers } from "../../services/userApi"
-import './style.css';
+import './AttendanceRecords.css';
+import '../../styles/tableScroll.css'; // shared table scrollbar
 import toast from '../../utils/toast';
 export default function AttendanceRecords() {
   const { isAuthenticated, user } = useAuth();
@@ -298,7 +299,7 @@ export default function AttendanceRecords() {
   return (
     <div className="lecture-page attendance-records-page">
       <div className="page-header">
-        <h1>المحاضرات</h1>
+        <h1>سجل الحضور</h1>
         <Link 
           to="/instructor-grades" 
           className="btn-main !px-4 !py-2"
@@ -322,6 +323,7 @@ export default function AttendanceRecords() {
             جاري التحميل...
           </div>
         ) : (
+          <div className="students-table-scroll !h-[480px] !overflow-y-auto">
           <table className="lecture-table">
             <thead>
               <tr>
@@ -360,6 +362,7 @@ export default function AttendanceRecords() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
       

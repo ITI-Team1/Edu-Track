@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import logoRaw from '../../assets/psu-logo.svg?raw';
 import jsPDF from 'jspdf';
@@ -9,14 +8,13 @@ import { fetchCourses } from '../../services/courseApi';
 import { fetchUsers } from '../../services/userApi';
 import { AttendanceAPI } from '../../services/attendanceApi';
 import Modal from '../../components/ui/Modal';
-import '../Attendance/attendance.css';
+import '../../styles/tableScroll.css'; // shared table scrollbar
 
 import './instructorgrades.css';
 import toast from '../../utils/toast';
 
 export default function InstructorGrades() {
     const { user } = useAuth();
-    const navigate = useNavigate();
     const [lectures, setLectures] = useState([]);
     const [courses, setCourses] = useState([]);
     const [users, setUsers] = useState([]);
@@ -29,7 +27,6 @@ export default function InstructorGrades() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [search, setSearch] = useState('');
-console.log(user,lectures);
     // Load initial data
       // Helper function to check if user has a specific group
   const hasGroup = (groupId) => {
@@ -93,7 +90,7 @@ console.log(user,lectures);
         };
         
         loadData();
-    }, []);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Load course students when course is selected
     const loadCourseStudents = useCallback(async () => {

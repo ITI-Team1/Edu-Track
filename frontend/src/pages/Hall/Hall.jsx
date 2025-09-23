@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "./hall.css";
+import "../../styles/tableScroll.css"; // shared table scrollbar
 import Modal from "../../components/ui/Modal";
 import Button from "../../components/ui/Button";
 import {
@@ -245,11 +246,15 @@ export default function Hall() {
       </div>
       {/* Toasts handle feedback globally */}
       <div className="hall-table-wrapper">
+        {error && (
+          <div style={{ color: 'red', textAlign: 'center', marginBottom: '0.75rem' }}>{error}</div>
+        )}
         {loading ? (
           <div style={{ textAlign: "center", color: "#646cff" }}>
             جاري التحميل...
           </div>
         ) : (
+          <div className="students-table-scroll !h-[480px] !overflow-y-auto">
           <table className="hall-table">
             <thead>
               <tr>
@@ -301,6 +306,7 @@ export default function Hall() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
       {/* Modal for Create/Update */}
