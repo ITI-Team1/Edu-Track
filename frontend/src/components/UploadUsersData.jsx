@@ -164,30 +164,15 @@ export default function UploadExcel({ onUploadComplete, onError }) {
     <div className="enroll-upload" aria-busy={uploading}>
       {uploading && createPortal(
         <div
-          className="upload-overlay"
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'rgba(15, 23, 42, 0.6)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 999999, // ensure above Navbar
-            backdropFilter: 'blur(1px)'
-          }}
+          className="fixed inset-0 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm z-[999999]"
           aria-live="polite"
           aria-label="يتم رفع الملف، الرجاء الانتظار"
         >
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+          <div className="flex flex-col items-center gap-3">
             <Spinner size="large" color="white" />
-            <div style={{ color: '#fff', fontWeight: 600 }}>
-
+            <div className="text-white font-semibold">
               <Spinner size="lg" color="primary" />
-            
-            
+              <div className="text-white font-semibold">جارٍ التحميل...</div>
             </div>
           </div>
         </div>,

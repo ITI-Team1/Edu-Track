@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { createPortal } from 'react-dom';
 import '../styles/enrollment.css';
 import toast from '../utils/toast';
 
@@ -550,16 +551,31 @@ const Enrollment = () => {
   const combinedError = error || usersError?.message;
 
   if (combinedLoading) {
-    return <div className="loading-container">
-    <span className='text-blue-800'>تحميل المزيد</span>
-        <Spinner size='lg' color='primary' />
-      </div>;
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[200px] gap-4">
+        <span className="text-blue-800 text-lg">تحميل المزيد</span>
+        <Spinner size="lg" color="primary" />
+      </div>
+    );
   }
 
   // ===== MAIN RENDER =====
   
   return (
     <div className="enrollment-page" dir="rtl">
+      {submitting && createPortal(
+        <div
+          className="fixed inset-0 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm z-[999999]"
+          aria-live="polite"
+          aria-label="يتم معالجة الطلب، الرجاء الانتظار"
+        >
+          <div className="flex flex-col items-center gap-3">
+            <Spinner size="lg" color="primary" />
+            <div className="text-white font-semibold">جارٍ التسجيل...</div>
+          </div>
+        </div>,
+        document.body
+      )}
       <h1>تسجيل الطلاب و المقررات</h1>
       
       {/* Toastify handles success/error feedback globally */}
@@ -729,7 +745,7 @@ const Enrollment = () => {
               className="btn btn-primary enroll-submit" 
               disabled={submitting}
             >
-              {submitting ? 'جارٍ التسجيل...' : 'تسجيل'}
+              تسجيل
             </button>
             
             <div className="upload-section">

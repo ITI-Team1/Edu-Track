@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom';
+import Spinner from '../../components/Spinner';
 import { useAuth } from '../../context/AuthContext';
 import Modal from '../../components/ui/Modal';
 import { 
@@ -10,18 +12,19 @@ import {
 } from '../../services/examApi';
 import { fetchFaculties } from '../../services/facultyApi';
 import { fetchPrograms } from '../../services/programApi';
+import toast from '../../utils/toast';
 
 export default function ExamTable() {
   const { user } = useAuth();
   const [examTables, setExamTables] = useState([]);
-  const [universities, setUniversities] = useState([]);
+  const [_universities, setUniversities] = useState([]);
   const [faculties, setFaculties] = useState([]);
   const [programs, setPrograms] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editingExam, setEditingExam] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [examToDelete, setExamToDelete] = useState(null);
 
   const [formData, setFormData] = useState({
     university: "",
@@ -49,14 +52,9 @@ export default function ExamTable() {
         if (facultiesData.length > 0) {
           const uniqueUniversities = [...new Map(facultiesData.map(f => [f.university?.id, f.university]).filter(([id, uni]) => id && uni)).values()];
           setUniversities(uniqueUniversities);
-          console.log('Universities loaded:', uniqueUniversities);
         }
-        
-        console.log('Faculties loaded:', facultiesData);
-        console.log('Programs loaded:', programsData);
-        console.log('First faculty university:', facultiesData[0]?.university);
       } catch (err) {
-        setError('فشل في تحميل البيانات: ' + err.message);
+        toast.error('فشل في تحميل البيانات: ' + (err.message || 'حدث خطأ غير متوقع'));
       } finally {
         setLoading(false);
       }
@@ -83,14 +81,10 @@ export default function ExamTable() {
       image: null,
     });
     setEditingExam(null);
-    setError('');
-    setSuccess('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
 
     const data = new FormData();
     data.append("university", formData.university);
@@ -104,10 +98,10 @@ export default function ExamTable() {
       setLoading(true);
       if (editingExam) {
         await updateExamTable(editingExam.id, data);
-        setSuccess('تم تحديث جدول الامتحانات بنجاح');
+        toast.success('تم تحديث جدول الامتحانات بنجاح');
       } else {
         await createExamTable(data);
-        setSuccess('تم إنشاء جدول الامتحانات بنجاح');
+        toast.success('تم إنشاء جدول الامتحانات بنجاح');
       }
       
       // Refresh the list
@@ -116,7 +110,7 @@ export default function ExamTable() {
       resetForm();
       setShowModal(false);
     } catch (err) {
-      setError('فشل في العملية: ' + err.message);
+      toast.error('فشل في العملية: ' + (err.message || 'حدث خطأ غير متوقع'));
     } finally {
       setLoading(false);
     }
@@ -149,27 +143,25 @@ export default function ExamTable() {
       setEditingExam(exam);
       setShowModal(true);
     } catch (err) {
-      setError('فشل في تحميل بيانات الجدول: ' + err.message);
+      toast.error('فشل في تحميل بيانات الجدول: ' + (err.message || 'حدث خطأ غير متوقع'));
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async (examId) => {
-    if (!window.confirm('هل أنت متأكد من حذف جدول الامتحانات؟')) {
-      return;
-    }
-
     try {
       setLoading(true);
       await deleteExamTable(examId);
-      setSuccess('تم حذف جدول الامتحانات بنجاح');
+      toast.success('تم حذف جدول الامتحانات بنجاح');
       
       // Refresh the list
       const updatedList = await fetchExamTableList();
       setExamTables(updatedList);
+      setShowDeleteModal(false);
+      setExamToDelete(null);
     } catch (err) {
-      setError('فشل في حذف الجدول: ' + err.message);
+      toast.error('فشل في حذف الجدول: ' + (err.message || 'حدث خطأ غير متوقع'));
     } finally {
       setLoading(false);
     }
@@ -179,21 +171,24 @@ export default function ExamTable() {
     resetForm();
     setShowModal(true);
   };
+  
+  const openDeleteModal = (exam) => {
+    setExamToDelete(exam);
+    setShowDeleteModal(true);
+  };
   return (
-    <div className="!min-h-[600px] content-card exam-table-section-applying">
+    <div className="!min-h-[600px] content-card exam-table-section-applying relative">
+      {loading && createPortal(
+        <div className="fixed inset-0 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm z-[999999]" aria-live="polite" aria-label="يتم معالجة الطلب، الرجاء الانتظار">
+          <div className="flex flex-col items-center gap-3">
+            <Spinner size="lg" color="primary" />
+            <div className="text-white font-semibold">جارٍ التحميل...</div>
+          </div>
+        </div>,
+        document.body
+      )}
       <h2>جدول الامتحانات</h2>
       
-      {/* Error and Success Messages */}
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          {error}
-        </div>
-      )}
-      {success && (
-        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-          {success}
-        </div>
-      )}
 
       <div className="exam-table-chart">
         {hasAnyGroup([6, 5, 4, 1]) && (
@@ -222,48 +217,48 @@ export default function ExamTable() {
             </div>
           ) : (
             examTables.map((examTable) => (
-              <div key={examTable.id} className='flex flex-col gap-4 justify-center border border-gray-200 rounded-lg p-4 mb-4'>
-                <div className="flex justify-between items-start">
+              <div key={examTable.id} className='flex flex-col gap-3 border border-gray-200 rounded-xl p-4  text-white shadow-sm transition-all'>
+
+<div className="flex justify-between items-start">
                   <div>
-                    <h3 className="text-lg font-semibold mb-2">جدول الامتحانات</h3>
-                    <p><strong>الجامعة:</strong> {examTable.university_data?.name || examTable.university?.name}</p>
-                    <p><strong>الكلية:</strong> {examTable.faculty_data?.name || examTable.faculty?.name}</p>
-                    <p><strong>القسم:</strong> {examTable.program_data?.name || examTable.program?.name}</p>
+                    <h3 className="text-lg font-extrabold mb-2">جدول الامتحانات</h3>
+                    <p className='text-sm opacity-90'><span className='font-semibold'>الجامعة:</span> {examTable.university_data?.name || examTable.university?.name}</p>
+                    <p className='text-sm opacity-90'><span className='font-semibold'>الكلية:</span> {examTable.faculty_data?.name || examTable.faculty?.name}</p>
+                    <p className='text-sm opacity-90'><span className='font-semibold'>القسم:</span> {examTable.program_data?.name || examTable.program?.name}</p>
                   </div>
-                  
-                  {hasAnyGroup([6, 5, 4, 1]) && ( <div className="flex gap-2">
-                    <button
-                      onClick={() => handleEdit(examTable.id)}
-                      className="btn-main !px-3 !py-2 text-sm"
-                      disabled={loading}
-                    >
-                      تعديل
-                    </button>
-                    <button
-                      onClick={() => handleDelete(examTable.id)}
-                      className="bg-red-500 hover:bg-red-600 text-white !px-3 !py-2 text-sm rounded"
-                      disabled={loading}
-                    >
-                      حذف
-                    </button>
-                  </div>
+                  {hasAnyGroup([6, 5, 4, 1]) && ( 
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleEdit(examTable.id)}
+                        className="btn-main !px-3 !py-2 text-sm"
+                        disabled={loading}
+                      >
+                        تعديل
+                      </button>
+                      <button
+                        onClick={() => openDeleteModal(examTable)}
+                        className="bg-red-500 hover:bg-red-600 text-white !px-5 !py-3 text-sm rounded-lg"
+                        disabled={loading}
+                      >
+                        حذف
+                      </button>
+                    </div>
                   )}
                 </div>
 
-                <div className='flex justify-center'>
-                  <img 
-                    className='!h-[200px] !w-[200px] !object-cover rounded' 
-                    src={examTable.image} 
-                    alt={`جدول امتحانات ${examTable.faculty_data?.name || examTable.faculty?.name}`} 
-                  />
-                </div>
+
+                <img 
+                  className='w-full max-h-[550px] object-contain rounded-lg' 
+                  src={examTable.image} 
+                  alt={`جدول امتحانات ${examTable.faculty_data?.name || examTable.faculty?.name}`} 
+                />
               </div>
             ))
           )}
         </div>
       </div>
 
-      {/* Modal */}
+      {/* Create / Edit Modal */}
       <Modal
         isOpen={showModal}
         onClose={() => {
@@ -364,6 +359,43 @@ export default function ExamTable() {
           </button>
         </form>
       </Modal>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && examToDelete && (
+        <Modal
+          isOpen={showDeleteModal}
+          onClose={() => {
+            setShowDeleteModal(false);
+            setExamToDelete(null);
+          }}
+          title={"تأكيد حذف جدول الامتحانات"}
+        >
+          <div className="px-1">
+            <div className="h-[2px] w-full bg-slate-200/50 mb-3" />
+            <p className="text-center text-slate-700 mb-6">هل أنت متأكد من حذف هذا الجدول؟ لا يمكن التراجع عن هذا الإجراء.</p>
+            <div className="flex items-center justify-center gap-3 !mt-5">
+              <button
+                className="!px-5 !py-2 rounded-md bg-gray-200 text-gray-800 border border-gray-300 hover:bg-gray-300"
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setExamToDelete(null);
+                }}
+                disabled={loading}
+              >
+                إلغاء
+              </button>
+              <button
+                className="!px-4 !py-2 rounded-md bg-red-600 hover:bg-red-700 text-white flex items-center gap-2"
+                onClick={() => handleDelete(examToDelete.id)}
+                disabled={loading}
+              >
+                نعم، حذف
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6zm2 3h14v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V9zm5 2v7h2v-7h-2zm-4 0v7h2v-7H6zm8 0v7h2v-7h-2z"/></svg>
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   )
 }
