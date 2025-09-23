@@ -1,6 +1,7 @@
 import { toast as baseToast } from 'react-toastify';
 
-const common = { theme: 'dark', rtl: true };
+const common = { theme: 'light', rtl: true };
+
 
 function extractApiMessage(err, fallback = 'حدث خطأ') {
   // Axios-style error response

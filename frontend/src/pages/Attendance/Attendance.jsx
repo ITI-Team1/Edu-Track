@@ -420,32 +420,32 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
                     </button>
                     </div>
                 </div>
-                <table
-                
-                >
-                    <thead>
-                        <tr>
-                            <th>الكود</th>
-                            <th>الاسم</th>
-                            <th>الحالة</th>
-                        </tr>
-                    </thead>
-                    <tbody className=' !h-[100px] !overflow-y-auto'>
-                        {students.filter(s => s.username.toLowerCase().includes(search.toLowerCase())).map((s) => (
-                            <tr key={s.id}>
-                                <td>{s.student_id}</td>
-                                <td>{s.username}</td>
-                                <td
-                                    className={`status ${s.present ? 'present' : 'absent'}`}
-                                    onClick={() => toggleStudent(s.student_id)}
-                                    title="تبديل الحالة (محلي فقط)"
-                                >
-                                    {s.present ? 'حضور' : 'غياب'}
-                                </td>
+                <div className='students-table-scroll !h-[448px] !overflow-y-auto'>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>الكود</th>
+                                <th>الاسم</th>
+                                <th>الحالة</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {students.filter(s => s.username.toLowerCase().includes(search.toLowerCase())).map((s) => (
+                                <tr key={s.id}>
+                                    <td>{s.student_id}</td>
+                                    <td>{s.username}</td>
+                                    <td
+                                        className={`status ${s.present ? 'present' : 'absent'}`}
+                                        onClick={() => toggleStudent(s.student_id)}
+                                        title="تبديل الحالة (محلي فقط)"
+                                    >
+                                        {s.present ? 'حضور' : 'غياب'}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
             <div className='qr-section'>
                 <div className='qr-inline-bar'>

@@ -283,9 +283,6 @@ console.log(user,lectures);
     return (
         <div className='attendance-page instructor-grades'>
             <div className='attendance-header'>
-                <button className='btn btn-secondary-attendance !m-10' onClick={() => navigate('/dashboard')}>
-                    لوحة التحكم
-                </button>
                 <h2 className='attendance-title'>إدارة درجات الطلاب</h2>
             </div>
 
@@ -408,6 +405,7 @@ console.log(user,lectures);
                             جاري التحميل...
                         </div>
                     ) : selectedCourse && courseStudents.length > 0 ? (
+                        <div className='students-table-scroll !h-[480px] !overflow-y-auto'>
                         <table>
                             <thead>
                                 <tr>
@@ -447,6 +445,7 @@ console.log(user,lectures);
                                 ))}
                             </tbody>
                         </table>
+                        </div>
                     ) : selectedCourse ? (
                         <div style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
                             لا توجد بيانات طلاب لهذا المقرر

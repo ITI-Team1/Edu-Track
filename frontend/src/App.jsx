@@ -1,5 +1,5 @@
 import React from 'react';
-import { ToastContainer } from 'react-toastify';
+import { ToastContainer, Slide } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import './styles/toastify-overrides.css';
 import { AuthProvider } from './context/AuthContext';
@@ -26,15 +26,16 @@ function AppContent() {
       {/* Global toast container so any page can show toasts */}
       <ToastContainer
         position="top-right"
-        autoClose={4000}
+        autoClose={5000}
         hideProgressBar={false}
-        newestOnTop
+        newestOnTop={false}
         closeOnClick
         rtl
         pauseOnFocusLoss
         draggable
         pauseOnHover
-        theme="dark"
+        theme="light"
+        transition={Slide}
       />
     </div>
   );
