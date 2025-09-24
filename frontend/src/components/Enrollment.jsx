@@ -48,6 +48,7 @@ const Enrollment = () => {
   const [filterLevel, setFilterLevel] = useState('');
   const [filterName, setFilterName] = useState('');
   const [debouncedName, setDebouncedName] = useState('');
+  const [courseSearch, setCourseSearch] = useState('');
 
   // Virtualization states
   const scrollRef = useRef(null);
@@ -139,8 +140,17 @@ const Enrollment = () => {
       }
     }
     
+    // Local search filter by course title/slug
+    const term = (courseSearch || '').toLowerCase().trim();
+    if (term) {
+      courseList = courseList.filter(c => {
+        const title = String(c.title || '').toLowerCase();
+        const slug = String(c.slug || '').toLowerCase();
+        return title.includes(term) || slug.includes(term);
+      });
+    }
     return courseList;
-  }, [courses, programs, filterFaculty, filterProgram]);
+  }, [courses, programs, filterFaculty, filterProgram, courseSearch]);
 
   // ===== REACT QUERY =====
   
@@ -548,7 +558,7 @@ const Enrollment = () => {
   // ===== LOADING STATE =====
   
   const combinedLoading = loading || usersLoading;
-  const combinedError = error || usersError?.message;
+  const _combinedError = error || usersError?.message;
 
   if (combinedLoading) {
     return (
@@ -715,6 +725,16 @@ const Enrollment = () => {
               />
               <label htmlFor="courses-select-all">تحديد الكل</label>
             </div>
+          </div>
+          {/* Search subjects */}
+          <div style={{ marginBottom: 10 }}>
+            <input
+              type="text"
+              placeholder="ابحث عن مقرر"
+              value={courseSearch}
+              onChange={(e) => setCourseSearch(e.target.value)}
+              style={{ width: '100%', padding: '8px 10px', border: '1px solid #e2e8f0', borderRadius: 8 }}
+            />
           </div>
           
           <div className="scroll-area">

@@ -21,7 +21,6 @@
   
   .enrollment-page {
     min-height: 100%;
-    padding: clamp(16px, 2.5vw, 32px);
     color: var(--text);
   }
   
@@ -134,10 +133,15 @@
     max-height: 380px;
     overflow: auto;
     padding-right: 6px; /* room for scrollbar */
+    /* Prevent layout shift when scrollbars appear */
+    scrollbar-gutter: stable;
   }
   .scroll-area::-webkit-scrollbar { width: 8px; height: 8px; }
-  .scroll-area::-webkit-scrollbar-thumb { background: #c7d2fe; border-radius: 8px; }
+  .scroll-area::-webkit-scrollbar-thumb { background: #317fc9; border-radius: 8px; }
   .scroll-area::-webkit-scrollbar-track { background: #eef2ff; }
+  @supports not selector(::-webkit-scrollbar) {
+    .scroll-area { scrollbar-color: #317fc9 #eef2ff; scrollbar-width: thin; }
+  }
 
   /* Group header with select-all inline */
   .group-head {

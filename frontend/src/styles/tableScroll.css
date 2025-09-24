@@ -1,8 +1,8 @@
-/* Shared table scroll styling to match the main page scrollbar */
+/* Shared table scroll styling - matches Enrollment .scroll-area */
 .students-table-scroll {
-  --sb-track-color: transparent;
-  --sb-thumb-color: #6696c7;
-  --sb-size: 7px;
+  --sb-track-color: #eef2ff;   /* same as Enrollment */
+  --sb-thumb-color: #317fc9;   /* updated to requested blue */
+  --sb-size: 8px;              /* same width/height */
   /* Prevent layout shift when scrollbars appear */
   scrollbar-gutter: stable;
 }
@@ -15,6 +15,7 @@
 }
 .students-table-scroll::-webkit-scrollbar-thumb {
   background: var(--sb-thumb-color);
+  border-radius: 8px; /* match Enrollment radius */
 }
 @supports not selector(::-webkit-scrollbar) {
   .students-table-scroll {
