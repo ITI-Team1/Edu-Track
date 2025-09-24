@@ -6,10 +6,9 @@ import '../../styles/schedule.css';
 import { fetchLectures } from '../../services/lectureApi';
 import { fetchCourses } from '../../services/courseApi';
 import { fetchLocations } from '../../services/locationApi';
-
-
 import { fetchUsers } from '../../services/userApi';
 import { fetchUserPermissions } from '../../services/userApi';
+import { fetchPortSaidWeather, describeWeatherCode } from '../../services/weatherApi';
 
 export default function Overview() {
   const [viewDate, setViewDate] = useState(new Date()); 
@@ -61,12 +60,14 @@ export default function Overview() {
   const [courses, setCourses] = useState([]);
   const [locations, setLocations] = useState([]);
   const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [_loading, setLoading] = useState(false);
+  const [_error, setError] = useState('');
   const [permissions, setPermissions] = useState([]);
+  const [weather, setWeather] = useState(null);
+  const [weatherError, setWeatherError] = useState('');
 
   // Filters
-  const [selectedCourse, setSelectedCourse] = useState('');
+  const [selectedCourse] = useState('');
 
   // Redirect to home if not authenticated
   useEffect(() => {
@@ -83,6 +84,22 @@ export default function Overview() {
       });
     }
   }, [user]);
+
+  // Load Port Said weather (refresh every 10 minutes)
+  useEffect(() => {
+    let alive = true;
+    const loadWeather = async () => {
+      try {
+        const w = await fetchPortSaidWeather();
+        if (alive) { setWeather(w); setWeatherError(''); }
+      } catch (e) {
+        if (alive) setWeatherError(e?.message || 'فشل جلب الطقس');
+      }
+    };
+    loadWeather();
+    const id = setInterval(loadWeather, 10 * 60 * 1000);
+    return () => { alive = false; clearInterval(id); };
+  }, []);
 
   // Load real data
   useEffect(() => {
@@ -120,14 +137,23 @@ export default function Overview() {
 
   const getInstructorNames = useCallback((lec) => {
     if (!lec) return '';
-    const ids = Array.isArray(lec.instructor)
-      ? lec.instructor.map(ins => (typeof ins === 'object' ? ins.id : ins))
-      : (lec.instructor ? [ (typeof lec.instructor === 'object' ? lec.instructor.id : lec.instructor) ] : []);
-    const names = ids.map(id => {
-      const u = users.find(u => u.id === id);
-      return u ? `${u.first_name || ''} ${u.last_name || ''}`.trim() : String(id);
-    });
-    return names.join(', ');
+    // Prefer server-provided instructor_details if available
+    const details = Array.isArray(lec.instructor_details) ? lec.instructor_details : [];
+    let names = details
+      .map(d => `${d.first_name || ''} ${d.last_name || ''}`.trim())
+      .filter(Boolean);
+    // Fallback to local users list matching IDs if details not present
+    if (names.length === 0) {
+      const ids = Array.isArray(lec.instructor)
+        ? lec.instructor.map(ins => (typeof ins === 'object' ? ins.id : ins))
+        : (lec.instructor ? [ (typeof lec.instructor === 'object' ? lec.instructor.id : lec.instructor) ] : []);
+      names = ids.map(id => {
+        const targetId = Number(id);
+        const u = users.find(u => Number(u.id) === targetId);
+        return u ? `${u.first_name || ''} ${u.last_name || ''}`.trim() : '';
+      }).filter(Boolean);
+    }
+    return names.join('، ');
   }, [users]);
 
   const getRoomName = useCallback((lec) => {
@@ -194,7 +220,6 @@ export default function Overview() {
   }, [lectures, user?.id, selectedCourse, isDoctor, isStudent]);
 
   // Build "today" schedule
-  const daysOrder = ['السبت', 'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس'];
   const jsToArabic = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
   const todayIndex = new Date().getDay();
   const todayName = jsToArabic[todayIndex];
@@ -290,6 +315,34 @@ export default function Overview() {
         <p style={{ margin: 0 }}>
           {now.toLocaleDateString("ar-EG", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
         </p>
+        {/* Weather panel */}
+        <div style={{ marginTop: 32, width: '100%' }}>
+          <div className="content-card" style={{ padding: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ fontWeight: 600 }}>طقس بورسعيد</div>
+              <div style={{ fontSize: 12, color: '#6b7280' }}>مباشر</div>
+            </div>
+            {weather ? (
+              <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ fontSize: 28 }}>{describeWeatherCode(weather.weathercode).icon}</div>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ fontSize: 16 }}>
+                    {describeWeatherCode(weather.weathercode).text}
+                    {weather.is_day ? ' • نهاراً' : ' • ليلاً'}
+                  </div>
+                  <div style={{ fontSize: 14, color: '#374151' }}>
+                    درجة الحرارة: <strong>{Math.round(weather.temperature)}°م</strong>
+                    {' '}• سرعة الرياح: <strong>{Math.round(weather.windspeed)} كم/س</strong>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div style={{ marginTop: 8, fontSize: 14, color: '#6b7280' }}>
+                {weatherError ? weatherError : 'جارٍ تحميل الطقس...'}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
     <div>
@@ -311,19 +364,22 @@ export default function Overview() {
                 </div>
                 <div className="class-info">
                   <h4>{class_.course}</h4>
-                  <p><strong>المحاضر:</strong> {class_.instructor}</p>
+                  {/* add instructor details */}
+                  <p className="class-instructor"><strong>المحاضر:</strong> {class_.instructor}</p>
                   <p><strong>القاعة:</strong> {class_.room}</p>
                   <span className="class-type">{class_.type}</span>
                 </div>
-                <div className="class-actions">
-                  {/* <Link
-                    to={`/attendance/${class_.id}`}
-                    className="btn"
-                    title="عرض الحضور لهذه المحاضرة"
-                  >
-                    الحضور
-                  </Link> */}
-                </div>
+                {(isDoctor || permissions.includes('Can add student attendance')) && (
+                  <div className="class-actions">
+                    <Link
+                      to={`/attendance/${class_.id}`}
+                      className="btn"
+                      title="عرض الحضور لهذه المحاضرة"
+                    >
+                      الحضور
+                    </Link>
+                  </div>
+                )}
               </div>
             ))}
           </div>

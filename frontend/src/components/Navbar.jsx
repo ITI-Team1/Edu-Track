@@ -7,6 +7,15 @@ export default function Navbar() {
   const { isAuthenticated, logout, user } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  
+  // Determine if the current user has permission to view admin log entries
+  const hasLogPermission = Boolean(
+    user?.groups?.some(
+      (g) => Array.isArray(g?.permissions) && g.permissions.some(
+        (p) => p?.codename === "view_logentry" || (typeof p?.name === "string" && p.name.toLowerCase().includes("log entry"))
+      )
+    )
+  );
 
   useEffect(() => {
     const SHOW_AT = 60;
@@ -95,19 +104,23 @@ export default function Navbar() {
         ${isMenuOpen ? "!opacity-100 !visible !translate-y-0" : "!opacity-0 !invisible !-translate-y-4"}
         md:!translate-y-0 md:!flex`}
       >
-        {(isAuthenticated
-          ? [
-            { to: "/", label: "الصفحة الرئيسية" },
-            { to: "/dashboard", label: "لوحة التحكم" },
-            { to: "/logs", label: "السجلات" },
-            ]
-          : [
-              { to: "/", label: "الرئيسية" },
-              { to: "/features", label: "المميزات" },
-              { to: "/about", label: "حول" },
-              { to: "/help", label: "مركز المساعدة" },
-              { to: "/contact", label: "اتصل بنا" },
-            ]
+        {(
+          isAuthenticated
+            ? [
+                { to: "/", label: "الصفحة الرئيسية" },
+                { to: "/dashboard", label: "لوحة التحكم" },
+                { to: "/about", label: "حول" },
+                { to: "/help", label: "مركز المساعدة" },
+                { to: "/contact", label: "اتصل بنا" },
+                ...(hasLogPermission ? [{ to: "/logs", label: "السجلات" }] : []),
+              ]
+            : [
+                { to: "/", label: "الرئيسية" },
+                { to: "/features", label: "المميزات" },
+                { to: "/about", label: "حول" },
+                { to: "/help", label: "مركز المساعدة" },
+                { to: "/contact", label: "اتصل بنا" },
+              ]
         ).map(link => (
           <Link
             key={link.to}

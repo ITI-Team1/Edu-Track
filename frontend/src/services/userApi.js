@@ -8,6 +8,14 @@ export const fetchUsers = async () => {
   const data = await res.json();
   return Array.isArray(data) ? data : (data?.results ?? []);
 };
+
+export const fetchUserById = async (id) => {
+  const res = await fetch(`${api.baseURL}/auth/users/${id}/`, {
+    headers: api.getAuthHeaders(),
+  });
+  if (!res.ok) throw new Error('فشل في جلب بيانات المستخدم');
+  return await res.json();
+};
 /**
  * Get all permissions of a specific user by their groups
  */

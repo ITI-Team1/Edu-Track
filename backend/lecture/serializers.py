@@ -1,7 +1,16 @@
 from rest_framework import serializers
 from .models import Lecture
+from user.models import User
+
+
+class SimpleUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ("id", "first_name", "last_name")
 
 class LectureSerializer(serializers.ModelSerializer):
+    # Read-only projection for instructors to get names without extra queries from the client
+    instructor_details = SimpleUserSerializer(source='instructor', many=True, read_only=True)
     class Meta:
         model = Lecture
         fields = '__all__'

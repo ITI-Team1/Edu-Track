@@ -76,14 +76,21 @@ function Schedule() {
   }, [courses]);
   const getInstructorNames = useCallback((lec) => {
     if (!lec) return '';
-    const ids = Array.isArray(lec.instructor)
-      ? lec.instructor.map(ins => (typeof ins === 'object' ? ins.id : ins))
-      : (lec.instructor ? [ (typeof lec.instructor === 'object' ? lec.instructor.id : lec.instructor) ] : []);
-    const names = ids.map(id => {
-      const u = users.find(u => u.id === id);
-      return u ? `${u.first_name} ${u.last_name}` : String(id);
-    });
-    return names.join(', ');
+    // Prefer the server-provided instructor_details (added to LectureSerializer)
+    const details = Array.isArray(lec.instructor_details) ? lec.instructor_details : [];
+    let names = details.map(d => `${d.first_name || ''} ${d.last_name || ''}`.trim()).filter(Boolean);
+    // Fallback to local users list if details are absent
+    if (names.length === 0) {
+      const ids = Array.isArray(lec.instructor)
+        ? lec.instructor.map(ins => (typeof ins === 'object' ? ins.id : ins))
+        : (lec.instructor ? [ (typeof lec.instructor === 'object' ? lec.instructor.id : lec.instructor) ] : []);
+      names = ids.map(id => {
+        const targetId = Number(id);
+        const u = users.find(u => Number(u.id) === targetId);
+        return u ? `${u.first_name} ${u.last_name}` : '';
+      }).filter(Boolean);
+    }
+    return names.join('، ');
   }, [users]);
   const getRoomName = useCallback((lec) => {
     if (lec.location && typeof lec.location === 'object') return lec.location.name || lec.location.title || lec.location.slug;
@@ -201,6 +208,7 @@ function Schedule() {
         time12: formatTime12(lec.starttime),
         course: getCourseTitle(lec),
         room: getRoomName(lec),
+        instructor: getInstructorNames(lec),
       });
     });
     Object.keys(grouped).forEach(d => grouped[d].sort((a,b) => a.time24.localeCompare(b.time24)));
@@ -227,12 +235,12 @@ function Schedule() {
       }
     });
     return cards;
-  }, [userLectures, normalizeDay, getCourseTitle, getRoomName, daysOrder]);
+  }, [userLectures, normalizeDay, getCourseTitle, getRoomName, getInstructorNames, daysOrder]);
 
   // Export weekly schedule to Excel (xlsx if available, otherwise CSV fallback)
   const handleExportWeekExcel = async () => {
     // Build tabular data: header + rows
-    const header = ['اليوم', 'الوقت', 'المقرر', 'القاعة'];
+  const header = ['اليوم', 'الوقت', 'المقرر', 'المحاضر', 'القاعة'];
     const rows = [];
     weekCards.forEach(card => {
       if (!card.classes || card.classes.length === 0) {
@@ -240,7 +248,7 @@ function Schedule() {
         return;
       }
       card.classes.forEach(cls => {
-        rows.push([card.day, cls.time12, cls.course, cls.room]);
+        rows.push([card.day, cls.time12, cls.course, cls.instructor || '', cls.room]);
       });
     });
     const data = [header, ...rows];
@@ -378,6 +386,9 @@ function Schedule() {
                     <div key={index} className="day-class">
                       <span className="class-time">{class_.time12}</span>
                       <span className="class-name">{class_.course}</span>
+                      {class_.instructor ? (
+                        <span className="class-instructor">{class_.instructor}</span>
+                      ) : null}
                       <span className="class-room">{class_.room}</span>
                     </div>
                   ))}
@@ -385,11 +396,13 @@ function Schedule() {
               </div>
             ))}
           </div>
+          {permissions.includes('Can export week schedule') && (
           <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'flex-end' }}>
             <button className="btn" onClick={handleExportWeekExcel}>
               تصدير جدول الأسبوع إلى Excel
             </button>
           </div>
+          )}
         </section>
       </main>
     </div>
