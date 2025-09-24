@@ -50,14 +50,22 @@ function Courses() {
   // Helpers copied from Schedule.jsx for names
   const getInstructorNames = useCallback((lec) => {
     if (!lec) return '';
-    const ids = Array.isArray(lec.instructor)
-      ? lec.instructor.map(ins => (typeof ins === 'object' ? ins.id : ins))
-      : (lec.instructor ? [ (typeof lec.instructor === 'object' ? lec.instructor.id : lec.instructor) ] : []);
-    const names = ids.map(id => {
-      const u = users.find(u => u.id === id);
-      return u ? `${u.first_name} ${u.last_name}` : String(id);
-    });
-    return names.join(', ');
+    // Prefer server-provided instructor_details (from LectureSerializer)
+    const details = Array.isArray(lec.instructor_details) ? lec.instructor_details : [];
+    let names = details
+      .map(d => `${d.first_name || ''} ${d.last_name || ''}`.trim())
+      .filter(Boolean);
+    if (names.length === 0) {
+      // Fallback to local users list by IDs
+      const ids = Array.isArray(lec.instructor)
+        ? lec.instructor.map(ins => (typeof ins === 'object' ? ins.id : ins))
+        : (lec.instructor ? [ (typeof lec.instructor === 'object' ? lec.instructor.id : lec.instructor) ] : []);
+      names = ids.map(id => {
+        const u = users.find(u => Number(u.id) === Number(id));
+        return u ? `${u.first_name || ''} ${u.last_name || ''}`.trim() : '';
+      }).filter(Boolean);
+    }
+    return names.join('، ');
   }, [users]);
   const getRoomName = useCallback((lec) => {
     if (lec.location && typeof lec.location === 'object') return lec.location.name || lec.location.title || lec.location.slug;
