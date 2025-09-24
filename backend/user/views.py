@@ -5,7 +5,6 @@ from .serializers import GroupSerializer, LogSerializer
 from django.contrib.admin.models import LogEntry
 from rest_framework.response import Response
 from rest_framework import status
-from django.core.files.storage import default_storage
 from user.models import User
 from rest_framework import permissions
 from rest_framework.views import APIView
@@ -13,7 +12,8 @@ import pandas as pd
 from django.conf import settings
 from django.core.files.storage import default_storage
 from .models import User, Faculty, Program, University
-
+from django.db.models import Q
+from django.db import transaction
 
 
 # Create your views here.
@@ -28,17 +28,7 @@ class LogList(generics.ListAPIView):
 
 
 
-import os
-import pandas as pd
-from django.conf import settings
-from django.core.files.storage import default_storage
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework import status
-from django.db.models import Q
-from django.db import transaction
 
-from .models import User, University, Faculty, Program
 
 class UploadExcelView(APIView):
     def post(self, request):
