@@ -7,6 +7,7 @@ import { fetchCourses } from '../services/courseApi';
 import { fetchLocations } from '../services/locationApi';
 import { fetchUsers } from '../services/userApi';
 import { useQuery } from '@tanstack/react-query';
+import { surveyApi } from '../pages/Survey-Pages/surveyApi';
 
 function Courses() {
   const { isAuthenticated, user } = useAuth();
@@ -105,6 +106,7 @@ function Courses() {
         room: firstLec ? getRoomName(firstLec) : '—',
         nextClass,
         sessionsCount: relatedLectures.length,
+        representativeLectureId: firstLec ? firstLec.id : null,
       };
     });
   }, [allCourses, lectures, enrolledCourseIds, getInstructorNames, getRoomName]);
@@ -124,6 +126,35 @@ function Courses() {
   const [modalCourseId, setModalCourseId] = React.useState(null);
   const openCourseModal = (courseId) => setModalCourseId(courseId);
   const closeCourseModal = () => setModalCourseId(null);
+
+  // Navigate: if survey answered for representative lecture -> degrees; else -> survey with lectureId
+  const handleGoToDegrees = React.useCallback(async (course) => {
+    try {
+      const lecId = course?.representativeLectureId;
+      if (!lecId || !user?.id) {
+        // Fallback to survey page if missing data
+        navigate('/survey');
+        return;
+      }
+      const answers = await surveyApi.listAnswers();
+      const hasAny = Array.isArray(answers)
+        ? answers.some(a => Number(a.lecture) === Number(lecId) && Number(a.student) === Number(user.id))
+        : false;
+      if (hasAny) {
+        navigate('/student-degrees');
+      } else {
+        navigate(`/survey?lectureId=${lecId}`);
+      }
+    } catch (e) {
+      // On error, default to survey to encourage completion
+      const lecId = course?.representativeLectureId;
+      if (lecId) {
+        navigate(`/survey?lectureId=${lecId}`);
+      } else {
+        navigate('/survey');
+      }
+    }
+  }, [navigate, user?.id]);
 
   // Build details for selected course
   const modalCourse = React.useMemo(() => {
@@ -197,8 +228,8 @@ function Courses() {
           {!combinedLoading && !combinedError && enrolledCourseCards.map(course => (
             <div key={course.id} className="course-card">
               <div className="course-header">
-                <h3>{course.name}</h3>
-                <span className="course-credits">عدد المحاضرات: {course.sessionsCount}</span>
+                <h3 className='!w-2/3'>{course.name}</h3>
+                <span className="course-credits !w-fit  text-left"> المحاضرات: {course.sessionsCount}</span>
               </div>
               
               <div className="course-info">
@@ -209,6 +240,7 @@ function Courses() {
               
               <div className="course-actions">
                 <button type="button" className="btn btn-primary" onClick={() => openCourseModal(course.id)}>عرض التفاصيل</button>
+                <button type="button" className="btn btn-primary" onClick={() => handleGoToDegrees(course)}>الدرجات</button>
               </div>
             </div>
           ))}

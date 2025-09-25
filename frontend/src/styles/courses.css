@@ -243,6 +243,9 @@
     padding: 1.25rem;
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
+    min-height: 240px;
+    height: 100%;
     backdrop-filter: blur(10px);
     transition: all 0.3s ease;
     margin-bottom: 1rem;
@@ -279,6 +282,11 @@
     margin: 0;
     font-size: 1.1rem;
     font-family: 'Cairo', sans-serif;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
   
   .course-credits {
@@ -293,12 +301,17 @@
   
   .course-info {
     margin-bottom: 1rem;
+    flex: 1 1 auto;
   }
   
   .course-info p {
     color: #4b5563;
     margin-bottom: 0.3rem;
     font-size: 0.9rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
   
   .course-info strong {
@@ -387,7 +400,9 @@
   /* Courses Grid Layout */
   .courses-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
+    align-items: stretch;
+    grid-auto-rows: 1fr;
     gap: 1rem;
     margin-top: 1rem;
   }

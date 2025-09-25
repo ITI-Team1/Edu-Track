@@ -1,46 +1,74 @@
 import api from '../../services/api';
 
-export const surveyApi = {
-  // Submit survey data
-  submitSurvey: async (surveyData) => {
-    try {
-      const response = await api.post('/surveys/', surveyData);
-      return response.data;
-    } catch (error) {
-      console.error('Error submitting survey:', error);
-      throw error;
-    }
-  },
+// Helper function to get auth headers - using the same pattern as main API service
+const getAuthHeaders = () => {
+  return api.getAuthHeaders();
+};
 
-  // Get survey questions (if needed for dynamic loading)
-  getSurveyQuestions: async () => {
+export const surveyApi = {
+  // List survey questions (GET /survey/)
+  listQuestions: async () => {
     try {
-      const response = await api.get('/surveys/questions/');
-      return response.data;
+      const response = await fetch(`${api.baseURL}/survey/`, {
+        method: 'GET',
+        headers: getAuthHeaders()
+      });
+      
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.detail || 'فشل تحميل الأسئلة');
+      }
+      
+      const data = await response.json();
+      return Array.isArray(data) ? data : (data?.results || []);
     } catch (error) {
       console.error('Error fetching survey questions:', error);
       throw error;
     }
   },
 
-  // Get survey statistics (for admin dashboard)
-  getSurveyStats: async () => {
+  // Create a survey answer (POST /survey/answers/create/)
+  createAnswer: async ({ lecture, question, student, rating }) => {
     try {
-      const response = await api.get('/surveys/stats/');
-      return response.data;
+      const response = await fetch(`${api.baseURL}/survey/answers/create/`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ lecture, question, student, rating })
+      });
+      
+      if (!response.ok) {
+        const errorJson = await response.json().catch(() => ({}));
+        // Throw a structured error so toast.apiError can extract meaningful message
+        const err = new Error(errorJson.detail || errorJson.error || 'فشل حفظ الإجابة');
+        err.response = { data: errorJson };
+        err.status = response.status;
+        throw err;
+      }
+      
+      return await response.json();
     } catch (error) {
-      console.error('Error fetching survey stats:', error);
+      console.error('Error creating survey answer:', error);
       throw error;
     }
   },
 
-  // Get survey responses (for admin dashboard)
-  getSurveyResponses: async (params = {}) => {
+  // List existing answers for a student and lecture
+  listAnswers: async () => {
     try {
-      const response = await api.get('/surveys/responses/', { params });
-      return response.data;
+      const response = await fetch(`${api.baseURL}/survey/answers/`, {
+        method: 'GET',
+        headers: getAuthHeaders()
+      });
+      
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.detail || 'فشل تحميل الإجابات');
+      }
+      
+      const data = await response.json();
+      return Array.isArray(data) ? data : (data?.results || []);
     } catch (error) {
-      console.error('Error fetching survey responses:', error);
+      console.error('Error fetching survey answers:', error);
       throw error;
     }
   }

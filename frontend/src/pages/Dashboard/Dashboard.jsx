@@ -256,8 +256,8 @@ function Dashboard() {
             <span className="md:text-lg font-medium text-xs ">إدارة الدرجات</span>
             </button>
             )}
-
-            {hasAnyGroup([2, 1]) && (
+ 
+            {hasAnyGroup([1]) && (
           <button
             className={`sidebar-tabs ${activeTab === "student-degrees" ? 'sidebar-active' : ""}`}
             onClick={() => setActiveTab("student-degrees")}

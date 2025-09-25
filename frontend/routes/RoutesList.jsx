@@ -23,6 +23,7 @@ import Activation from "../src/pages/Activation/Activation";
 import InstructorGrades from "../src/pages/InstructorGrades/InstructorGrades";
 import Survey from "../src/pages/Survey-Pages/Survey";
 import ExamTable from "../src/pages/ExamTable/ExamTable";
+import StudentDegree from "../src/pages/StudentDegrees/StudentDegree";
 
 // Small helper to set the page title per route
 const Page = ({ title, children }) => {
@@ -128,7 +129,15 @@ const RoutesList = () => {
       />
       <Route
         path="/survey"
-        element={<Page title="الاستبانة"><Survey /></Page>}
+        element={<Page><Survey /></Page>}
+      />
+      <Route
+        path="/student-degrees"
+        element={
+          <ProtectedRoute>
+            <Page title="درجاتي"><StudentDegree /></Page>
+          </ProtectedRoute>
+        }
       />
       <Route
         path="/exam-table"

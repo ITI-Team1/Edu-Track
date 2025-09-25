@@ -1,217 +1,318 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { surveyApi } from "./surveyApi";
+import { getLecture } from "../../services/lectureApi";
+import { fetchCourses } from "../../services/courseApi";
+import { fetchFaculties } from "../../services/facultyApi";
+import { fetchPrograms } from "../../services/programApi";
+import { useAuth } from "../../context/AuthContext";
+import toast from "../../utils/toast";
 
-const surveyQuestions = [
-  { id: 1, text: "المقرر الدراسي شامل وواقعي ويتم عرضه بطريقة شيقة وغير مملة" },
-  { id: 2, text: "المقرر يحتوي على أهداف واضحة ويكتسب المتعلم المعرفة النظرية والمهارات العملية" },
-  { id: 3, text: "ينفذ أعضاء هيئة التدريس المواعيد المحددة بدقة" },
-  { id: 4, text: "يتمكن المحاضر من توصيل المعلومة بوضوح" },
-  { id: 5, text: "المقرر الدراسي شامل وواقعي ويتم عرضه بطريقة شيقة وغير مملة" },
-  { id: 6, text: "المقرر يحتوي على أهداف واضحة ويكتسب المتعلم المعرفة النظرية والمهارات العملية" },
-  { id: 7, text: "ينفذ أعضاء هيئة التدريس المواعيد المحددة بدقة" },
-  { id: 8, text: "يتمكن المحاضر من توصيل المعلومة بوضوح" },
-  { id: 9, text: "المقرر الدراسي شامل وواقعي ويتم عرضه بطريقة شيقة وغير مملة" },
-  { id: 10, text: "المقرر يحتوي على أهداف واضحة ويكتسب المتعلم المعرفة النظرية والمهارات العملية" },
-  { id: 11, text: "ينفذ أعضاء هيئة التدريس المواعيد المحددة بدقة" },
-  { id: 12, text: "يتمكن المحاضر من توصيل المعلومة بوضوح" },
-];
+// Questions are loaded from backend using surveyApi.listQuestions()
 
-// Validation schema
-const validationSchema = Yup.object({
-  academicYear: Yup.string().required("العام الدراسي مطلوب"),
-  semester: Yup.string().required("الفصل الدراسي مطلوب"),
-  courseName: Yup.string().required("اسم المقرر مطلوب"),
-  courseCode: Yup.string().required("كود المقرر مطلوب"),
-  instructor: Yup.string().required("القائم على التدريس مطلوب"),
-  teachingAssistant: Yup.string().required("الهيئة المعاونة مطلوبة"),
-  questions: Yup.array().of(
-    Yup.object({
-      score: Yup.string().required("يرجى اختيار تقييم"),
-      comment: Yup.string()
-    })
-  ),
-  improvement: Yup.string().required("يرجى كتابة اقتراحات التحسين"),
-  otherSuggestions: Yup.string().required("يرجى كتابة اقتراحات أخرى")
-});
+// Rating mapping to backend Arabic choices
+const RATING_MAP = { 5: "ممتاز", 4: "جيد جدا", 3: "جيد", 2: "مقبول", 1: "ضعيف" };
+
+// Dynamic validation schema built from fetched questions
+const buildValidationSchema = (len) =>
+  Yup.object({
+    questions: Yup.array()
+      .of(Yup.object({ id: Yup.number().required(), score: Yup.string().required("يرجى اختيار تقييم") }))
+      .min(len),
+    improvement: Yup.string().nullable(),
+    otherSuggestions: Yup.string().nullable(),
+  });
 
 export default function SurveyForm() {
+  const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitStatus, setSubmitStatus] = useState(null);
+  const [questions, setQuestions] = useState([]);
+  const [lecture, setLecture] = useState(null);
+  const [course, setCourse] = useState(null);
+  const [faculties, setFaculties] = useState([]);
+  const [programs, setPrograms] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const lectureId = useMemo(() => {
+    const sp = new URLSearchParams(window.location.search);
+    const id = sp.get('lectureId');
+    return id ? Number(id) : null;
+  }, []);
+
+  // Helper functions for names
+  const getFacultyName = (facultyId) => {
+    if (!facultyId) return 'غير محدد';
+    const faculty = faculties.find(f => f.id === facultyId);
+    return faculty ? faculty.name : `ID: ${facultyId}`;
+  };
+
+  const getProgramName = (programId) => {
+    if (!programId) return 'غير محدد';
+    const program = programs.find(p => p.id === programId);
+    return program ? program.name : `ID: ${programId}`;
+  };
+
+  const getInstructorNames = (lecture) => {
+    if (!lecture) return 'غير محدد';
+    // Prefer server-provided instructor_details (from LectureSerializer)
+    const details = Array.isArray(lecture.instructor_details) ? lecture.instructor_details : [];
+    let names = details
+      .map(d => `${d.first_name || ''} ${d.last_name || ''}`.trim())
+      .filter(Boolean);
+    if (names.length === 0) {
+      // Fallback to instructor IDs
+      const ids = Array.isArray(lecture.instructor)
+        ? lecture.instructor.map(ins => (typeof ins === 'object' ? ins.id : ins))
+        : (lecture.instructor ? [ (typeof lecture.instructor === 'object' ? lecture.instructor.id : lecture.instructor) ] : []);
+      names = ids.map(id => `المحاضر ${id}`).filter(Boolean);
+    }
+    return names.join('، ') || 'غير محدد';
+  };
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        console.log('=== LOADING SURVEY DATA ===');
+        console.log('Lecture ID from URL:', lectureId);
+        console.log('User:', user);
+        
+        // Load all required data in parallel
+        const [qs, lec, coursesData, facultiesData, programsData] = await Promise.all([
+          surveyApi.listQuestions().catch((e) => {
+            console.error('Error loading questions:', e);
+            return [];
+          }),
+          lectureId ? getLecture(lectureId).catch((e) => {
+            console.error('Error loading lecture:', e);
+            return null;
+          }) : Promise.resolve(null),
+          fetchCourses().catch((e) => {
+            console.error('Error loading courses:', e);
+            return [];
+          }),
+          fetchFaculties().catch((e) => {
+            console.error('Error loading faculties:', e);
+            return [];
+          }),
+          fetchPrograms().catch((e) => {
+            console.error('Error loading programs:', e);
+            return [];
+          })
+        ]);
+        
+        console.log('Questions loaded:', qs?.length || 0);
+        console.log('Lecture loaded:', lec);
+        console.log('Courses loaded:', coursesData?.length || 0);
+        console.log('Faculties loaded:', facultiesData?.length || 0);
+        console.log('Programs loaded:', programsData?.length || 0);
+        
+        const normalizedQs = Array.isArray(qs) ? qs : [];
+        setQuestions(normalizedQs);
+        setLecture(lec);
+        setFaculties(Array.isArray(facultiesData) ? facultiesData : (facultiesData?.results || []));
+        setPrograms(Array.isArray(programsData) ? programsData : (programsData?.results || []));
+        
+        // Find the course for this lecture
+        if (lec && lec.course) {
+          const courseId = typeof lec.course === 'object' ? lec.course.id : lec.course;
+          const foundCourse = (Array.isArray(coursesData) ? coursesData : (coursesData?.results || []))
+            .find(c => c.id === courseId);
+          setCourse(foundCourse);
+          console.log('Course found:', foundCourse);
+        }
+        
+      } catch (e) {
+        console.error('Error loading survey data:', e);
+        setError('فشل تحميل بيانات الاستبانة');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    if (lectureId) {
+      load();
+    } else {
+      setError('معرف المحاضرة غير صحيح');
+      setLoading(false);
+    }
+  }, [lectureId, user]);
 
   const initialValues = {
-    academicYear: "",
-    semester: "",
-    courseName: "",
-    courseCode: "",
-    instructor: "",
-    teachingAssistant: "",
-    questions: surveyQuestions.map(q => ({ id: q.id, score: "", comment: "" })),
+    questions: (Array.isArray(questions) ? questions : []).map(q => ({ id: q.id, score: "", comment: "" })),
     improvement: "",
     otherSuggestions: ""
   };
 
   const handleSubmit = async (values, { setSubmitting, resetForm }) => {
     setIsSubmitting(true);
-    setSubmitStatus(null);
     
     try {
-      // Prepare data for backend
-      const surveyData = {
-        course_info: {
-          academic_year: values.academicYear,
-          semester: values.semester,
-          course_name: values.courseName,
-          course_code: values.courseCode,
-          instructor: values.instructor,
-          teaching_assistant: values.teachingAssistant
-        },
-        responses: values.questions.map(q => ({
-          question_id: q.id,
-          score: parseInt(q.score),
-          comment: q.comment
-        })),
-        improvement_suggestions: values.improvement,
-        other_suggestions: values.otherSuggestions,
-        submitted_at: new Date().toISOString()
-      };
+      if (!lectureId || !user?.id) {
+        throw new Error('بيانات المستخدم أو المحاضرة غير متوفرة');
+      }
 
-      // Submit survey data to backend
-  await surveyApi.submitSurvey(surveyData);
-      
-      setSubmitStatus('success');
+      // Submit each answer separately to backend
+      const payloads = (values.questions || [])
+        .filter(q => q.score)
+        .map(q => ({
+          lecture: lectureId,
+          question: q.id,
+          student: user.id,
+          rating: RATING_MAP[q.score],
+        }));
+
+      // Submit all answers; tolerate duplicates (unique_together) as non-fatal
+      const results = await Promise.allSettled(payloads.map(p => surveyApi.createAnswer(p)));
+      const successes = results.filter(r => r.status === 'fulfilled').length;
+      const failures = results.filter(r => r.status === 'rejected');
+      const duplicates = failures.filter(r => {
+        const data = r.reason?.response?.data;
+        const msg = (data?.non_field_errors?.[0]) || data?.detail || r.reason?.message || '';
+        return /unique|already exists|unique set|موجود بالفعل/i.test(String(msg));
+      });
+      const realFailures = failures.filter(r => !duplicates.includes(r));
+
+      if (successes > 0 && realFailures.length === 0) {
+        toast.success(`تم إرسال ${successes} إجابة${duplicates.length ? ` (تم تجاهل ${duplicates.length} مكررة)` : ''}. شكراً لمشاركتك.`);
+      } else if (successes > 0 && realFailures.length > 0) {
+        const firstErr = realFailures[0]?.reason;
+        toast.apiError(firstErr, `تم حفظ ${successes} وإخفاق ${realFailures.length}.`);
+      } else if (successes === 0 && duplicates.length > 0 && realFailures.length === 0) {
+        toast.info('لقد قمت بالإجابة على هذه الاستبانة مسبقاً. لم يتم حفظ إجابات جديدة.');
+      } else {
+        // All failed for other reasons
+        const firstErr = realFailures[0]?.reason || failures[0]?.reason;
+        throw firstErr || new Error('فشل إرسال الإجابات');
+      }
+
+      // Mark survey as submitted (simple client-side gate)
+      try {
+        localStorage.setItem('surveySubmitted', 'true');
+        localStorage.setItem('surveySubmittedAt', new Date().toISOString());
+      } catch (_) { /* ignore storage errors */ }
+
       resetForm();
       
     } catch (error) {
       console.error('Error submitting survey:', error);
-      setSubmitStatus('error');
+      toast.apiError(error, 'حدث خطأ في إرسال الاستمارة. يرجى المحاولة مرة أخرى.');
     } finally {
       setIsSubmitting(false);
       setSubmitting(false);
     }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen !bg-gradient-to-br !from-blue-50 !to-indigo-100 !p-5">
+        <div className="!max-w-6xl p-4 !mx-auto !bg-white !rounded-lg !shadow-lg">
+          <div className="!text-center !py-20">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <p className="mt-4 text-gray-600">جارٍ تحميل الاستبانة...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen !bg-gradient-to-br !from-blue-50 !to-indigo-100 !p-5">
+        <div className="!max-w-6xl p-4 !mx-auto !bg-white !rounded-lg !shadow-lg">
+          <div className="!text-center !py-20">
+            <div className="text-red-600 text-xl mb-4">⚠️</div>
+            <p className="text-red-600 text-lg">{error}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen !bg-gradient-to-br !from-blue-50 !to-indigo-100  !p-5">
       <div className="!max-w-6xl p-4 !mx-auto !bg-white !rounded-lg !shadow-lg">
         {/* Header */}
         <div className="!text-center !py-5 ">
+          {/* Top info strip (before the title) */}
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-3">
+            <span className="px-3 py-1 rounded-full bg-white text-gray-800 border border-gray-200 text-sm shadow-sm hover:shadow transition-colors duration-150 hover:bg-gray-50" title="اسم الدكتور">
+              <span className="font-semibold">الدكتور:</span>
+              <span className="mr-1">{lecture ? getInstructorNames(lecture) : 'غير محدد'}</span>
+            </span>
+            <span className="px-3 py-1 rounded-full bg-white text-gray-800 border border-gray-200 text-sm shadow-sm hover:shadow transition-colors duration-150 hover:bg-gray-50" title="اسم المقرر">
+              <span className="font-semibold">المقرر:</span>
+              <span className="mr-1">{course?.title || course?.name || lecture?.course?.title || lecture?.course?.name || 'غير محدد'}</span>
+            </span>
+            <span className="px-3 py-1 rounded-full bg-white text-gray-800 border border-gray-200 text-sm hidden md:inline shadow-sm hover:shadow transition-colors duration-150 hover:bg-gray-50" title="الكلية">
+              <span className="font-semibold">الكلية:</span>
+              <span className="mr-1">{getFacultyName(user?.faculty?.id || user?.faculty_id || user?.faculty)}</span>
+            </span>
+            <span className="px-3 py-1 rounded-full bg-white text-gray-800 border border-gray-200 text-sm hidden md:inline shadow-sm hover:shadow transition-colors duration-150 hover:bg-gray-50" title="البرنامج">
+              <span className="font-semibold">البرنامج:</span>
+              <span className="mr-1">{getProgramName(user?.program?.id || user?.program_id || user?.program)}</span>
+            </span>
+          </div>
           <h1 className="!text-2xl !font-bold !text-gray-800 mb-4">
             استمارة استطلاع رأي حول مقرر دراسي
           </h1>
           <div className="!w-24 !h-1 !my-5 !bg-blue-900/80 !mx-auto !rounded"></div>
         </div>
-        {/* Status Messages */}
-        {submitStatus === 'success' && (
-          <div className="mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
-            تم إرسال الاستمارة بنجاح! شكراً لك على وقتك.
-          </div>
-        )}
-        {submitStatus === 'error' && (
-          <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
-            حدث خطأ في إرسال الاستمارة. يرجى المحاولة مرة أخرى.
-          </div>
-        )}
+        
+        {/* Toastify handles status messages globally */}
 
         <Formik 
-          initialValues={initialValues} 
-          validationSchema={validationSchema}
+          enableReinitialize
+          initialValues={initialValues}
+          validationSchema={buildValidationSchema((questions || []).length)}
           onSubmit={handleSubmit}
         >
-          {({ errors }) => (
+          {({ errors, values }) => (
             <Form className="space-y-8">
               {/* Course Information Card */}
-              <div className="bg-white rounded-xl rounded-b-none shadow-lg p-6">
-                <h2 className="!text-lg !font-bold !text-gray-800 !mb-6 text-center">
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl shadow-lg p-6 border border-blue-200">
+                <h2 className="!text-xl !font-bold !text-gray-800 !mb-6 text-center">
                   معلومات المقرر الدراسي
                 </h2>
-                <div className="grid !p-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      العام الدراسي <span className="text-red-500">*</span>
-                    </label>
-                    <Field
-                      name="academicYear"
-                      as="select"
-                      className="w-full !px-4 !py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent !transition-all !duration-200"
-                    >
-                      <option value="">اختر العام الدراسي</option>
-                      <option value="2024-2025">2024-2025</option>
-                      <option value="2023-2024">2023-2024</option>
-                      <option value="2022-2023">2022-2023</option>
-                    </Field>
-                    <ErrorMessage name="academicYear" component="div" className="text-red-500 text-sm mt-1" />
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  {/* Course Name */}
+                  <div className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-150">
+                    <h3 className="font-semibold !text-blue-900 mb-2">اسم المقرر:</h3>
+                    <p className="text-lg font-bold text-gray-900">
+                      {course?.title || course?.name || lecture?.course?.title || lecture?.course?.name || 'غير محدد'}
+                    </p>
                   </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      الفصل الدراسي <span className="text-red-500">*</span>
-                    </label>
-                    <Field
-                      name="semester"
-                      as="select"
-                      className="w-full !px-4 !py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                    >
-                      <option value="">اختر الفصل الدراسي</option>
-                      <option value="الأول">الأول</option>
-                      <option value="الثاني">الثاني</option>
-                      <option value="الصيفي">الصيفي</option>
-                    </Field>
-                    <ErrorMessage name="semester" component="div" className="text-red-500 text-sm mt-1" />
+                  
+                  {/* Instructor */}
+                  <div className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-150">
+                    <h3 className="font-semibold !text-blue-900 mb-2">المحاضر:</h3>
+                    <p className="text-lg font-bold text-gray-900">
+                      {lecture ? getInstructorNames(lecture) : 'غير محدد'}
+                    </p>
                   </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      اسم المقرر <span className="text-red-500">*</span>
-                    </label>
-                    <Field
-                      name="courseName"
-                      type="text"
-                      className="w-full !px-4 !py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                      placeholder="أدخل اسم المقرر"
-                    />
-                    <ErrorMessage name="courseName" component="div" className="text-red-500 text-sm mt-1" />
+                  
+                  {/* Student Faculty */}
+                  <div className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-150">
+                    <h3 className="font-semibold !text-blue-900 mb-2">كلية الطالب:</h3>
+                    <p className="text-lg font-bold text-gray-900">
+                      {getFacultyName(user?.faculty?.id || user?.faculty_id || user?.faculty)}
+                    </p>
                   </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      كود المقرر <span className="text-red-500">*</span>
-                    </label>
-                    <Field
-                      name="courseCode"
-                      type="text"
-                      className="w-full !px-4 !py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                      placeholder="أدخل كود المقرر"
-                    />
-                    <ErrorMessage name="courseCode" component="div" className="text-red-500 text-sm mt-1" />
+                  
+                  {/* Student Program */}
+                  <div className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-150">
+                    <h3 className="font-semibold !text-blue-900 mb-2">برنامج الطالب:</h3>
+                    <p className="text-lg font-bold text-gray-900">
+                      {getProgramName(user?.program?.id || user?.program_id || user?.program)}
+                    </p>
                   </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      القائم على التدريس <span className="text-red-500">*</span>
-                    </label>
-                    <Field
-                      name="instructor"
-                      type="text"
-                      className="w-full !px-4 !py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                      placeholder="أدخل اسم المحاضر"
-                    />
-                    <ErrorMessage name="instructor" component="div" className="text-red-500 text-sm mt-1" />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      الهيئة المعاونة <span className="text-red-500">*</span>
-                    </label>
-                    <Field
-                      name="teachingAssistant"
-                      type="text"
-                      className="w-full !px-4 !py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                      placeholder="أدخل اسم الهيئة المعاونة"
-                    />
-                    <ErrorMessage name="teachingAssistant" component="div" className="text-red-500 text-sm mt-1" />
-                  </div>
+                  
+                  {/* Lecture day/time removed as requested */}
                 </div>
               </div>
 
@@ -237,8 +338,12 @@ export default function SurveyForm() {
               {/* Survey Questions Table */}
               <div className="bg-white rounded-xl rounded-t-none !p-4 !rounded-b-lg shadow-lg overflow-hidden">
                 <div className="overflow-x-auto">
+                  {/* Progress */}
+                  <div className="flex justify-between items-center mb-3 px-1 text-sm text-gray-600">
+                    <span>تمت الإجابة على {((values?.questions || []).filter(q => q.score)?.length) || 0} من {(questions || []).length}</span>
+                  </div>
                   <table className="w-full text-right  ">
-                    <thead className="bg-gray-200 text-gray-600">
+                    <thead className="bg-gray-200 text-gray-600 sticky top-0 z-10">
                       <tr>
                         <th className="px-4 py-4 text-center font-semibold">م</th>
                         <th className="px-4 py-4 font-semibold">عناصر الاستبانة</th>
@@ -251,7 +356,7 @@ export default function SurveyForm() {
                       </tr>
                     </thead>
                     <tbody className="divide-y  divide-gray-200">
-                      {surveyQuestions.map((q, index) => (
+                      {(questions || []).map((q, index) => (
                         <tr key={q.id} className="hover:bg-gray-50 transition-colors duration-200">
                           <td className="px-4 py-4 text-center font-medium text-gray-600">
                             {index + 1}
