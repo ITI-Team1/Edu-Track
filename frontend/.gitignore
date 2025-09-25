@@ -23,3 +23,10 @@ dist-ssr
 *.sln
 *.sw?
 *.env
+# Test coverage reports
+coverage/
+*.lcov
+
+# Test results (optional - some teams prefer to keep these)
+test-results/
+playwright-report/
