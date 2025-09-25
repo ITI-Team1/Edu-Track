@@ -9,11 +9,11 @@ import '../Attendance/attendance.css';
 export default function StudentDegree() {
     const [lectures, setLectures] = useState([]);
     const [courses, setCourses] = useState([]);
-    const [locations, setLocations] = useState([]);
-    const [users, setUsers] = useState([]);
+    const [_locations, setLocations] = useState([]);
+    const [_users, setUsers] = useState([]);
     const [studentMarks, setStudentMarks] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
+    const [_loading, setLoading] = useState(false);
+    const [_error, setError] = useState('');
     const { isAuthenticated, user } = useAuth();
     
     // Derive only the lectures and courses that this student is enrolled in (based on marks)
@@ -53,7 +53,7 @@ export default function StudentDegree() {
           }
         };
         load();
-      }, [isAuthenticated]);
+      }, [isAuthenticated, user.id]);
   return (
     <div className='attendance-page'>
             {/* Header with title and safety alert under it */}

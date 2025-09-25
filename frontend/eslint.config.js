@@ -58,6 +58,7 @@ export default [
 
       // Project preferences
       "react/prop-types": "off", // using JS without PropTypes; disable rule
+      "react/react-in-jsx-scope": "off", // React 19 doesn't require React import for JSX
       "no-console": ["warn", { allow: ["warn", "error"] }],
       "no-empty": ["error", { allowEmptyCatch: true }],
       "no-unused-vars": [
@@ -70,6 +71,29 @@ export default [
           ignoreRestSiblings: true,
         },
       ],
+    },
+  },
+
+  // Test files config
+  {
+    files: ["src/**/*.test.{js,jsx}", "src/**/__tests__/**/*.{js,jsx}"],
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+        describe: "readonly",
+        it: "readonly",
+        expect: "readonly",
+        vi: "readonly",
+        beforeEach: "readonly",
+        afterEach: "readonly",
+        beforeAll: "readonly",
+        afterAll: "readonly",
+      },
+    },
+    rules: {
+      "react-hooks/rules-of-hooks": "off", // Allow hooks in test components
+      "react/display-name": "off", // Allow anonymous components in tests
     },
   },
 ];

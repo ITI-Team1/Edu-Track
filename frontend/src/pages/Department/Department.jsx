@@ -19,7 +19,7 @@ export default function Department({_permissions, _facultiesData}) {
   const [faculties, setFaculties] = useState([]);
   const [facultiesLoaded, setFacultiesLoaded] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [_error, setError] = useState(null);
 
   // For create/update modal
   const [showModal, setShowModal] = useState(false);

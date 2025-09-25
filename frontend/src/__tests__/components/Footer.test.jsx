@@ -8,7 +8,7 @@ vi.mock('../../assets/psu-logo.svg', () => ({
   default: 'mocked-logo.svg'
 }));
 
-const TestWrapper = ({ children, initialPath = '/' }) => {
+const TestWrapper = ({ children, _initialPath = '/' }) => {
   return (
     <BrowserRouter>
       {children}

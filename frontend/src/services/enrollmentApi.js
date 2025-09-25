@@ -1,18 +1,16 @@
 import api from './api';
 
-// Version 9.0 - Clean version (user will be made staff)
-console.log('enrollmentApi.js v9.0 loaded');
+// Version 9.0 - Clean version
 
 // Helper function to check if a user is a student (by group ID)
 const isStudent = (user) => {
   if (!user) return false;
   
-  console.log('Checking if user is student:', user.username, 'Groups:', user.groups);
+  // debug log removed
   
   // Check if user has staff/admin privileges (exclude them even if in students group)
   const isStaffOrAdmin = user.is_staff || user.is_superuser || user.is_admin;
   if (isStaffOrAdmin) {
-    console.log('User is staff/admin, not a student:', user.username);
     return false;
   }
   
@@ -24,27 +22,16 @@ const isStudent = (user) => {
       // Handle both formats: [2] and [{"id": 2, "name": "طلاب"}]
       const groupId = typeof group === 'object' ? group.id : group;
       const isStudentGroup = groupId === 2; // Group ID 2 = 'طلاب'
-      console.log('Checking group:', group, 'ID:', groupId, 'Is student group:', isStudentGroup);
       return isStudentGroup;
     });
-    console.log('User is in students group:', isInStudentsGroup, 'for user:', user.username);
     return isInStudentsGroup;
   }
   
-  console.log('No groups found for user:', user.username);
   return false;
 };
 
 // Fetch students - using regular user token (user will be staff)
 export const fetchStudents = async (user, filters = {}) => {
-  console.log('=== FETCHING STUDENTS v9.0 ===');
-  console.log('Logged-in user info:', {
-    username: user?.username,
-    email: user?.email,
-    faculty: user?.faculty,
-    program: user?.program,
-    groups: user?.groups
-  });
   
   // Build query parameters - only basic filters
   const params = new URLSearchParams();
@@ -63,7 +50,6 @@ export const fetchStudents = async (user, filters = {}) => {
   }
   
   const url = `${api.baseURL}/auth/users/?${params.toString()}`;
-  console.log('API URL:', url);
   
   const res = await fetch(url, { headers: api.getAuthHeaders() });
   
@@ -72,31 +58,17 @@ export const fetchStudents = async (user, filters = {}) => {
   }
   
   const data = await res.json();
-  console.log('Raw API response count:', data.results?.length || data.length || 0);
-  console.log('Sample user data:', data[0] || data.results?.[0]);
   
   // Handle both array and object response formats
   const allUsers = Array.isArray(data) ? data : (data.results || []);
-  console.log('All users before filtering:', allUsers.length);
   
   // Debug: log first few users and their groups
-  allUsers.slice(0, 3).forEach((user, index) => {
-    console.log(`User ${index + 1}:`, user.username, 'Groups:', user.groups, 'isStudent:', isStudent(user));
-  });
+  // removed debug sampling logs
   
   // Client-side filtering to ensure only students are returned
-  const studentsOnly = allUsers.filter(user => {
-    const isStudentResult = isStudent(user);
-    if (isStudentResult) {
-      console.log('Found student:', user.username, 'Groups:', user.groups);
-    } else {
-      console.log('User is NOT a student:', user.username, 'Groups:', user.groups);
-    }
-    return isStudentResult;
-  });
+  const studentsOnly = allUsers.filter(user => isStudent(user));
   
-  console.log('Students found:', studentsOnly.length, 'out of', allUsers.length, 'total users');
-  console.log('=== END FETCHING STUDENTS v9.0 ===');
+  // removed summary logs
   
   // Return in consistent format
   return { results: studentsOnly };

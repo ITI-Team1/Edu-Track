@@ -32,13 +32,17 @@ const createWrapper = () => {
     },
   });
 
-  return ({ children }) => (
+  const TestWrapper = ({ children }) => (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AuthProvider>{children}</AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>
   );
+
+  TestWrapper.displayName = 'TestWrapper';
+
+  return TestWrapper;
 };
 
 describe('AuthContext', () => {

@@ -1,8 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import Modal from "../../components/ui/Modal";
-import Button from "../../components/ui/Button";
 import {
   fetchLectures,
   createLecture,
@@ -16,17 +14,16 @@ import './AttendanceRecords.css';
 import '../../styles/tableScroll.css'; // shared table scrollbar
 import toast from '../../utils/toast';
 export default function AttendanceRecords() {
-  const { isAuthenticated, user } = useAuth();
-  const navigate = useNavigate();
+  const { _isAuthenticated, user } = useAuth();
   const [lectures, setLectures] = useState([]);
   const [locations, setLocations] = useState([]);
   const [courses, setCourses] = useState([])
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [lectureToDelete, setLectureToDelete] = useState(null);
+  const [_showModal, setShowModal] = useState(false);
+  const [_showDeleteModal, setShowDeleteModal] = useState(false);
+  const [_lectureToDelete, setLectureToDelete] = useState(null);
   const [modalType, setModalType] = useState("create");
   const [selectedLecture, setSelectedLecture] = useState(null);
 
@@ -36,6 +33,7 @@ export default function AttendanceRecords() {
     loadLocations();
     loadCourses();
     loadUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
 
@@ -111,14 +109,14 @@ export default function AttendanceRecords() {
     }
   };
 
-  const handleCreate = () => {
+  const _handleCreate = () => {
     setModalType("create");
     setSelectedLecture(null);
     resetForm();
     setShowModal(true);
   };
 
-  const handleUpdate = (lec) => {
+  const _handleUpdate = (lec) => {
     setModalType("update");
     setSelectedLecture(lec);
     setForm({
@@ -134,7 +132,7 @@ export default function AttendanceRecords() {
     setShowModal(true);
   };
 
-  const handleDelete = async (id) => {
+  const _handleDelete = async (id) => {
     setLoading(true);
     try {
       await deleteLecture(id);
@@ -159,7 +157,7 @@ export default function AttendanceRecords() {
     endtime: "", // HH:MM
   });
 
-  const dayOptions = useMemo(
+  const _dayOptions = useMemo(
     () => [
       "السبت",
       "الأحد",
@@ -182,12 +180,12 @@ export default function AttendanceRecords() {
     });
   };
 
-  const openDeleteModal = (lecture) => {
+  const _openDeleteModal = (lecture) => {
     setLectureToDelete(lecture);
     setShowDeleteModal(true);
   };
 
-  const handleSubmit = async (e) => {
+  const _handleSubmit = async (e) => {
     e.preventDefault();
     // Basic client-side validations
     const courseId = Number(form.course);
@@ -270,7 +268,7 @@ export default function AttendanceRecords() {
     return course ? course.title : lec.course;
   };
 
-  const getUserName = (lec) => {
+  const _getUserName = (lec) => {
     const ids = Array.isArray(lec.instructor)
       ? lec.instructor.map((ins) => (typeof ins === 'object' ? ins.id : ins))
       : (lec.instructor ? [ (typeof lec.instructor === 'object' ? lec.instructor.id : lec.instructor) ] : []);

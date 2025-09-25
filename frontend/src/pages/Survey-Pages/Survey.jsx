@@ -77,11 +77,8 @@ export default function SurveyForm() {
         submitted_at: new Date().toISOString()
       };
 
-      console.log("Survey data to be sent:", surveyData);
-      
       // Submit survey data to backend
-      const response = await surveyApi.submitSurvey(surveyData);
-      console.log("Survey submitted successfully:", response);
+  await surveyApi.submitSurvey(surveyData);
       
       setSubmitStatus('success');
       resetForm();
@@ -122,7 +119,7 @@ export default function SurveyForm() {
           validationSchema={validationSchema}
           onSubmit={handleSubmit}
         >
-          {({ errors, touched, values }) => (
+          {({ errors }) => (
             <Form className="space-y-8">
               {/* Course Information Card */}
               <div className="bg-white rounded-xl rounded-b-none shadow-lg p-6">

@@ -30,7 +30,6 @@ function Dashboard() {
 
   const [facultiesData, setFacultiesData] = useState([]);
   useEffect(() => {
-    console.log(user);
     fetchUserPermissions(user).then(permissions => {
       
       setPermissions(permissions);
@@ -47,7 +46,6 @@ function Dashboard() {
     });
     
   }, [user]);
-console.log(permissions);
 
   // Ensure we scroll to the top whenever switching dashboard tabs
   useEffect(() => {
@@ -77,17 +75,13 @@ console.log(permissions);
 
   // Debug logging
   useEffect(() => {
-    if (user) {
-      console.log('Dashboard - User groups:', user.groups);
-      console.log('Dashboard - User is superuser:', user.is_superuser);
-      console.log('Dashboard - User is staff:', user.is_staff);
-    }
+    // Removed debug logs for production cleanliness
   }, [user]);
 
   if (!isAuthenticated) {
     return null; // Don't render anything while redirecting
   }
-// console.log(user.groups);
+//
 
 
   return (
