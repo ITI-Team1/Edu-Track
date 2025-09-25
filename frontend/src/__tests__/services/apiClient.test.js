@@ -41,7 +41,7 @@ describe('apiClient', () => {
     expect(apiClient).toBeDefined();
   });
 
-  it('falls back to localhost when no environment variables are set', async () => {
+  it('falls back to production URL when no environment variables are set', async () => {
     delete import.meta.env.VITE_API_BASE;
     delete import.meta.env.VITE_PUBLIC_BASE_URL;
     
