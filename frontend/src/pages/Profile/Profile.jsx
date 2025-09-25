@@ -24,7 +24,7 @@ function Profile() {
 
       try {
         setLoading(true);
-        const response = await fetch('https://alaaelgharably.pythonanywhere.com/auth/users/me/', {
+        const response = await fetch('http://localhost:8000/auth/users/me/', {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
@@ -86,8 +86,8 @@ function Profile() {
   const normalizeMediaUrl = (p) => {
     if (!p) return null;
     if (p.startsWith('http')) return p;
-    if (p.startsWith('/')) return `https://alaaelgharably.pythonanywhere.com${p}`;
-    return `https://alaaelgharably.pythonanywhere.com/media/${p}`;
+    if (p.startsWith('/')) return `http://localhost:8000${p}`;
+    return `http://localhost:8000/media/${p}`;
   };
 
   return (

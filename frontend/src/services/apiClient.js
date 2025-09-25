@@ -13,7 +13,7 @@ if (!baseURL) {
     } catch { /* ignore */ }
   }
 }
-if (!baseURL) baseURL = 'https://alaaelgharably.pythonanywhere.com/';
+if (!baseURL) baseURL = 'http://localhost:8000/';
 
 export const apiClient = axios.create({
   baseURL,

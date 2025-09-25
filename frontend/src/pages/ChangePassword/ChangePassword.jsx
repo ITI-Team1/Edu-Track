@@ -47,7 +47,7 @@ function ChangePassword() {
     const fetchMe = async () => {
       if (!isAuthenticated) return;
       try {
-        const response = await fetch('https://alaaelgharably.pythonanywhere.com/auth/users/me/', {
+        const response = await fetch('http://localhost:8000/auth/users/me/', {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('access_token')}`
@@ -57,7 +57,7 @@ function ChangePassword() {
           const data = await response.json();
           setProfileEmail(data?.email || '');
           if (data?.picture) {
-            setProfileImagePreview(`https://alaaelgharably.pythonanywhere.com${data.picture}`);
+            setProfileImagePreview(`http://localhost:8000${data.picture}`);
           }
         }
       } catch {
@@ -111,7 +111,7 @@ function ChangePassword() {
           setLoading(false);
           return;
         }
-        const respPassword = await fetch('https://alaaelgharably.pythonanywhere.com/auth/users/set_password/', {
+        const respPassword = await fetch('http://localhost:8000/auth/users/set_password/', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -138,7 +138,7 @@ function ChangePassword() {
         }
         const formData = new FormData();
         formData.append('email', profileEmail);
-        const respProfile = await fetch('https://alaaelgharably.pythonanywhere.com/auth/users/me/', {
+        const respProfile = await fetch('http://localhost:8000/auth/users/me/', {
           method: 'PATCH',
           headers: { 'Authorization': `Bearer ${localStorage.getItem('access_token')}` },
           body: formData
@@ -158,7 +158,7 @@ function ChangePassword() {
         }
         const formData = new FormData();
         formData.append('picture', profileImageFile);
-        const respProfile = await fetch('https://alaaelgharably.pythonanywhere.com/auth/users/me/', {
+        const respProfile = await fetch('http://localhost:8000/auth/users/me/', {
           method: 'PATCH',
           headers: { 'Authorization': `Bearer ${localStorage.getItem('access_token')}` },
           body: formData
@@ -272,7 +272,7 @@ function ChangePassword() {
       let usernameVal = user?.username;
       if (!usernameVal) {
         try {
-          const meResp = await fetch('https://alaaelgharably.pythonanywhere.com/auth/users/me/', {
+          const meResp = await fetch('http://localhost:8000/auth/users/me/', {
             method: 'GET',
             headers: { 'Authorization': `Bearer ${localStorage.getItem('access_token')}` }
           });
@@ -286,7 +286,7 @@ function ChangePassword() {
         setError('تعذر الحصول على اسم المستخدم للتحقق');
         return false;
       }
-      const resp = await fetch('https://alaaelgharably.pythonanywhere.com/auth/jwt/create/', {
+      const resp = await fetch('http://localhost:8000/auth/jwt/create/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: usernameVal, password: passwordData.current_password })
