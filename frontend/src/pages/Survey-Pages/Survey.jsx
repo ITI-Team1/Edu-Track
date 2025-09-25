@@ -8,6 +8,7 @@ import { fetchFaculties } from "../../services/facultyApi";
 import { fetchPrograms } from "../../services/programApi";
 import { useAuth } from "../../context/AuthContext";
 import toast from "../../utils/toast";
+import { AttendanceAPI } from "../../services/attendanceApi";
 
 // Questions are loaded from backend using surveyApi.listQuestions()
 
@@ -34,6 +35,7 @@ export default function SurveyForm() {
   const [programs, setPrograms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [eligible, setEligible] = useState(true);
 
   const lectureId = useMemo(() => {
     const sp = new URLSearchParams(window.location.search);
@@ -77,10 +79,6 @@ export default function SurveyForm() {
         setLoading(true);
         setError(null);
         
-        console.log('=== LOADING SURVEY DATA ===');
-        console.log('Lecture ID from URL:', lectureId);
-        console.log('User:', user);
-        
         // Load all required data in parallel
         const [qs, lec, coursesData, facultiesData, programsData] = await Promise.all([
           surveyApi.listQuestions().catch((e) => {
@@ -104,13 +102,6 @@ export default function SurveyForm() {
             return [];
           })
         ]);
-        
-        console.log('Questions loaded:', qs?.length || 0);
-        console.log('Lecture loaded:', lec);
-        console.log('Courses loaded:', coursesData?.length || 0);
-        console.log('Faculties loaded:', facultiesData?.length || 0);
-        console.log('Programs loaded:', programsData?.length || 0);
-        
         const normalizedQs = Array.isArray(qs) ? qs : [];
         setQuestions(normalizedQs);
         setLecture(lec);
@@ -123,7 +114,6 @@ export default function SurveyForm() {
           const foundCourse = (Array.isArray(coursesData) ? coursesData : (coursesData?.results || []))
             .find(c => c.id === courseId);
           setCourse(foundCourse);
-          console.log('Course found:', foundCourse);
         }
         
       } catch (e) {
@@ -141,6 +131,33 @@ export default function SurveyForm() {
       setLoading(false);
     }
   }, [lectureId, user]);
+
+  // Eligibility guard: require positive marks for the current student on this lecture's course
+  useEffect(() => {
+    const verifyEligibility = async () => {
+      try {
+        if (!user?.id || !lectureId) return;
+        const marks = await AttendanceAPI.getStudentMarksByStudent(user.id);
+        const normalized = Array.isArray(marks) ? marks : [];
+        const hasPositiveForLecture = normalized.some(m => {
+          const lecIdRaw = (m && typeof m.lecture === 'object') ? m.lecture?.id : m?.lecture;
+          const lecId = Number(lecIdRaw);
+          const attendance = Number(m?.attendance_mark || 0);
+          const instructor = Number(m?.instructor_mark || 0);
+          return Number.isFinite(lecId) && lecId === Number(lectureId) && (attendance > 0 || instructor > 0);
+        });
+        if (!hasPositiveForLecture) {
+          setEligible(false);
+        } else {
+          setEligible(true);
+        }
+      } catch (_) {
+        // On error, be conservative: disallow to avoid unintended access
+        setEligible(false);
+      }
+    };
+    verifyEligibility();
+  }, [user?.id, lectureId]);
 
   const initialValues = {
     questions: (Array.isArray(questions) ? questions : []).map(q => ({ id: q.id, score: "", comment: "" })),
@@ -228,6 +245,19 @@ export default function SurveyForm() {
             <div className="text-red-600 text-xl mb-4">⚠️</div>
             <p className="text-red-600 text-lg">{error}</p>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!eligible) {
+    return (
+      <div className="min-h-screen !bg-gradient-to-br !from-blue-50 !to-indigo-100 !p-5">
+        <div className="!max-w-6xl p-6 !mx-auto !bg-white !rounded-lg !shadow-lg text-center">
+          <div className="text-red-600 text-2xl mb-3">⚠️</div>
+          <h2 className="text-xl font-bold mb-2">غير مؤهل لإجراء هذا الاستبيان</h2>
+          <p className="text-gray-600 mb-4">لا توجد درجات مسجلة لك لهذه المحاضرة/المقرر حتى الآن. سيتم تفعيل الاستبيان بعد تسجيل درجاتك.</p>
+          <button className="btn btn-primary" onClick={() => window.history.back()}>رجوع</button>
         </div>
       </div>
     );

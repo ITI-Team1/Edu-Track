@@ -386,22 +386,42 @@
     box-shadow: 0 6px 20px rgba(100, 108, 255, 0.4);
   }
   
-  /* Second button - Solid Color (الواجبات) */
-  .course-actions .btn:last-child {
+  /* Secondary button style (استبيان) */
+  .course-actions .btn.btn-secondary {
+    background: linear-gradient(135deg, #1a365d, #535bf2);
+    color: #fff;
+    border: 1px solid #e5e7eb;
+  }
+  .course-actions .btn.btn-secondary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  }
+
+  /* Primary button (درجات) */
+  .course-actions .btn.btn-primary {
     background: linear-gradient(135deg, #1a365d, #535bf2);
     color: #fff;
   }
-  
-  .course-actions .btn:last-child:hover {
+  .course-actions .btn.btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(107, 114, 128, 0.3);
+    box-shadow: 0 4px 15px rgba(100, 108, 255, 0.3);
+  }
+
+  /* Disabled state for buttons */
+  .course-actions .btn:disabled,
+  .course-actions .btn.is-disabled {
+    opacity: 0.55;
+    filter: grayscale(25%);
+    cursor: not-allowed;
+    pointer-events: none;
+    transform: none !important;
+    box-shadow: none !important;
   }
   
   /* Courses Grid Layout */
   .courses-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    align-items: stretch;
     grid-auto-rows: 1fr;
     gap: 1rem;
     margin-top: 1rem;
