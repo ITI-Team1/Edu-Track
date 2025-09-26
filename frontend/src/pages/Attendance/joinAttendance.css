@@ -1,7 +1,7 @@
-/* JoinAttendance Component Styles */
+/* JoinAttendance Component Styles - Light Mode */
 .join-attendance-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #0b1220 0%, #111827 100%);
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -11,16 +11,16 @@
 }
 
 .join-attendance-card {
-  background: rgba(17, 24, 39, 0.9);
-  color: #ffffff;
+  background: rgba(255, 255, 255, 0.95);
+  color: #1e293b;
   font-weight: 600;
   backdrop-filter: blur(10px);
   border-radius: 24px;
   padding: 3rem;
   max-width: 540px;
   width: 100%;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(226, 232, 240, 0.8);
   text-align: center;
   animation: slideInUp 0.6s ease-out;
 }
@@ -56,13 +56,13 @@
 .attendance-header h1 {
   font-size: 2rem;
   font-weight: 800;
-  color: #ffffff;
+  color: #1e293b;
   margin: 0.5rem 0;
-  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  text-shadow: 0 2px 6px rgba(30, 41, 59, 0.1);
 }
 
 .attendance-header p {
-  color: #cbd5e1;
+  color: #64748b;
   font-size: 1.1rem;
   margin: 0;
   font-weight: 600;
@@ -70,15 +70,15 @@
 
 /* Lecture Info */
 .lecture-info {
-  background: linear-gradient(135deg, #111827 0%, #0f172a 100%);
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
   border-radius: 16px;
   padding: 1.5rem;
   margin-bottom: 2rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(226, 232, 240, 0.8);
 }
 
 .lecture-info h3 {
-  color: #ffffff;
+  color: #1e293b;
   font-size: 1.3rem;
   font-weight: 800;
   margin: 0 0 1rem 0;
@@ -95,7 +95,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 0.5rem 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.5);
 }
 
 .info-item:last-child {
@@ -104,12 +104,12 @@
 
 .info-item .label {
   font-weight: 700;
-  color: #cbd5e1;
+  color: #64748b;
   font-size: 0.95rem;
 }
 
 .info-item .value {
-  color: #ffffff;
+  color: #1e293b;
   font-weight: 700;
   max-width: 60%;
   text-align: left;
@@ -124,13 +124,56 @@
 }
 
 .status-display.processing {
-  background: linear-gradient(135deg, #3b2f0b 0%, #4b3a12 100%);
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
   border: 1px solid #f59e0b;
 }
 
 .status-display.success {
-  background: linear-gradient(135deg, #06351b 0%, #0f5132 100%);
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
   border: 1px solid #22c55e;
+}
+
+/* Attended Toast */
+.attended-toast {
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+  color: white;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  animation: slideInDown 0.5s ease-out;
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25);
+}
+
+.toast-icon {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.toast-text {
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Animations */
@@ -186,15 +229,15 @@
   font-size: 1.4rem;
   font-weight: 800;
   margin: 0.5rem 0;
-  color: #ffffff;
+  color: #1e293b;
 }
 
 .status-display.processing .status-text {
-  color: #fbbf24;
+  color: #d97706;
 }
 
 .status-display.success .status-text {
-  color: #22c55e;
+  color: #16a34a;
 }
 
 /* Redirect Info */
@@ -203,7 +246,7 @@
 }
 
 .redirect-info p {
-  color: #86efac;
+  color: #16a34a;
   margin-bottom: 0.5rem;
   font-weight: 700;
 }
@@ -214,7 +257,7 @@
   justify-content: center;
   gap: 0.5rem;
   font-size: 1.1rem;
-  color: #22c55e;
+  color: #16a34a;
 }
 
 .countdown-number {
@@ -223,7 +266,7 @@
   justify-content: center;
   width: 40px;
   height: 40px;
-  background: #22c55e;
+  background: #16a34a;
   color: white;
   border-radius: 50%;
   font-weight: bold;
@@ -283,13 +326,13 @@
 
 .btn-outline {
   background: transparent;
-  color: #ffffff;
-  border: 2px solid #ffffff;
+  color: #1e293b;
+  border: 2px solid #1e293b;
 }
 
 .btn-outline:hover {
-  background: #ffffff;
-  color: #111827;
+  background: #1e293b;
+  color: #ffffff;
   transform: translateY(-2px);
 }
 
@@ -297,14 +340,14 @@
 .student-info {
   margin-top: 2rem;
   padding: 1rem;
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(226, 232, 240, 0.3);
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(226, 232, 240, 0.6);
 }
 
 .student-info p {
   margin: 0.25rem 0;
-  color: #e2e8f0;
+  color: #475569;
   font-size: 0.9rem;
   font-weight: 700;
 }
@@ -329,13 +372,13 @@
 }
 
 .join-attendance-card.loading h2 {
-  color: #ffffff;
+  color: #1e293b;
   font-size: 1.3rem;
   margin-bottom: 0.5rem;
 }
 
 .join-attendance-card.loading p {
-  color: #cbd5e1;
+  color: #64748b;
   font-size: 1rem;
 }
 
