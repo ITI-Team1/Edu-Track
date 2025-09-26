@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -6,6 +6,7 @@ import { getLecture } from '../../services/lectureApi';
 import { AttendanceAPI } from '../../services/attendanceApi';
 import toast from '../../utils/toast';
 import './joinAttendance.css';
+import psuLogo from '../../assets/psu-logo.svg';
 
 // Enhanced student attendance joining with React Query integration
 export default function JoinAttendance() {
@@ -17,6 +18,7 @@ export default function JoinAttendance() {
   const [lectureInfo, setLectureInfo] = useState(null);
   const [countdown, setCountdown] = useState(3);
   const [attendanceSuccess, setAttendanceSuccess] = useState(false);
+  const markingRef = useRef(false); // prevent concurrent or repeated marking
 
   const params = new URLSearchParams(loc.search);
   const lectureId = params.get('lec');
@@ -107,8 +109,10 @@ export default function JoinAttendance() {
   // Function to handle attendance marking
   const markAttendance = useCallback(async () => {
     if (!lectureId || !token || !user) return;
+    if (markingRef.current || attendanceSuccess) return; // guard against multiple calls
 
     try {
+      markingRef.current = true;
       setStatus('جاري تسجيل الحضور...');
 
       const uid = Number(user?.id || user?.pk || user?.user_id);
@@ -116,14 +120,8 @@ export default function JoinAttendance() {
         throw new Error('Invalid user ID');
       }
 
-      // Debug: Log lecture data to help diagnose issues
-      console.error('Lecture data for debugging:', {
-        lectureId,
-        lecture,
-        course: lecture?.course,
-        instructor: lecture?.instructor,
-        user: { id: uid, name: user?.first_name }
-      });
+      // Debug: Log basic context (avoid referencing lecture object to keep deps stable)
+     
 
       // Get or create attendance record for this lecture
       let attendanceRecord;
@@ -275,8 +273,13 @@ export default function JoinAttendance() {
 
       setStatus(`❌ ${msgCore}`);
       toast.error(pieces.join(' | '));
+    } finally {
+      // Keep the guard latched after success to prevent duplicate toasts
+      if (!attendanceSuccess) {
+        markingRef.current = false;
+      }
     }
-  }, [lectureId, token, user, navigate, queryClient, lecture]);
+  }, [lectureId, token, user, navigate, queryClient, attendanceSuccess]);
 
   useEffect(() => {
     // Validation checks
@@ -327,7 +330,7 @@ export default function JoinAttendance() {
         {/* Header */}
         <div className="attendance-header">
           <div className="university-logo">
-            <img src="/src/assets/psu-logo.svg" alt="PSU Logo" className="logo-svg" />
+            <img src={psuLogo} alt="PSU Logo" className="logo-svg" />
           </div>
           <h1>جامعة بورسعيد</h1>
           <p>نظام تسجيل الحضور</p>
