@@ -33,7 +33,7 @@ export const AttendanceAPI = {
   
   getAttendanceByLecture: (lectureId) =>
     apiClient.get('attendance/').then(response =>
-      response.data.filter(attendance => attendance.lecture === lectureId)
+      response.data.filter(attendance => attendance.lecture === Number(lectureId))
     ),
 
   getStudentAttendancesByAttendance: (attendanceId) =>

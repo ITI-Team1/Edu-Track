@@ -60,9 +60,23 @@ export default function JoinAttendance() {
       let attendanceRecord;
       try {
         const attendances = await AttendanceAPI.getAttendanceByLecture(lectureId);
-        
+        console.log('Existing attendance sessions for lecture', lectureId, attendances);
+
         if (attendances.length === 0) {
-          // Create new attendance record
+          // Determine if current user is allowed to create sessions (instructor/staff)
+          const isInstructor = Boolean(
+            user?.is_staff ||
+            user?.is_superuser ||
+            user?.role === 'instructor' ||
+            (Array.isArray(user?.groups) && user.groups.some(g => ['دكاترة - معيدين', 'Instructor'].includes(g?.name || g)))
+          );
+
+          if (!isInstructor) {
+            // Students should not create a session; show clear guidance
+            throw new Error('لا توجد جلسة حضور مفتوحة لهذا الدرس. يرجى إبلاغ المحاضر بفتح الجلسة.');
+          }
+
+          // Only instructors create new attendance records
           const newAttendance = await AttendanceAPI.createAttendance({
             lecture: Number(lectureId)
           });
@@ -72,7 +86,9 @@ export default function JoinAttendance() {
         }
       } catch (attendanceError) {
         console.error('Failed to get/create attendance record:', attendanceError);
-        throw new Error('Failed to create attendance session');
+        // Preserve backend message if available
+        const backendMsg = attendanceError?.response?.data?.detail || attendanceError?.response?.data?.message;
+        throw new Error(backendMsg || 'Failed to create attendance session');
       }
 
       // Check if student already has an attendance record for this session
