@@ -35,14 +35,18 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
     const [search, setSearch] = useState('');
 
     // React Query for students data with automatic refresh
-    const { data: studentsData, refetch: refetchStudents } = useQuery({
+    const { data: studentsData, refetch: refetchStudents, isLoading: studentsLoading } = useQuery({
         queryKey: ['students', lectureId],
         queryFn: () => fetchStudentsData(),
         enabled: !!lectureId,
-        refetchInterval: 3000, // Auto refresh every 3 seconds
+        refetchInterval: 2000, // Auto refresh every 2 seconds for better responsiveness
         refetchIntervalInBackground: true,
-        staleTime: 1000, // Consider data stale after 1 second
-        retry: 3
+        staleTime: 500, // Consider data stale after 0.5 seconds
+        retry: 3,
+        retryDelay: 1000, // Wait 1 second between retries
+        onError: (error) => {
+            console.error('Failed to fetch students data:', error);
+        }
     });
 
     // React Query for lecture data
@@ -101,7 +105,8 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
                 const courseId = (typeof lec?.course === 'object' && lec?.course !== null) ? lec.course.id : lec?.course;
                 const courseTitle = courses.find((c) => Number(c.id) === Number(courseId))?.title;
                 setHeadingText(courseTitle ? `المحاضرة: ${courseTitle}` : `المحاضرة رقم ${lectureId}`);
-            } catch {
+            } catch (courseError) {
+                console.warn('Failed to fetch course data:', courseError);
                 setHeadingText(`المحاضرة رقم ${lectureId}`);
             }
             
@@ -247,9 +252,14 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
                     });
                 }
                 
-                // Invalidate query to refresh data immediately
+                // FIXED: Invalidate and refetch queries to refresh data immediately
+                // This ensures the instructor dashboard auto-updates when student attendance changes
                 queryClient.invalidateQueries(['students', lectureId]);
                 queryClient.invalidateQueries(['attendance', lectureId]);
+                queryClient.invalidateQueries(['studentAttendances']);
+                
+                // Force immediate refetch for better real-time updates
+                refetchStudents();
                 
             } catch (error) {
                 console.error('Failed to toggle student attendance:', error);

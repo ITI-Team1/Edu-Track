@@ -416,3 +416,25 @@
     gap: 0.75rem;
   }
 }
+
+/* Lecture Error State */
+.lecture-error {
+  background: #fff5f5;
+  border: 1px solid #fed7d7;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 20px 0;
+}
+
+.lecture-error .info-item .value.error {
+  color: #e53e3e;
+  font-weight: 500;
+}
+
+.lecture-error .error-message {
+  color: #e53e3e;
+  font-size: 14px;
+  margin-top: 8px;
+  text-align: center;
+  font-style: italic;
+}

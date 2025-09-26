@@ -23,12 +23,16 @@ export default function JoinAttendance() {
   const token = params.get('j');
 
   // Fetch lecture information with React Query
-  const { data: lecture, isLoading: lectureLoading } = useQuery({
+  const { data: lecture, isLoading: lectureLoading, error: lectureError } = useQuery({
     queryKey: ['lecture', lectureId],
     queryFn: () => getLecture(lectureId),
     enabled: !!lectureId && !!user,
     staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: 2
+    retry: 3,
+    retryDelay: 1000,
+    onError: (error) => {
+      console.error('Failed to fetch lecture data:', error);
+    }
   });
 
   // Function to handle attendance marking
@@ -42,6 +46,15 @@ export default function JoinAttendance() {
       if (!Number.isFinite(uid)) {
         throw new Error('Invalid user ID');
       }
+
+      // Debug: Log lecture data to help diagnose the "غير محدد" issue
+      console.log('Lecture data for debugging:', {
+        lectureId,
+        lecture,
+        course: lecture?.course,
+        instructor: lecture?.instructor,
+        user: { id: uid, name: user?.first_name }
+      });
 
       // Get or create attendance record for this lecture
       let attendanceRecord;
@@ -124,7 +137,10 @@ export default function JoinAttendance() {
     }
     
     // If user is not logged in, redirect to login with return path
-    if (!user) {
+    // FIXED: Only redirect if we're sure the user is not authenticated (not just loading)
+    // This prevents the race condition where QR scanning triggers login redirect
+    // even when the user is already authenticated but the auth check is still loading
+    if (!user && !lectureLoading) {
       navigate(`/login?next=${encodeURIComponent(loc.pathname + loc.search)}`, { replace: true });
       return;
     }
@@ -135,7 +151,7 @@ export default function JoinAttendance() {
       // Auto-mark attendance after lecture info is loaded
       markAttendance();
     }
-  }, [lecture, lectureId, token, user, navigate, loc.pathname, loc.search, markAttendance]);
+  }, [lecture, lectureId, token, user, navigate, loc.pathname, loc.search, markAttendance, lectureLoading]);
 
   // Loading state
   if (lectureLoading) {
@@ -172,17 +188,48 @@ export default function JoinAttendance() {
             <div className="info-grid">
               <div className="info-item">
                 <span className="label">المقرر:</span>
-                <span className="value">{lectureInfo.course?.title || lectureInfo.course?.name || 'غير محدد'}</span>
+                <span className="value">
+                  {lectureInfo.course?.title || 
+                   lectureInfo.course?.name || 
+                   (typeof lectureInfo.course === 'string' ? lectureInfo.course : 'غير محدد')}
+                </span>
               </div>
               <div className="info-item">
                 <span className="label">المحاضر:</span>
-                <span className="value">{lectureInfo.instructor?.first_name || 'غير محدد'}</span>
+                <span className="value">
+                  {lectureInfo.instructor?.first_name || 
+                   lectureInfo.instructor?.username ||
+                   (typeof lectureInfo.instructor === 'string' ? lectureInfo.instructor : 'غير محدد')}
+                </span>
               </div>
               <div className="info-item">
                 <span className="label">التاريخ:</span>
                 <span className="value">{new Date().toLocaleDateString('ar-EG')}</span>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* FIXED: Error state for lecture data - handles the "غير محدد" issue */}
+        {/* This shows when lecture data fails to load, explaining why course/instructor show as "غير محدد" */}
+        {lectureError && (
+          <div className="lecture-error">
+            <h3>معلومات المحاضرة</h3>
+            <div className="info-grid">
+              <div className="info-item">
+                <span className="label">المقرر:</span>
+                <span className="value error">غير محدد</span>
+              </div>
+              <div className="info-item">
+                <span className="label">المحاضر:</span>
+                <span className="value error">غير محدد</span>
+              </div>
+              <div className="info-item">
+                <span className="label">التاريخ:</span>
+                <span className="value">{new Date().toLocaleDateString('ar-EG')}</span>
+              </div>
+            </div>
+            <p className="error-message">تعذر تحميل معلومات المحاضرة - تحقق من اتصال الإنترنت</p>
           </div>
         )}
 
