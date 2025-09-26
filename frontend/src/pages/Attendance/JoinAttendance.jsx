@@ -58,9 +58,11 @@ export default function JoinAttendance() {
 
       // Get or create attendance record for this lecture
       let attendanceRecord;
+      let sessionsMeta = { lectureId, foundCount: 0 };
       try {
         const attendances = await AttendanceAPI.getAttendanceByLecture(lectureId);
         console.log('Existing attendance sessions for lecture', lectureId, attendances);
+        sessionsMeta.foundCount = Array.isArray(attendances) ? attendances.length : 0;
 
         if (attendances.length === 0) {
           // Determine if current user is allowed to create sessions (instructor/staff)
@@ -86,9 +88,33 @@ export default function JoinAttendance() {
         }
       } catch (attendanceError) {
         console.error('Failed to get/create attendance record:', attendanceError);
-        // Preserve backend message if available
-        const backendMsg = attendanceError?.response?.data?.detail || attendanceError?.response?.data?.message;
-        throw new Error(backendMsg || 'Failed to create attendance session');
+        // Build a rich error for the outer catch
+        const status = attendanceError?.response?.status;
+        const statusText = attendanceError?.response?.statusText;
+        const method = attendanceError?.config?.method?.toUpperCase();
+        const url = attendanceError?.config?.url;
+        const backendMsg = attendanceError?.response?.data?.detail || attendanceError?.response?.data?.message || attendanceError?.message;
+        const rawData = attendanceError?.response?.data;
+        const dataStr = rawData && typeof rawData === 'object' ? JSON.stringify(rawData) : String(rawData || '');
+        const userId = Number(user?.id || user?.pk || user?.user_id);
+        const isInstructor = Boolean(
+          user?.is_staff ||
+          user?.is_superuser ||
+          user?.role === 'instructor' ||
+          (Array.isArray(user?.groups) && user.groups.some(g => ['دكاترة - معيدين', 'Instructor'].includes(g?.name || g)))
+        );
+        const composed = [
+          status ? `[${status}${statusText ? ' ' + statusText : ''}]` : null,
+          method && url ? `${method} ${url}` : null,
+          backendMsg || 'Failed to create attendance session',
+          sessionsMeta ? `sessions=${sessionsMeta.foundCount}` : null,
+          `lec=${lectureId}`,
+          userId ? `uid=${userId}` : null,
+          `role=${isInstructor ? 'instructor' : 'student'}`,
+          dataStr && !backendMsg ? `data=${dataStr}` : null,
+        ].filter(Boolean).join(' | ');
+        // Re-throw with composed message so outer catcher can toast
+        throw new Error(composed);
       }
 
       // Check if student already has an attendance record for this session
@@ -151,14 +177,35 @@ export default function JoinAttendance() {
           data: error.config?.data
         }
       });
-      const errorMessage = error.response?.data?.detail || 
-                   error.response?.data?.message || 
-                   error.message ;
-                   
-      console.error('Attendance marking failed:', error);
-     
- setStatus(`❌ ${errorMessage}`);
-  toast.error(`[${error.response?.status || 'N/A'}] ${errorMessage}`.trim());
+      // Build a comprehensive message for mobile toasts
+      const status = error.response?.status;
+      const statusText = error.response?.statusText;
+      const method = error.config?.method?.toUpperCase();
+      const url = error.config?.url;
+      const backendMsg = error.response?.data?.detail || error.response?.data?.message || error.response?.data?.error || error.response?.data?.errors?.[0];
+      const rawData = error.response?.data;
+      const dataStr = rawData && typeof rawData === 'object' ? JSON.stringify(rawData) : String(rawData || '');
+
+      const msgCore = backendMsg || error.message || 'حدث خطأ غير متوقع';
+      const userId = Number(user?.id || user?.pk || user?.user_id);
+      const isInstructor = Boolean(
+        user?.is_staff ||
+        user?.is_superuser ||
+        user?.role === 'instructor' ||
+        (Array.isArray(user?.groups) && user.groups.some(g => ['دكاترة - معيدين', 'Instructor'].includes(g?.name || g)))
+      );
+      const pieces = [
+        status ? `[${status}${statusText ? ' ' + statusText : ''}]` : null,
+        method && url ? `${method} ${url}` : null,
+        msgCore,
+        `lec=${lectureId}`,
+        userId ? `uid=${userId}` : null,
+        `role=${isInstructor ? 'instructor' : 'student'}`,
+        dataStr && !backendMsg ? `data=${dataStr}` : null,
+      ].filter(Boolean);
+
+      setStatus(`❌ ${msgCore}`);
+      toast.error(pieces.join(' | '));
     }
   }, [lectureId, token, user, navigate, queryClient]);
 
