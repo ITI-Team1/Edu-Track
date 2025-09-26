@@ -1,5 +1,6 @@
-/* Flickity base styles */
 @import 'flickity/css/flickity.css';
+
+/* Flickity base styles */
 
 .b-slider {
   background-color: #f7f7f7;

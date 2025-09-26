@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+/* Import Google Fonts for Arabic */
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap');
+
+:root {
+  font-family: 'Cairo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;}
+
 /* Custom CSS Variables and Global Styles */
 :root {
   --primary-color: #3b82f6;
@@ -10,6 +16,146 @@
   --border-color: rgba(59, 130, 246, 0.2);
   --shadow-color: rgba(0, 0, 0, 0.1);
 }
+.btn {
+  padding: 0.6em 1.2em;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font-size: 1em;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.25s;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+/* Standardized Action Buttons (Edit/Update/Delete/Cancel) */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+/* Edit/Update button (blue) */
+.btn.update,
+.btn.edit {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+}
+.btn.update:hover,
+.btn.edit:hover {
+  transform: translateY(-1px);
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+}
+
+/* Delete button (red) */
+.btn.delete,
+.btn-danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.25);
+}
+.btn.delete:hover,
+.btn-danger:hover {
+  transform: translateY(-1px);
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+}
+
+/* Cancel/neutral button */
+.btn.cancel {
+  background: #e5e7eb;
+  color: #1f2937;
+  border: 1px solid #cbd5e1;
+}
+.btn.cancel:hover {
+  transform: translateY(-1px);
+  background: #e2e8f0;
+}
+
+/* Icon alignment inside buttons */
+.btn .btn-icon-left,
+.btn .btn-icon-right {
+  display: inline-flex;
+  align-items: center;
+  line-height: 0;
+}
+.btn .btn-icon-left { margin-inline-start: 0; margin-inline-end: 4px; }
+.btn .btn-icon-right { margin-inline-start: 4px; margin-inline-end: 0; }
+.btn svg { width: 18px; height: 18px; display: inline-block; }
+
+/* Size modifiers */
+.btn-lg {
+  height: 48px;
+  padding: 0 18px;
+  font-size: 1rem;
+}
+.btn-lg svg { width: 20px; height: 20px; }
+
+/* Responsive sizing for small screens */
+@media (max-width: 480px) {
+  .btn {
+    height: 36px;
+    padding: 0 12px;
+    font-size: 0.9rem;
+    gap: 6px;
+  }
+  .btn-lg {
+    height: 42px;
+    padding: 0 16px;
+    font-size: 0.95rem;
+  }
+  .btn svg { width: 16px; height: 16px; }
+}
+
+input, textarea, select {
+  padding: 0.8rem;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #1f2937; /* dark readable text */
+  font-size: 1rem;
+  font-family: 'Cairo', sans-serif;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+  caret-color: #1f2937;
+}
+
+input::placeholder, textarea::placeholder {
+  font-family: 'Cairo', sans-serif;
+  color: #9ca3af; /* neutral placeholder */
+  font-size: 0.95rem;
+  font-weight: 400;
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: #3182ce;
+  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.15);
+  color: #1f2937; /* keep dark on focus */
+  background:#ffffff;
+}
+
+label {
+  color: #1a365d; /* navy for light theme */
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  font-family: 'Cairo', sans-serif;
+}
+
+
 
 /* Arabic RTL Support */
 body {

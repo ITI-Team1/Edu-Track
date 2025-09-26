@@ -7,6 +7,7 @@ import { fetchCourses } from '../services/courseApi';
 import { fetchLocations } from '../services/locationApi';
 import { fetchUsers } from '../services/userApi';
 import { useQuery } from '@tanstack/react-query';
+import { AttendanceAPI } from '../services/attendanceApi';
 
 function Courses() {
   const { isAuthenticated, user } = useAuth();
@@ -44,6 +45,13 @@ function Courses() {
     queryKey: ['users'],
     queryFn: fetchUsers,
     enabled: isAuthenticated,
+    staleTime: 60_000,
+  });
+  // Load student marks to determine which courses have degrees
+  const { data: studentMarks = [], isLoading: marksLoading, error: marksError } = useQuery({
+    queryKey: ['studentMarks', user?.id],
+    queryFn: () => AttendanceAPI.getStudentMarksByStudent(user.id),
+    enabled: isAuthenticated && !!user?.id,
     staleTime: 60_000,
   });
 
@@ -91,6 +99,26 @@ function Courses() {
   // Build UI-friendly course cards for the user's enrolled courses
   const enrolledCourseCards = React.useMemo(() => {
     const filtered = (Array.isArray(allCourses) ? allCourses : []).filter(c => enrolledCourseIds.has(Number(c.id)));
+    // Build lookup: lectureId -> courseId
+    const lectureIdToCourseId = new Map();
+    (Array.isArray(lectures) ? lectures : []).forEach(lec => {
+      const cid = Number(typeof lec.course === 'object' ? lec.course?.id : lec.course);
+      lectureIdToCourseId.set(Number(lec.id), cid);
+    });
+    // Build sets based on POSITIVE marks only (attendance or instructor)
+    const courseIdsWithPositiveMarks = new Set();
+    const lectureIdsWithPositiveMarks = new Set();
+    (Array.isArray(studentMarks) ? studentMarks : []).forEach(m => {
+      const lecIdRaw = (m && typeof m.lecture === 'object') ? m.lecture?.id : m?.lecture;
+      const lecId = Number(lecIdRaw);
+      const attendance = Number(m?.attendance_mark || 0);
+      const instructor = Number(m?.instructor_mark || 0);
+      const hasPositive = (attendance > 0) || (instructor > 0);
+      if (!Number.isFinite(lecId) || !hasPositive) return;
+      lectureIdsWithPositiveMarks.add(lecId);
+      const cid = lectureIdToCourseId.get(lecId);
+      if (cid != null) courseIdsWithPositiveMarks.add(Number(cid));
+    });
     return filtered.map(c => {
       const relatedLectures = lectures.filter(lec => {
         const cid = Number(typeof lec.course === 'object' ? lec.course?.id : lec.course);
@@ -98,6 +126,10 @@ function Courses() {
       });
       const firstLec = relatedLectures[0];
       const nextClass = firstLec ? `${firstLec.day || ''} ${String(firstLec.starttime || '').slice(0,5)}`.trim() : '—';
+      // Course is eligible for survey only if the current student has POSITIVE marks for ANY lecture in this course
+      const hasDegree = courseIdsWithPositiveMarks.has(Number(c.id));
+      // Prefer a lecture that actually has POSITIVE marks when navigating to survey
+      const markedLectureForCourse = relatedLectures.find(lec => lectureIdsWithPositiveMarks.has(Number(lec.id)));
       return {
         id: c.id,
         name: c.title || c.name || c.slug,
@@ -105,9 +137,11 @@ function Courses() {
         room: firstLec ? getRoomName(firstLec) : '—',
         nextClass,
         sessionsCount: relatedLectures.length,
+        representativeLectureId: (markedLectureForCourse?.id) ?? (firstLec ? firstLec.id : null),
+        hasDegree,
       };
     });
-  }, [allCourses, lectures, enrolledCourseIds, getInstructorNames, getRoomName]);
+  }, [allCourses, lectures, enrolledCourseIds, getInstructorNames, getRoomName, studentMarks]);
 
   // New: total number of lectures across the user's enrolled courses
   const totalLecturesCount = React.useMemo(() => {
@@ -117,13 +151,27 @@ function Courses() {
     }).length;
   }, [lectures, enrolledCourseIds]);
 
-  const combinedLoading = lecLoading || crsLoading || locLoading || usrLoading;
-  const combinedError = lecError?.message || crsError?.message || locError?.message || usrError?.message || '';
+  const combinedLoading = lecLoading || crsLoading || locLoading || usrLoading || marksLoading;
+  const combinedError = lecError?.message || crsError?.message || locError?.message || usrError?.message || marksError?.message || '';
 
   // Modal state for course details
   const [modalCourseId, setModalCourseId] = React.useState(null);
   const openCourseModal = (courseId) => setModalCourseId(courseId);
   const closeCourseModal = () => setModalCourseId(null);
+
+  // Navigation handlers
+  const goToDegreesPage = React.useCallback(() => {
+    navigate('/student-degrees');
+  }, [navigate]);
+  const goToSurvey = React.useCallback((lectureId, enabled) => {
+    // Hard guard: do not navigate if not enabled
+    if (!enabled) return;
+    if (lectureId) {
+      navigate(`/survey?lectureId=${lectureId}`);
+    } else {
+      navigate('/survey');
+    }
+  }, [navigate]);
 
   // Build details for selected course
   const modalCourse = React.useMemo(() => {
@@ -192,13 +240,13 @@ function Courses() {
             <div className="course-card" style={{ textAlign: 'center', color: 'red' }}>خطأ: {combinedError}</div>
           )}
           {!combinedLoading && !combinedError && enrolledCourseCards.length === 0 && (
-            <div className="course-card" style={{ textAlign: 'center' }}>لا توجد مقررات مسجلة</div>
+            <div className="course-card  text-gray-800 " style={{ textAlign: 'center' }}>لا توجد مقررات مسجلة</div>
           )}
           {!combinedLoading && !combinedError && enrolledCourseCards.map(course => (
             <div key={course.id} className="course-card">
               <div className="course-header">
-                <h3>{course.name}</h3>
-                <span className="course-credits">عدد المحاضرات: {course.sessionsCount}</span>
+                <h3 className='!w-2/3'>{course.name}</h3>
+                <span className="course-credits !w-fit  text-left"> المحاضرات: {course.sessionsCount}</span>
               </div>
               
               <div className="course-info">
@@ -209,6 +257,23 @@ function Courses() {
               
               <div className="course-actions">
                 <button type="button" className="btn btn-primary" onClick={() => openCourseModal(course.id)}>عرض التفاصيل</button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={goToDegreesPage}
+                >
+                  الدرجات
+                </button>
+                <button
+                  type="button"
+                  className={`btn btn-secondary ${!course.hasDegree ? 'is-disabled' : ''}`}
+                  aria-disabled={!course.hasDegree}
+                  disabled={!course.hasDegree}
+                  title={course.hasDegree ? '' : 'سيتم تفعيل زر الاستبيان بعد تسجيل درجاتك لهذه المادة'}
+                  onClick={course.hasDegree ? (() => goToSurvey(course.representativeLectureId, true)) : undefined}
+                >
+                  استبيان
+                </button>
               </div>
             </div>
           ))}

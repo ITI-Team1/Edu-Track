@@ -55,7 +55,7 @@ function Footer() {
               {title:"الخدمات", links:[
                 {to:"/dashboard", text:"لوحة التحكم"},
                 {to:"/features", text:"المميزات"},
-                {to:"/register", text:"التسجيل"}
+                // {to:"/register", text:"التسجيل"}
               ]}
             ].map((sec, si)=>(
               <div key={si} className="!bg-gradient-to-br !from-white/3 !to-white/1 !rounded-xl !p-4 !border !border-white/10 !transition-all !duration-300 hover:!bg-gradient-to-br hover:!from-white/5 hover:!to-white/2 hover:!border-blue-500/30 hover:!-translate-y-0.5 hover:!shadow-lg">

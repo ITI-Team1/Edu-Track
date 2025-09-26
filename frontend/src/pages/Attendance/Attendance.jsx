@@ -48,7 +48,8 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
                     .join('')
             : Math.random().toString(36).slice(2);
         setQrToken(rand);
-        const base = (import.meta.env.VITE_PUBLIC_BASE_URL || window.location.origin).replace(/\/$/, '');
+        // Always use the production URL for QR codes, fallback to current origin if not set
+        const base = (import.meta.env.VITE_PUBLIC_BASE_URL || 'https://psu-platform.vercel.app').replace(/\/$/, '');
         setJoinLink(`${base}/attendance/join?lec=${encodeURIComponent(lectureId)}&j=${rand}`);
     }, [lectureId]);
 

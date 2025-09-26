@@ -177,7 +177,23 @@ export default function ExamTable() {
     setShowDeleteModal(true);
   };
   return (
-    <div className="!min-h-[600px] content-card exam-table-section-applying relative">
+    <div>
+      <div className='flex justify-between  items-center !my-5'>
+
+    <h2 className='!text-2xl md:!text-[30px] font-bold  text-center !text-gray-700'>جدول الامتحانات</h2>
+    {hasAnyGroup([6, 5, 4, 1]) && (
+          <div className='flex gap-2 justify-end mb-4'>
+          <button
+            onClick={openCreateModal}
+            className='btn-main !px-2 !py-1 md:!px-4 md:!py-3 !text-meduim'
+            disabled={loading}
+          >
+            {loading ? 'جاري التحميل...' : 'اضافة جدول الامتحانات'}
+          </button>
+        </div>
+        )}
+      </div>
+    <div className="  content-card  relative">
       {loading && createPortal(
         <div className="fixed inset-0 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm z-[999999]" aria-live="polite" aria-label="يتم معالجة الطلب، الرجاء الانتظار">
           <div className="flex flex-col items-center gap-3">
@@ -187,21 +203,10 @@ export default function ExamTable() {
         </div>,
         document.body
       )}
-      <h2>جدول الامتحانات</h2>
       
 
-      <div className="exam-table-chart">
-        {hasAnyGroup([6, 5, 4, 1]) && (
-          <div className='flex gap-2 justify-end mb-4'>
-          <button
-            onClick={openCreateModal}
-            className='btn-main !px-4 !py-3 text-lg'
-            disabled={loading}
-          >
-            {loading ? 'جاري التحميل...' : 'اضافة جدول الامتحانات'}
-          </button>
-        </div>
-        )}
+      <div className="exam-table-chart  flex flex-col gap-3 !p-0">
+        
         {/* Loading State */}
         {loading && examTables.length === 0 && (
           <div className="text-center py-8">
@@ -210,34 +215,43 @@ export default function ExamTable() {
         )}
 
         {/* Exam Tables List */}
-        <div className="chart-placeholder">
+        
           {examTables.length === 0 && !loading ? (
             <div className="text-center py-8 text-gray-500">
               <p>لا توجد جداول امتحانات متاحة</p>
             </div>
           ) : (
             examTables.map((examTable) => (
-              <div key={examTable.id} className='flex flex-col gap-3 border border-gray-200 rounded-xl p-4  text-white shadow-sm transition-all'>
+              <div key={examTable.id} className='flex flex-col gap-3 border border-gray-200 rounded-xl !p-4  text-gray-800 shadow-sm transition-all'>
 
-<div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="text-lg font-extrabold mb-2">جدول الامتحانات</h3>
-                    <p className='text-sm opacity-90'><span className='font-semibold'>الجامعة:</span> {examTable.university_data?.name || examTable.university?.name}</p>
-                    <p className='text-sm opacity-90'><span className='font-semibold'>الكلية:</span> {examTable.faculty_data?.name || examTable.faculty?.name}</p>
-                    <p className='text-sm opacity-90'><span className='font-semibold'>القسم:</span> {examTable.program_data?.name || examTable.program?.name}</p>
+                  <div className='text-center'>
+                    
+                    
+                    <p className='text-lg opacity-90'><span className='font-semibold'>الكلية:</span> {examTable.faculty_data?.name || examTable.faculty?.name}</p>
+                    <p className='text-lg opacity-90'><span className='font-semibold'>القسم:</span> {examTable.program_data?.name || examTable.program?.name}</p>
                   </div>
-                  {hasAnyGroup([6, 5, 4, 1]) && ( 
+               <div className="flex  justify-center">
+                  
+                <img 
+                  className='!w-[700px] max-h-[400px] md:max-h-[600px] mx-auto rounded-lg' 
+                  src={examTable.image} 
+                  alt={`جدول امتحانات ${examTable.faculty_data?.name || examTable.faculty?.name}`} 
+                />
+                </div>
+                <div className='flex justify-center'>
+
+                {hasAnyGroup([6, 5, 4, 1]) && ( 
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleEdit(examTable.id)}
-                        className="btn-main !px-3 !py-2 text-sm"
+                        className="btn btn edit !px-5 !py-4 text-sm"
                         disabled={loading}
                       >
                         تعديل
                       </button>
                       <button
                         onClick={() => openDeleteModal(examTable)}
-                        className="bg-red-500 hover:bg-red-600 text-white !px-5 !py-3 text-sm rounded-lg"
+                        className=" btn delete text-white !px-5 !py-3 text-sm rounded-lg"
                         disabled={loading}
                       >
                         حذف
@@ -247,15 +261,10 @@ export default function ExamTable() {
                 </div>
 
 
-                <img 
-                  className='w-full max-h-[550px] object-contain rounded-lg' 
-                  src={examTable.image} 
-                  alt={`جدول امتحانات ${examTable.faculty_data?.name || examTable.faculty?.name}`} 
-                />
               </div>
             ))
           )}
-        </div>
+        
       </div>
 
       {/* Create / Edit Modal */}
@@ -396,6 +405,7 @@ export default function ExamTable() {
           </div>
         </Modal>
       )}
+    </div>
     </div>
   )
 }

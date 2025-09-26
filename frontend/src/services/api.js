@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE || 'https://alaaelgharably.pythonanywhere.com';
 
 class ApiService {
   constructor() {

@@ -9,7 +9,7 @@ import { fetchUsers } from '../../services/userApi';
 import { AttendanceAPI } from '../../services/attendanceApi';
 import Modal from '../../components/ui/Modal';
 import '../../styles/tableScroll.css'; // shared table scrollbar
-
+// import '../../styles/global.css';
 import './instructorgrades.css';
 import toast from '../../utils/toast';
 
@@ -53,20 +53,28 @@ export default function InstructorGrades() {
                     AttendanceAPI.listStudentMarks(),
                 ]);
                 
-                setLectures(Array.isArray(lecturesData) ? lecturesData : []);
-                // check if user has program only set the courses that the user has program
+                // Normalize and save lectures
+                const normalizedLectures = Array.isArray(lecturesData) ? lecturesData : [];
+                setLectures(normalizedLectures);
+                // If the user is an instructor (group id 3), show only courses linked to lectures they teach
+                if (hasAnyGroup([3])) {
+                    const currentDoctorLectures = normalizedLectures.filter(l => {
+                        const instructorIds = Array.isArray(l.instructor)
+                            ? l.instructor.map(i => (typeof i === 'object' ? i.id : i))
+                            : [];
+                        return instructorIds.includes(user?.id);
+                    });
 
-                if(hasAnyGroup([3])){
-                    
-                    const currentDoctorLectures = lectures.filter(l => l.instructor.map(i => i).includes(user.id));
-                    // convert the currentDoctorLectures to courses to show the name of the course
-                    const courseByName = coursesData.filter(c => currentDoctorLectures.map(l => l.course).includes(c.id));
-                    
-                    
-                    
+                    const courseIds = currentDoctorLectures.map(l =>
+                        typeof l.course === 'object' ? l.course.id : l.course
+                    );
+                    const uniqueCourseIds = [...new Set(courseIds)];
+
+                    const allCourses = Array.isArray(coursesData) ? coursesData : [];
+                    const courseByName = allCourses.filter(c => uniqueCourseIds.includes(c.id));
+
                     setCourses(courseByName);
-                    
-                }else{
+                } else {
                     setCourses(Array.isArray(coursesData) ? coursesData : []);
                 }
 
@@ -314,78 +322,6 @@ export default function InstructorGrades() {
                         
                         {selectedCourse && courseStudents.length > 0 && (
                             <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                {/* <button
-                                    className='btn btn-secondary-attendance'
-                                    onClick={async () => {
-                                        if (!selectedCourse) return;
-                                        
-                                        setLoading(true);
-                                        try {
-                                            // Get all lectures for this course
-                                            const courseLectures = lectures.filter(lec => 
-                                                (typeof lec.course === 'object' ? lec.course.id : lec.course) === Number(selectedCourse)
-                                            );
-                                            const lectureIdSet = new Set(courseLectures.map(l => l.id));
-
-                                            // Snapshot current attendance marks per (student,lecture)
-                                            const beforeResp = await AttendanceAPI.listStudentMarks();
-                                            const beforeMarks = Array.isArray(beforeResp.data) ? beforeResp.data : [];
-                                            const beforeAttendanceByKey = new Map(); // key: `${student}:${lecture}` -> attendance_mark
-                                            beforeMarks.forEach(m => {
-                                                if (lectureIdSet.has(m.lecture)) {
-                                                    const key = `${m.student}:${m.lecture}`;
-                                                    const prev = Number(m.attendance_mark || 0);
-                                                    beforeAttendanceByKey.set(key, prev);
-                                                }
-                                            });
-
-                                            // Recalculate attendance marks for all lectures in this course
-                                            const recalculatePromises = courseLectures.map(lecture => 
-                                                AttendanceAPI.recalculateAttendanceMarks(lecture.id)
-                                            );
-                                            await Promise.all(recalculatePromises);
-
-                                            // Fetch after recalculation
-                                            const afterResp = await AttendanceAPI.listStudentMarks();
-                                            const afterMarks = Array.isArray(afterResp.data) ? afterResp.data : [];
-
-                                            // For marks in this course, set attendance_mark = previous + new
-                                            const updatePromises = afterMarks
-                                                .filter(m => lectureIdSet.has(m.lecture))
-                                                .map(m => {
-                                                    const key = `${m.student}:${m.lecture}`;
-                                                    const prev = beforeAttendanceByKey.get(key) || 0;
-                                                    const now = Number(m.attendance_mark || 0);
-                                                    const combined = prev + now;
-                                                    // Only update if combined differs from current to avoid extra writes
-                                                    if (Number.isFinite(combined) && combined !== now) {
-                                                        return AttendanceAPI.updateStudentMark(m.id, { attendance_mark: combined });
-                                                    }
-                                                    return null;
-                                                })
-                                                .filter(Boolean);
-
-                                            if (updatePromises.length) {
-                                                await Promise.all(updatePromises);
-                                            }
-
-                                            // Refresh data in UI
-                                            const marksData = await AttendanceAPI.listStudentMarks();
-                                            setStudentMarks(Array.isArray(marksData.data) ? marksData.data : []);
-                                            
-                                            toast.success('تم إضافة درجات الحضور الجديدة إلى الدرجات الحالية بنجاح');
-                                        } catch (error) {
-                                            console.error('Failed to recalculate attendance marks:', error);
-                                            toast.error('فشل في إضافة درجات الحضور');
-                                        } finally {
-                                            setLoading(false);
-                                        }
-                                    }}
-                                    disabled={loading}
-                                    style={{ fontSize: '14px', padding: '8px 12px' }}
-                                >
-                                    إعادة حساب درجات الحضور
-                                </button> */}
                                 <button
                                     className='btn btn-secondary-attendance'
                                     onClick={generatePDF}
