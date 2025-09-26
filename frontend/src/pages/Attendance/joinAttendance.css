@@ -1,7 +1,7 @@
 /* JoinAttendance Component Styles */
 .join-attendance-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #0b1220 0%, #111827 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -11,14 +11,16 @@
 }
 
 .join-attendance-card {
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(17, 24, 39, 0.9);
+  color: #ffffff;
+  font-weight: 600;
   backdrop-filter: blur(10px);
   border-radius: 24px;
   padding: 3rem;
-  max-width: 500px;
+  max-width: 540px;
   width: 100%;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   text-align: center;
   animation: slideInUp 0.6s ease-out;
 }
@@ -53,31 +55,32 @@
 
 .attendance-header h1 {
   font-size: 2rem;
-  font-weight: 700;
-  color: #1a365d;
+  font-weight: 800;
+  color: #ffffff;
   margin: 0.5rem 0;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
 }
 
 .attendance-header p {
-  color: #64748b;
+  color: #cbd5e1;
   font-size: 1.1rem;
   margin: 0;
+  font-weight: 600;
 }
 
 /* Lecture Info */
 .lecture-info {
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  background: linear-gradient(135deg, #111827 0%, #0f172a 100%);
   border-radius: 16px;
   padding: 1.5rem;
   margin-bottom: 2rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .lecture-info h3 {
-  color: #1a365d;
+  color: #ffffff;
   font-size: 1.3rem;
-  font-weight: 600;
+  font-weight: 800;
   margin: 0 0 1rem 0;
 }
 
@@ -92,7 +95,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 0.5rem 0;
-  border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .info-item:last-child {
@@ -100,14 +103,14 @@
 }
 
 .info-item .label {
-  font-weight: 600;
-  color: #475569;
+  font-weight: 700;
+  color: #cbd5e1;
   font-size: 0.95rem;
 }
 
 .info-item .value {
-  color: #1a365d;
-  font-weight: 500;
+  color: #ffffff;
+  font-weight: 700;
   max-width: 60%;
   text-align: left;
 }
@@ -121,13 +124,13 @@
 }
 
 .status-display.processing {
-  background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%);
+  background: linear-gradient(135deg, #3b2f0b 0%, #4b3a12 100%);
   border: 1px solid #f59e0b;
 }
 
 .status-display.success {
-  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
-  border: 1px solid #16a34a;
+  background: linear-gradient(135deg, #06351b 0%, #0f5132 100%);
+  border: 1px solid #22c55e;
 }
 
 /* Animations */
@@ -139,13 +142,13 @@
   display: inline-block;
   width: 60px;
   height: 60px;
-  background: #16a34a;
+  background: #22c55e;
   border-radius: 50%;
   color: white;
   font-size: 2rem;
   line-height: 60px;
   animation: scaleIn 0.6s ease-out;
-  box-shadow: 0 4px 20px rgba(22, 163, 74, 0.3);
+  box-shadow: 0 4px 20px rgba(34, 197, 94, 0.35);
 }
 
 @keyframes scaleIn {
@@ -181,16 +184,17 @@
 /* Status Text */
 .status-text {
   font-size: 1.4rem;
-  font-weight: 600;
+  font-weight: 800;
   margin: 0.5rem 0;
+  color: #ffffff;
 }
 
 .status-display.processing .status-text {
-  color: #d97706;
+  color: #fbbf24;
 }
 
 .status-display.success .status-text {
-  color: #16a34a;
+  color: #22c55e;
 }
 
 /* Redirect Info */
@@ -199,9 +203,9 @@
 }
 
 .redirect-info p {
-  color: #16a34a;
+  color: #86efac;
   margin-bottom: 0.5rem;
-  font-weight: 500;
+  font-weight: 700;
 }
 
 .countdown-display {
@@ -210,7 +214,7 @@
   justify-content: center;
   gap: 0.5rem;
   font-size: 1.1rem;
-  color: #16a34a;
+  color: #22c55e;
 }
 
 .countdown-number {
@@ -219,7 +223,7 @@
   justify-content: center;
   width: 40px;
   height: 40px;
-  background: #16a34a;
+  background: #22c55e;
   color: white;
   border-radius: 50%;
   font-weight: bold;
@@ -244,7 +248,7 @@
   padding: 0.75rem 1.5rem;
   border-radius: 12px;
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 800;
   cursor: pointer;
   border: none;
   transition: all 0.3s ease;
@@ -256,36 +260,36 @@
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #1a365d 0%, #2563eb 100%);
-  color: white;
-  box-shadow: 0 4px 12px rgba(26, 54, 93, 0.3);
+  background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(26, 54, 93, 0.4);
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5);
 }
 
 .btn-secondary {
-  background: linear-gradient(135deg, #64748b 0%, #475569 100%);
-  color: white;
-  box-shadow: 0 4px 12px rgba(100, 116, 139, 0.3);
+  background: linear-gradient(135deg, #4b5563 0%, #334155 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.35);
 }
 
 .btn-secondary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(100, 116, 139, 0.4);
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.5);
 }
 
 .btn-outline {
   background: transparent;
-  color: #1a365d;
-  border: 2px solid #1a365d;
+  color: #ffffff;
+  border: 2px solid #ffffff;
 }
 
 .btn-outline:hover {
-  background: #1a365d;
-  color: white;
+  background: #ffffff;
+  color: #111827;
   transform: translateY(-2px);
 }
 
@@ -293,15 +297,16 @@
 .student-info {
   margin-top: 2rem;
   padding: 1rem;
-  background: rgba(26, 54, 93, 0.05);
+  background: rgba(255, 255, 255, 0.04);
   border-radius: 12px;
-  border: 1px solid rgba(26, 54, 93, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .student-info p {
   margin: 0.25rem 0;
-  color: #475569;
+  color: #e2e8f0;
   font-size: 0.9rem;
+  font-weight: 700;
 }
 
 /* Loading State */
@@ -324,13 +329,13 @@
 }
 
 .join-attendance-card.loading h2 {
-  color: #1a365d;
+  color: #ffffff;
   font-size: 1.3rem;
   margin-bottom: 0.5rem;
 }
 
 .join-attendance-card.loading p {
-  color: #64748b;
+  color: #cbd5e1;
   font-size: 1rem;
 }
 
@@ -366,49 +371,5 @@
   
   .action-buttons {
     gap: 0.75rem;
-  }
-}
-
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .join-attendance-card {
-    background: rgba(30, 41, 59, 0.95);
-    color: #e2e8f0;
-  }
-  
-  .attendance-header h1 {
-    color: #e2e8f0;
-  }
-  
-  .lecture-info {
-    background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
-    border-color: #4b5563;
-  }
-  
-  .lecture-info h3 {
-    color: #e2e8f0;
-  }
-  
-  .info-item .label {
-    color: #cbd5e1;
-  }
-  
-  .info-item .value {
-    color: #e2e8f0;
-  }
-  
-  .student-info {
-    background: rgba(55, 65, 81, 0.5);
-    border-color: rgba(55, 65, 81, 0.3);
-  }
-  
-  .btn-outline {
-    color: #e2e8f0;
-    border-color: #e2e8f0;
-  }
-  
-  .btn-outline:hover {
-    background: #e2e8f0;
-    color: #1e293b;
   }
 }

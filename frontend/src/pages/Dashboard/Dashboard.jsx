@@ -95,7 +95,7 @@ function Dashboard() {
       border-b border-[rgba(100,108,255,0.2)]
       bg-[linear-gradient(180deg,#1e1e2e_0%,#282c4e_50%,#2d3748_100%)]
       overflow-visible 
-      z-[1000]
+      z-[100]
       shadow-[4px_0_20px_rgba(0,0,0,0.1)]
       md:fixed md:h-screen md:w-[240px] md:border-b-0 md:border-r
       lg:w-[280px]

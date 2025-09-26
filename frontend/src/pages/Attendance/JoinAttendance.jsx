@@ -181,7 +181,17 @@ export default function JoinAttendance() {
         )}
 
         {/* Status Display */}
-        <div className={`status-display ${attendanceSuccess ? 'success' : 'processing'}`}>
+        <div
+          className={`status-display ${attendanceSuccess ? 'success' : 'processing'}`}
+          role="status"
+          aria-live="polite"
+        >
+          {attendanceSuccess && (
+            <div className="attended-toast" role="alert" aria-label="تم تأكيد الحضور">
+              <span className="toast-icon" aria-hidden>✔</span>
+              <span className="toast-text">تم تأكيد حضورك لهذه المحاضرة</span>
+            </div>
+          )}
           {attendanceSuccess ? (
             <div className="success-animation">
               <div className="checkmark">✓</div>

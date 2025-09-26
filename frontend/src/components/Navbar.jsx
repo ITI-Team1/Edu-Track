@@ -47,7 +47,7 @@ export default function Navbar() {
 
   return (
     <nav
-      className={`!sticky !top-0 !z-50 !flex !items-center !justify-between !transition-all !duration-200 
+      className={`!sticky !top-0 z-[1000] !flex !items-center !justify-between !transition-all !duration-200 
         ${scrolled
           ? "!py-2 !px-6 !shadow-lg !bg-gradient-to-r !from-slate-900/75 !via-slate-800/85 !to-gray-800/95"
           : "!py-1 md:py-6 !px-4 !shadow-md !bg-gradient-to-r !from-slate-900 !via-slate-800/95 !to-gray-800"

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import PropTypes from 'prop-types';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import QRCode from 'qrcode';
 import logoRaw from '../../assets/psu-logo.svg?raw';
 import jsPDF from 'jspdf';
@@ -13,11 +13,14 @@ import { AttendanceAPI } from '../../services/attendanceApi';
 import Modal from '../../components/ui/Modal';
 import './attendance.css';
 import toast from '../../utils/toast';
+import { useAuth } from '../../context/AuthContext';
 
 // Instructor view (QR + students). Frontend-only QR rotation; no DB storage.
 // Treat route param as lectureId. Optional prop to override.
 const AttendancePage = ({ attendanceId: propAttendanceId }) => {
     const params = useParams();
+    const navigate = useNavigate();
+    const { user } = useAuth();
     const lectureId = propAttendanceId || params.attendanceId;
     const queryClient = useQueryClient();
     const [qrToken, setQrToken] = useState(null);
@@ -53,7 +56,7 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
     });
 
     // React Query for lecture data
-    const { data: lectureData } = useQuery({
+    const { data: _lectureData } = useQuery({
         queryKey: ['lecture', lectureId],
         queryFn: () => getLecture(lectureId),
         enabled: !!lectureId,
@@ -161,6 +164,21 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
             setStudents(studentsData);
         }
     }, [studentsData]);
+
+    // If a logged-in user is enrolled in this lecture, auto-navigate to JoinAttendance to mark attendance
+    useEffect(() => {
+        try {
+            if (!user || !lectureId || !Array.isArray(studentsData)) return;
+            const uid = Number(user?.id || user?.pk || user?.user_id);
+            if (!Number.isFinite(uid)) return;
+            const isEnrolled = studentsData.some((s) => Number(s.student_id) === uid);
+            if (!isEnrolled) return;
+            // Use the rotating token if available, otherwise a fallback token
+            const token = (typeof qrToken === 'string' && qrToken.length) ? qrToken : Math.random().toString(36).slice(2);
+            navigate(`/attendance/join?lec=${encodeURIComponent(lectureId)}&j=${encodeURIComponent(token)}`, { replace: false });
+        } catch {}
+        // Only re-check when these change
+    }, [user, studentsData, lectureId, qrToken, navigate]);
 
     // Frontend-only QR rotation: random token + deep link to /attendance/join
     const generateQR = useCallback(async () => {
@@ -337,19 +355,29 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
         }
     };
 
-    // Sync across tabs on same device - React Query will handle the refresh automatically
+    // Sync across tabs on same device - ensure auto refetch & rerender on QR scans/attendance changes
     useEffect(() => {
         const onStorage = (e) => {
             if (e.key === `attend:lec:${lectureId}`) {
-                // Invalidate queries when localStorage changes in other tabs
+                // Invalidate and explicitly refetch when localStorage changes in other tabs
                 queryClient.invalidateQueries(['students', lectureId]);
+                refetchStudents();
             }
         };
         window.addEventListener('storage', onStorage);
+        // Refetch when tab becomes visible again (e.g., after a student scans QR in another tab)
+        const onVisibility = () => {
+            if (document.visibilityState === 'visible') {
+                queryClient.invalidateQueries(['students', lectureId]);
+                refetchStudents();
+            }
+        };
+        document.addEventListener('visibilitychange', onVisibility);
         return () => {
             window.removeEventListener('storage', onStorage);
+            document.removeEventListener('visibilitychange', onVisibility);
         };
-    }, [lectureId, queryClient]);
+    }, [lectureId, queryClient, refetchStudents]);
 
     return (
         <div className='attendance-page'>
