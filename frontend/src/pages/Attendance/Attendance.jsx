@@ -39,9 +39,9 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
         queryKey: ['students', lectureId],
         queryFn: () => fetchStudentsData(),
         enabled: !!lectureId,
-        refetchInterval: 2000, // Auto refresh every 2 seconds for better responsiveness
+        refetchInterval: 1000, // Auto refresh every 1 second for faster responsiveness
         refetchIntervalInBackground: true,
-        staleTime: 500, // Consider data stale after 0.5 seconds
+        staleTime: 200, // Consider data stale after 0.2 seconds
         retry: 3,
         retryDelay: 1000, // Wait 1 second between retries
         onError: (error) => {
@@ -269,46 +269,7 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
         [lectureId, queryClient]
     );
 
-    // Mark all as absent by updating all student attendance records
-    const markAllAbsent = useCallback(async () => {
-        if (!lectureId) return;
-        
-        try {
-            // Get or create attendance record for this lecture
-            const attendanceRecords = await AttendanceAPI.getAttendanceByLecture(lectureId);
-            let attendanceRecord;
-            
-            if (attendanceRecords.length === 0) {
-                // Create new attendance record
-                const newAttendance = await AttendanceAPI.createAttendance({
-                    lecture: Number(lectureId)
-                });
-                attendanceRecord = newAttendance.data;
-            } else {
-                attendanceRecord = attendanceRecords[attendanceRecords.length - 1]; // Get most recent
-            }
-            
-            // Get all student attendance records for this session
-            const studentAttendances = await AttendanceAPI.getStudentAttendancesByAttendance(attendanceRecord.id);
-            
-            // Update all records to absent
-            await Promise.all(
-                studentAttendances.map(record => 
-                    AttendanceAPI.updateStudentAttendance(record.id, { present: false })
-                )
-            );
-            
-            // Invalidate query to refresh data immediately
-            queryClient.invalidateQueries(['students', lectureId]);
-            queryClient.invalidateQueries(['attendance', lectureId]);
-            
-            toast.success('تم تعيين جميع الطلاب كغياب');
-            
-        } catch (error) {
-            console.error('Failed to mark all absent:', error);
-            toast.error('فشل في تعيين جميع الطلاب كغياب');
-        }
-    }, [lectureId, queryClient]);
+    // Removed markAllAbsent functionality per request to simplify UI and improve responsiveness
 
     // Rotation timer (one interval every second; when counter hits 0 rotate & reset)
     const rotateNow = useCallback(async () => {
@@ -488,14 +449,6 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
                         
                     </div>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <button
-                            className='btn btn-secondary-attendance'
-                            onClick={markAllAbsent}
-                            disabled={loading}
-                            style={{ fontSize: '14px', padding: '8px 12px' }}
-                        >
-                            اعادة الغياب 
-                        </button>
                         <button
                             className='btn btn-secondary-attendance'
                             onClick={() => setShowAttendanceGradeModal(true)}

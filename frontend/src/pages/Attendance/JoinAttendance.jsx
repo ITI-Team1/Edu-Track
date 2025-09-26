@@ -75,8 +75,11 @@ export default function JoinAttendance() {
       }
     }
 
-    // Resolve instructor name
-    if (lecture.instructor) {
+    // Resolve instructor name (prefer backend-provided instructor_details)
+    if (Array.isArray(lecture.instructor_details) && lecture.instructor_details.length) {
+      const names = lecture.instructor_details.map(u => `${u.first_name || ''} ${u.last_name || ''}`.trim()).filter(Boolean);
+      if (names.length) instructorName = names.join('، ');
+    } else if (lecture.instructor) {
       if (typeof lecture.instructor === 'object' && lecture.instructor.first_name) {
         instructorName = `${lecture.instructor.first_name} ${lecture.instructor.last_name || ''}`.trim();
       } else if (typeof lecture.instructor === 'string') {
@@ -286,7 +289,13 @@ export default function JoinAttendance() {
     // FIXED: Only redirect if we're sure the user is not authenticated (not just loading)
     // This prevents the race condition where QR scanning triggers login redirect
     // even when the user is already authenticated but the auth check is still loading
-    if (!user && !lectureLoading) {
+    // Avoid redirect if a token exists (AuthContext may still be hydrating)
+    const storedToken =
+      localStorage.getItem('authToken') ||
+      localStorage.getItem('access') ||
+      localStorage.getItem('access_token') ||
+      localStorage.getItem('token');
+    if (!user && !lectureLoading && !storedToken) {
       navigate(`/login?next=${encodeURIComponent(loc.pathname + loc.search)}`, { replace: true });
       return;
     }
