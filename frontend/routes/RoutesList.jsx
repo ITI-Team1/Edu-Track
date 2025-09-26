@@ -112,7 +112,7 @@ const RoutesList = () => {
       <Route
         path="/attendance/:attendanceId"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedGroups={[3]} requiresInstructor={true}>
             <Page title="الحضور"><AttendancePage /></Page>
           </ProtectedRoute>
         }

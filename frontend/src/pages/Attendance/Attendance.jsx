@@ -5,6 +5,7 @@ import QRCode from 'qrcode';
 import logoRaw from '../../assets/psu-logo.svg?raw';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getLecture, fetchLectures } from '../../services/lectureApi';
 import { fetchCourses } from '../../services/courseApi';
 import { fetchUsers } from '../../services/userApi';
@@ -18,11 +19,12 @@ import toast from '../../utils/toast';
 const AttendancePage = ({ attendanceId: propAttendanceId }) => {
     const params = useParams();
     const lectureId = propAttendanceId || params.attendanceId;
+    const queryClient = useQueryClient();
     const [qrToken, setQrToken] = useState(null);
     const [qrSvg, setQrSvg] = useState('');
     const [joinLink, setJoinLink] = useState(null);
     const [students, setStudents] = useState([]);
-    const [secondsLeft, setSecondsLeft] = useState(10);
+    const [secondsLeft, setSecondsLeft] = useState(20); // Extended to 20 seconds
     const [headingText, setHeadingText] = useState('');
     const [attendanceGrade, setAttendanceGrade] = useState(0);
     const [showAttendanceGradeModal, setShowAttendanceGradeModal] = useState(false);
@@ -39,22 +41,29 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
         }
     }, [lectureId]);
 
-    // Frontend-only QR rotation: random token + deep link to /attendance/join
-    const generateQR = useCallback(async () => {
-        if (!lectureId) return;
-        const rand = crypto?.getRandomValues
-            ? Array.from(crypto.getRandomValues(new Uint8Array(12)))
-                    .map((b) => b.toString(16).padStart(2, '0'))
-                    .join('')
-            : Math.random().toString(36).slice(2);
-        setQrToken(rand);
-        // Always use the production URL for QR codes, fallback to current origin if not set
-        const base = (import.meta.env.VITE_PUBLIC_BASE_URL || 'https://psu-platform.vercel.app').replace(/\/$/, '');
-        setJoinLink(`${base}/attendance/join?lec=${encodeURIComponent(lectureId)}&j=${rand}`);
-    }, [lectureId]);
+    // React Query for students data with automatic refresh
+    const { data: studentsData, refetch: refetchStudents } = useQuery({
+        queryKey: ['students', lectureId],
+        queryFn: () => fetchStudentsData(),
+        enabled: !!lectureId,
+        refetchInterval: 3000, // Auto refresh every 3 seconds
+        refetchIntervalInBackground: true,
+        staleTime: 1000, // Consider data stale after 1 second
+        retry: 3
+    });
 
-    const fetchStudents = useCallback(async () => {
-        if (!lectureId) return;
+    // React Query for lecture data
+    const { data: lectureData } = useQuery({
+        queryKey: ['lecture', lectureId],
+        queryFn: () => getLecture(lectureId),
+        enabled: !!lectureId,
+        staleTime: 5 * 60 * 1000, // 5 minutes
+        retry: 2
+    });
+
+    // Function to fetch students data
+    const fetchStudentsData = useCallback(async () => {
+        if (!lectureId) return [];
         try {
             // Small retry to handle eventual consistency right after lecture creation
             let lec = await getLecture(lectureId);
@@ -90,7 +99,7 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
                     }
                 } catch {}
             }
-            // raw now contains the best-effort students array from lecture payload
+            
             // Preload course title to display as heading (fallback to lecture id)
             try {
                 const courses = await fetchCourses();
@@ -100,6 +109,7 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
             } catch {
                 setHeadingText(`المحاضرة رقم ${lectureId}`);
             }
+            
             // Fetch users to resolve first/last names when students are IDs
             let usersMap = {};
             try {
@@ -108,6 +118,7 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
             } catch {
                 // ignore, will fallback
             }
+            
             const presentSet = readPresentSet();
             const mapped = raw.map((s) => {
                 // Extract a student id from multiple possible shapes
@@ -137,11 +148,33 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
                     present: Number.isFinite(sid) ? presentSet.has(sid) : false,
                 };
             });
-            setStudents(mapped);
+            
+            return mapped;
         } catch {
-            setStudents([]);
+            return [];
         }
     }, [lectureId, readPresentSet]);
+
+    // Update students when data changes
+    useEffect(() => {
+        if (studentsData) {
+            setStudents(studentsData);
+        }
+    }, [studentsData]);
+
+    // Frontend-only QR rotation: random token + deep link to /attendance/join
+    const generateQR = useCallback(async () => {
+        if (!lectureId) return;
+        const rand = crypto?.getRandomValues
+            ? Array.from(crypto.getRandomValues(new Uint8Array(12)))
+                    .map((b) => b.toString(16).padStart(2, '0'))
+                    .join('')
+            : Math.random().toString(36).slice(2);
+        setQrToken(rand);
+        // Always use the production URL for QR codes, fallback to current origin if not set
+        const base = (import.meta.env.VITE_PUBLIC_BASE_URL || 'https://psu-platform.vercel.app').replace(/\/$/, '');
+        setJoinLink(`${base}/attendance/join?lec=${encodeURIComponent(lectureId)}&j=${rand}`);
+    }, [lectureId]);
 
     const toggleStudent = useCallback(
         (studentId) => {
@@ -149,28 +182,37 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
             if (set.has(Number(studentId))) set.delete(Number(studentId));
             else set.add(Number(studentId));
             localStorage.setItem(`attend:lec:${lectureId}`, JSON.stringify(Array.from(set)));
-            fetchStudents();
+            // Trigger storage event for cross-tab sync
+            window.dispatchEvent(new StorageEvent('storage', {
+                key: `attend:lec:${lectureId}`,
+                newValue: JSON.stringify(Array.from(set)),
+                storageArea: localStorage
+            }));
+            // Invalidate query to refresh data immediately
+            queryClient.invalidateQueries(['students', lectureId]);
         },
-        [lectureId, readPresentSet, fetchStudents]
+        [lectureId, readPresentSet, queryClient]
     );
 
     // Mark all as absent locally by clearing the present set
     const markAllAbsent = useCallback(() => {
         if (!lectureId) return;
         localStorage.setItem(`attend:lec:${lectureId}`, JSON.stringify([]));
-        fetchStudents();
+        // Trigger storage event for cross-tab sync
+        window.dispatchEvent(new StorageEvent('storage', {
+            key: `attend:lec:${lectureId}`,
+            newValue: JSON.stringify([]),
+            storageArea: localStorage
+        }));
+        // Invalidate query to refresh data immediately
+        queryClient.invalidateQueries(['students', lectureId]);
         toast.info('تم تعيين جميع الطلاب كغياب (محليًا)');
-    }, [lectureId, fetchStudents]);
-
-    // Initial load
-    useEffect(() => {
-        fetchStudents();
-    }, [lectureId, fetchStudents]);
+    }, [lectureId, queryClient]);
 
     // Rotation timer (one interval every second; when counter hits 0 rotate & reset)
     const rotateNow = useCallback(async () => {
         await generateQR();
-        setSecondsLeft(10);
+        setSecondsLeft(20); // Extended to 20 seconds
     }, [generateQR]);
 
     useEffect(() => {
@@ -181,7 +223,7 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
                 if (prev <= 1) {
                     // Trigger rotation
                     rotateNow();
-                    return 10;
+                    return 20; // Extended to 20 seconds
                 }
                 return prev - 1;
             });
@@ -295,18 +337,19 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
         }
     };
 
-    // Sync across tabs on same device
+    // Sync across tabs on same device - React Query will handle the refresh automatically
     useEffect(() => {
         const onStorage = (e) => {
-            if (e.key === `attend:lec:${lectureId}`) fetchStudents();
+            if (e.key === `attend:lec:${lectureId}`) {
+                // Invalidate queries when localStorage changes in other tabs
+                queryClient.invalidateQueries(['students', lectureId]);
+            }
         };
         window.addEventListener('storage', onStorage);
-        const intv = setInterval(fetchStudents, 5000);
         return () => {
             window.removeEventListener('storage', onStorage);
-            clearInterval(intv);
         };
-    }, [lectureId, fetchStudents]);
+    }, [lectureId, queryClient]);
 
     return (
         <div className='attendance-page'>
@@ -459,9 +502,6 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
                 </div>
                 {!lectureId && <p>لم يتم تحديد محاضرة.</p>}
                 {lectureId && (qrSvg ? <div className='qr-box' dangerouslySetInnerHTML={{ __html: qrSvg }} /> : <p>جاري التحميل...</p>)}
-                {joinLink && (
-                    <div style={{ marginTop: 8, direction: 'ltr', fontSize: 12, textAlign: 'center', width: '100%' }}>Join: {joinLink}</div>
-                )}
             </div>
             </div>
             

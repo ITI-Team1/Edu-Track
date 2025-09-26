@@ -165,6 +165,7 @@ export default function AttendanceRecords() {
       "الثلاثاء",
       "الأربعاء",
       "الخميس",
+      "الجمعة",
     ],
     []
   );
