@@ -33,16 +33,6 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
     const [showAttendanceGradeModal, setShowAttendanceGradeModal] = useState(false);
     const [loading, setLoading] = useState(false);
     const [search, setSearch] = useState('');
-    // Build present set from localStorage (same-origin, cross-tab)
-    const readPresentSet = useCallback(() => {
-        try {
-            const raw = localStorage.getItem(`attend:lec:${lectureId}`);
-            const arr = raw ? JSON.parse(raw) : [];
-            return new Set(arr.map(Number));
-        } catch {
-            return new Set();
-        }
-    }, [lectureId]);
 
     // React Query for students data with automatic refresh
     const { data: studentsData, refetch: refetchStudents } = useQuery({
@@ -64,11 +54,12 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
         retry: 2
     });
 
-    // Function to fetch students data
+    // Function to fetch students data with attendance status from backend
     const fetchStudentsData = useCallback(async () => {
         if (!lectureId) return [];
+        
         try {
-            // Small retry to handle eventual consistency right after lecture creation
+            // Get lecture data to extract students
             let lec = await getLecture(lectureId);
             const pickStudents = (lecture) => {
                 const cands = [
@@ -83,6 +74,7 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
                 ];
                 return cands.find((arr) => Array.isArray(arr)) || [];
             };
+            
             let raw = pickStudents(lec);
             if (!raw.length) {
                 // retry up to 2 times with a small delay
@@ -122,7 +114,29 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
                 // ignore, will fallback
             }
             
-            const presentSet = readPresentSet();
+            // Get attendance records from backend instead of localStorage
+            let attendancePresenceMap = new Set();
+            try {
+                // Get attendance record for this lecture
+                const attendanceRecords = await AttendanceAPI.getAttendanceByLecture(lectureId);
+                if (attendanceRecords.length > 0) {
+                    // Get student attendance records for the latest attendance session
+                    const latestAttendance = attendanceRecords[attendanceRecords.length - 1]; // Get most recent
+                    const studentAttendances = await AttendanceAPI.getStudentAttendancesByAttendance(latestAttendance.id);
+                    
+                    // Build set of present students from backend data
+                    attendancePresenceMap = new Set(
+                        studentAttendances
+                            .filter(att => att.present === true)
+                            .map(att => Number(att.student))
+                    );
+                }
+            } catch (attendanceError) {
+                console.warn('Failed to fetch attendance from backend:', attendanceError);
+                // Fallback to empty set if backend fails
+                attendancePresenceMap = new Set();
+            }
+            
             const mapped = raw.map((s) => {
                 // Extract a student id from multiple possible shapes
                 let sid = null;
@@ -144,19 +158,21 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
                 const uname = first && last
                     ? `${first} ${last}`
                     : (first || cand?.username || cand?.englishfullname || cand?.name || (Number.isFinite(sid) ? `مستخدم ${sid}` : 'مستخدم'));
+                
                 return {
                     id: sid,
                     student_id: sid,
                     username: uname,
-                    present: Number.isFinite(sid) ? presentSet.has(sid) : false,
+                    present: Number.isFinite(sid) ? attendancePresenceMap.has(sid) : false, // Use backend data
                 };
             });
             
             return mapped;
-        } catch {
+        } catch (error) {
+            console.error('Failed to fetch students data:', error);
             return [];
         }
-    }, [lectureId, readPresentSet]);
+    }, [lectureId]);
 
     // Update students when data changes
     useEffect(() => {
@@ -195,36 +211,93 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
     }, [lectureId]);
 
     const toggleStudent = useCallback(
-        (studentId) => {
-            const set = readPresentSet();
-            if (set.has(Number(studentId))) set.delete(Number(studentId));
-            else set.add(Number(studentId));
-            localStorage.setItem(`attend:lec:${lectureId}`, JSON.stringify(Array.from(set)));
-            // Trigger storage event for cross-tab sync
-            window.dispatchEvent(new StorageEvent('storage', {
-                key: `attend:lec:${lectureId}`,
-                newValue: JSON.stringify(Array.from(set)),
-                storageArea: localStorage
-            }));
-            // Invalidate query to refresh data immediately
-            queryClient.invalidateQueries(['students', lectureId]);
+        async (studentId) => {
+            if (!lectureId || !studentId) return;
+            
+            try {
+                // Get or create attendance record for this lecture
+                const attendanceRecords = await AttendanceAPI.getAttendanceByLecture(lectureId);
+                let attendanceRecord;
+                
+                if (attendanceRecords.length === 0) {
+                    // Create new attendance record
+                    const newAttendance = await AttendanceAPI.createAttendance({
+                        lecture: Number(lectureId)
+                    });
+                    attendanceRecord = newAttendance.data;
+                } else {
+                    attendanceRecord = attendanceRecords[attendanceRecords.length - 1]; // Get most recent
+                }
+                
+                // Check if student already has an attendance record
+                const studentAttendances = await AttendanceAPI.getStudentAttendancesByAttendance(attendanceRecord.id);
+                const existingRecord = studentAttendances.find(att => att.student === Number(studentId));
+                
+                if (existingRecord) {
+                    // Toggle existing record
+                    await AttendanceAPI.updateStudentAttendance(existingRecord.id, {
+                        present: !existingRecord.present
+                    });
+                } else {
+                    // Create new record as present (since they're clicking to mark present)
+                    await AttendanceAPI.createStudentAttendance({
+                        attendance: attendanceRecord.id,
+                        student: Number(studentId),
+                        present: true
+                    });
+                }
+                
+                // Invalidate query to refresh data immediately
+                queryClient.invalidateQueries(['students', lectureId]);
+                queryClient.invalidateQueries(['attendance', lectureId]);
+                
+            } catch (error) {
+                console.error('Failed to toggle student attendance:', error);
+                toast.error('فشل في تعديل حضور الطالب');
+            }
         },
-        [lectureId, readPresentSet, queryClient]
+        [lectureId, queryClient]
     );
 
-    // Mark all as absent locally by clearing the present set
-    const markAllAbsent = useCallback(() => {
+    // Mark all as absent by updating all student attendance records
+    const markAllAbsent = useCallback(async () => {
         if (!lectureId) return;
-        localStorage.setItem(`attend:lec:${lectureId}`, JSON.stringify([]));
-        // Trigger storage event for cross-tab sync
-        window.dispatchEvent(new StorageEvent('storage', {
-            key: `attend:lec:${lectureId}`,
-            newValue: JSON.stringify([]),
-            storageArea: localStorage
-        }));
-        // Invalidate query to refresh data immediately
-        queryClient.invalidateQueries(['students', lectureId]);
-        toast.info('تم تعيين جميع الطلاب كغياب (محليًا)');
+        
+        try {
+            // Get or create attendance record for this lecture
+            const attendanceRecords = await AttendanceAPI.getAttendanceByLecture(lectureId);
+            let attendanceRecord;
+            
+            if (attendanceRecords.length === 0) {
+                // Create new attendance record
+                const newAttendance = await AttendanceAPI.createAttendance({
+                    lecture: Number(lectureId)
+                });
+                attendanceRecord = newAttendance.data;
+            } else {
+                attendanceRecord = attendanceRecords[attendanceRecords.length - 1]; // Get most recent
+            }
+            
+            // Get all student attendance records for this session
+            const studentAttendances = await AttendanceAPI.getStudentAttendancesByAttendance(attendanceRecord.id);
+            
+            // Update all records to absent
+            await Promise.all(
+                studentAttendances.map(record => 
+                    AttendanceAPI.updateStudentAttendance(record.id, { present: false })
+                )
+            );
+            
+            // Invalidate query to refresh data immediately
+            queryClient.invalidateQueries(['students', lectureId]);
+            queryClient.invalidateQueries(['attendance', lectureId]);
+            
+            toast.success('تم تعيين جميع الطلاب كغياب');
+            
+        } catch (error) {
+            console.error('Failed to mark all absent:', error);
+            toast.error('فشل في تعيين جميع الطلاب كغياب');
+        }
     }, [lectureId, queryClient]);
 
     // Rotation timer (one interval every second; when counter hits 0 rotate & reset)
@@ -281,9 +354,12 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
                 attendanceId = attendances[0].id;
             }
             
-            // Get present students from localStorage
-            const presentSet = readPresentSet();
-            const presentStudents = students.filter(student => presentSet.has(student.id));
+            // Get present students from backend database
+            const studentAttendances = await AttendanceAPI.getStudentAttendancesByAttendance(attendanceId);
+            const presentStudents = students.filter(student => {
+                const attendanceRecord = studentAttendances.find(att => att.student === student.id);
+                return attendanceRecord && attendanceRecord.present === true;
+            });
             
             // Update StudentAttendance records for present students (they are auto-created by signal)
             const updatePromises = presentStudents.map(async (student) => {
@@ -355,26 +431,17 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
         }
     };
 
-    // Sync across tabs on same device - ensure auto refetch & rerender on QR scans/attendance changes
+    // Auto-refresh when tab becomes visible again (e.g., after student interaction in another tab)
     useEffect(() => {
-        const onStorage = (e) => {
-            if (e.key === `attend:lec:${lectureId}`) {
-                // Invalidate and explicitly refetch when localStorage changes in other tabs
-                queryClient.invalidateQueries(['students', lectureId]);
-                refetchStudents();
-            }
-        };
-        window.addEventListener('storage', onStorage);
-        // Refetch when tab becomes visible again (e.g., after a student scans QR in another tab)
         const onVisibility = () => {
             if (document.visibilityState === 'visible') {
                 queryClient.invalidateQueries(['students', lectureId]);
+                queryClient.invalidateQueries(['attendance', lectureId]);
                 refetchStudents();
             }
         };
         document.addEventListener('visibilitychange', onVisibility);
         return () => {
-            window.removeEventListener('storage', onStorage);
             document.removeEventListener('visibilitychange', onVisibility);
         };
     }, [lectureId, queryClient, refetchStudents]);

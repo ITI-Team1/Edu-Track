@@ -38,56 +38,62 @@ export default function JoinAttendance() {
     try {
       setStatus('جاري تسجيل الحضور...');
 
-      // Mark user as present locally for real-time UI updates
-      const key = `attend:lec:${lectureId}`;
-      const raw = localStorage.getItem(key);
-      const set = new Set((raw ? JSON.parse(raw) : []).map(Number));
       const uid = Number(user?.id || user?.pk || user?.user_id);
-      
-      if (!Number.isNaN(uid)) {
-        set.add(uid);
-        localStorage.setItem(key, JSON.stringify(Array.from(set)));
-        
-        // Trigger storage event to refresh instructor's view
-        window.dispatchEvent(new StorageEvent('storage', {
-          key: key,
-          newValue: JSON.stringify(Array.from(set)),
-          storageArea: localStorage
-        }));
+      if (!Number.isFinite(uid)) {
+        throw new Error('Invalid user ID');
       }
 
-      // Try to create/update attendance record in backend
+      // Get or create attendance record for this lecture
+      let attendanceRecord;
       try {
         const attendances = await AttendanceAPI.getAttendanceByLecture(lectureId);
-        let attendanceId;
         
         if (attendances.length === 0) {
+          // Create new attendance record
           const newAttendance = await AttendanceAPI.createAttendance({
             lecture: Number(lectureId)
           });
-          attendanceId = newAttendance.data.id;
+          attendanceRecord = newAttendance.data;
         } else {
-          attendanceId = attendances[0].id;
+          attendanceRecord = attendances[0];
         }
+      } catch (attendanceError) {
+        console.error('Failed to get/create attendance record:', attendanceError);
+        throw new Error('Failed to create attendance session');
+      }
+
+      // Check if student already has an attendance record for this session
+      try {
+        const existingAttendances = await AttendanceAPI.getStudentAttendancesByAttendance(attendanceRecord.id);
+        const existingRecord = existingAttendances.find(att => att.student === uid);
         
-        // Mark student as present in backend
-        await AttendanceAPI.createStudentAttendance({
-          attendance: attendanceId,
-          student: uid,
-          present: true
-        });
-      } catch (backendError) {
-        // Log backend error but don't fail the process since local storage is working
-        console.warn('Backend attendance update failed:', backendError);
+        if (existingRecord) {
+          // Update existing record to mark as present
+          await AttendanceAPI.updateStudentAttendance(existingRecord.id, {
+            present: true,
+            ip_address: null // Let backend handle IP detection
+          });
+        } else {
+          // Create new student attendance record
+          await AttendanceAPI.createStudentAttendance({
+            attendance: attendanceRecord.id,
+            student: uid,
+            present: true
+          });
+        }
+      } catch (studentAttendanceError) {
+        console.error('Failed to mark student attendance:', studentAttendanceError);
+        throw new Error('Failed to mark attendance');
       }
 
       setAttendanceSuccess(true);
       setStatus('✅ تم تسجيل حضورك بنجاح!');
       toast.success('تم تسجيل حضورك بنجاح');
       
-      // Invalidate relevant queries to refresh data
+      // Invalidate relevant queries to refresh data across the app
       queryClient.invalidateQueries(['attendance', lectureId]);
-      queryClient.invalidateQueries(['lecture', lectureId]);
+      queryClient.invalidateQueries(['students', lectureId]);
+      queryClient.invalidateQueries(['studentAttendances']);
       
       // Start countdown for redirect
       let count = 3;
