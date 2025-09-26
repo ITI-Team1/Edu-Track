@@ -27,7 +27,7 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
     const [qrSvg, setQrSvg] = useState('');
     const [joinLink, setJoinLink] = useState(null);
     const [students, setStudents] = useState([]);
-    const [secondsLeft, setSecondsLeft] = useState(20); // Extended to 20 seconds
+    const [secondsLeft, setSecondsLeft] = useState(30); // Extended to 20 seconds
     const [headingText, setHeadingText] = useState('');
     const [attendanceGrade, setAttendanceGrade] = useState(0);
     const [showAttendanceGradeModal, setShowAttendanceGradeModal] = useState(false);
@@ -313,7 +313,7 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
     // Rotation timer (one interval every second; when counter hits 0 rotate & reset)
     const rotateNow = useCallback(async () => {
         await generateQR();
-        setSecondsLeft(20); // Extended to 20 seconds
+        setSecondsLeft(30); // Extended to 20 seconds
     }, [generateQR]);
 
     useEffect(() => {
@@ -324,7 +324,7 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
                 if (prev <= 1) {
                     // Trigger rotation
                     rotateNow();
-                    return 20; // Extended to 20 seconds
+                    return 30; // Extended to 20 seconds
                 }
                 return prev - 1;
             });

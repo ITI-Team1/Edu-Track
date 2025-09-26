@@ -125,7 +125,7 @@ export default function JoinAttendance() {
     } catch (error) {
       console.error('Attendance marking failed:', error);
       setStatus('❌ فشل في تسجيل الحضور');
-      toast.error(`${error} ${error.response?.status} ${error.response?.data}`);
+      toast.error(`${error} ${error.status} ${error.statusText} ${error.response?.status} ${error.response?.data}`);
     }
   }, [lectureId, token, user, navigate, queryClient]);
 
