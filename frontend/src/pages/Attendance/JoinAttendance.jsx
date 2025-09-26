@@ -123,9 +123,26 @@ export default function JoinAttendance() {
       return () => clearInterval(countdownInterval);
       
     } catch (error) {
+      console.error('Attendance marking failed:', {
+        error,
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        config: {
+          url: error.config?.url,
+          method: error.config?.method,
+          data: error.config?.data
+        }
+      });
+      const errorMessage = error.response?.data?.detail || 
+                   error.response?.data?.message || 
+                   error.message ;
+                   
       console.error('Attendance marking failed:', error);
-      setStatus('❌ فشل في تسجيل الحضور');
-      toast.error(`${error} ${error.status} ${error.statusText} ${error.response?.status} ${error.response?.data}`);
+     
+ setStatus(`❌ ${errorMessage}`);
+  toast.error(`[${error.response?.status || 'N/A'}] ${errorMessage}`.trim());
     }
   }, [lectureId, token, user, navigate, queryClient]);
 
