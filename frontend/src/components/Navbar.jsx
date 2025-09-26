@@ -134,7 +134,7 @@ export default function Navbar() {
             className={`!px-4 !py-3 md:!py-2 md:!px-3 !text-center !text-lg md:!text-base 
               !font-semibold !rounded-md !relative !transition-all !duration-200 
                 hover:!bg-indigo-500/10 hover:!text-white hover:!-translate-y-0.5 
-                ${(link.to === "/" ? location.pathname === "/" : location.pathname.startsWith(link.to)) ? "!text-blue-500 !bg-blue-500/10" : ""}`}
+                ${(link.to === "/" ? location.pathname === "/" : location.pathname.startsWith(link.to)) ? "!bg-blue-500/10" : ""}`}
 
           >
             {link.label}
