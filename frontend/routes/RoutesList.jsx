@@ -52,7 +52,9 @@ const RoutesList = () => {
   <Route path="/activation/:uid-:token" element={<Page title="تفعيل الحساب"><Activation /></Page>} />
   {/* Fallback with single param */}
   <Route path="/activation/:combo" element={<Page title="تفعيل الحساب"><Activation /></Page>} />
-  <Route path="/register" element={<Page title="إنشاء حساب"><Register /></Page>} />
+  
+  {/* <Route path="/register" element={<Page title="إنشاء حساب"><Register /></Page>} /> */}
+  
       <Route
         path="/dashboard"
         element={
@@ -144,6 +146,7 @@ const RoutesList = () => {
         element={<Page title="الاستبانة"><ExamTable /></Page>}
       />
     </Routes>
+
   );
 };
 

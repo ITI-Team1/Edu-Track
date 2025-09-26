@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import psuLogo from "../assets/psu-logo.svg";
 
@@ -7,6 +7,7 @@ export default function Navbar() {
   const { isAuthenticated, logout, user } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const location = useLocation();
   
   // Determine if the current user has permission to view admin log entries
   const hasLogPermission = Boolean(
@@ -87,7 +88,7 @@ export default function Navbar() {
           />
           <h4
             className={` !font-cairo !font-semibold !text-white/90 !transition-all !duration-200
-              ${scrolled ? "!text-base" : "!md:text-lg"}`}
+              ${scrolled ? "text-[1.35rem] md:text-2xl" : " text-2xl md:text-[1.7rem] "}`}
           >
             جامعة بورسعيد
           </h4>
@@ -122,6 +123,7 @@ export default function Navbar() {
                 { to: "/contact", label: "اتصل بنا" },
               ]
         ).map(link => (
+          // make active link with text-blue-500 and bg-blue-500/10
           <Link
             key={link.to}
             to={link.to}
@@ -129,9 +131,11 @@ export default function Navbar() {
               closeMenu();
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
-            className="!px-4 !py-3 md:!py-2 md:!px-3 !text-center !text-lg md:!text-base 
+            className={`!px-4 !py-3 md:!py-2 md:!px-3 !text-center !text-lg md:!text-base 
               !font-semibold !rounded-md !relative !transition-all !duration-200 
-              hover:!bg-indigo-500/10 hover:!text-white hover:!-translate-y-0.5 "
+                hover:!bg-indigo-500/10 hover:!text-white hover:!-translate-y-0.5 
+                ${(link.to === "/" ? location.pathname === "/" : location.pathname.startsWith(link.to)) ? "!text-blue-500 !bg-blue-500/10" : ""}`}
+
           >
             {link.label}
           </Link>
@@ -144,7 +148,7 @@ export default function Navbar() {
           <Link
             to="/login"
             onClick={closeMenu}
-            className="!px-5 !py-2 !rounded-md !bg-slate-600 !text-white !font-semibold !shadow-md 
+            className="!px-3 !py-1 md:!px-5 md:!py-2 !rounded-md !bg-slate-600 !text-white  !shadow-md 
               !transition-all !duration-200 hover:!bg-slate-500 hover:!-translate-y-0.5 !text-sm md:!text-base"
           >
             تسجيل الدخول

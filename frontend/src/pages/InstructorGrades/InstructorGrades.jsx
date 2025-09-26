@@ -9,7 +9,7 @@ import { fetchUsers } from '../../services/userApi';
 import { AttendanceAPI } from '../../services/attendanceApi';
 import Modal from '../../components/ui/Modal';
 import '../../styles/tableScroll.css'; // shared table scrollbar
-
+// import '../../styles/global.css';
 import './instructorgrades.css';
 import toast from '../../utils/toast';
 

@@ -300,7 +300,7 @@ export default function AttendanceRecords() {
         <h1>سجل الحضور</h1>
         <Link 
           to="/instructor-grades" 
-          className="btn-main !px-4 !py-2"
+          className="btn add-lecture-btn btn-lg !px-4 !py-2"
           title="إدارة درجات الطلاب"
         >
           إدارة الدرجات

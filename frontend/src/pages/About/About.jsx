@@ -42,10 +42,10 @@ function About() {
   }, []);
 
   return (
-    <div className="about-edu-page">
+    <div className="about-edu-page ">
       {/* Hero Section */}
-      <section className="about-edu-hero">
-        <div className="about-edu-hero-content">
+      <section className="about-edu-hero  ">
+        <div className="about-edu-hero-content ">
           <h1 className="about-edu-title">عن جامعة بورسعيد</h1>
           <p className="about-edu-subtitle">
             منارة العلم والمعرفة ونموذج ترسيخ القيم المجتمعية
@@ -57,18 +57,18 @@ function About() {
       </section>
 
       {/* Vision & Mission Section */}
-      <section className="about-edu-vision-mission">
+      <section className="about-edu-vision-mission !p-1 md:!p-5 md:!mt-10 ">
         <div className="about-edu-container">
-          <div className="about-edu-section-header">
+          <div className="about-edu-section-header !py-0 !mb-0 md:!my-5  md:!py-5 ">
             <h2>الرؤية، الرسالة، والأهداف</h2>
           </div>
           
-          <div className="about-edu-cards-grid">
+          <div className="about-edu-cards-grid  grid !grid-cols-2  !gap-4 !mb-4 md:!mb-10 ">
             {/* Vision Card */}
             <div className="about-edu-card about-edu-vision-card" ref={visionRef}>
-              <div className="about-edu-card-icon">🎯</div>
-              <h3>الرؤية</h3>
-              <p>
+              
+              <h3 className="!text-right !text-lg !leading-relaxed md:!text-2xl">الرؤية</h3>
+              <p className="!text-right !text-sm !leading-relaxed md:!text-lg">
                 ترغب جامعة بورسعيد أن تكون منارةً للعلم والمعرفة، ونموذجًا لترسيخ القيم المجتمعية، 
                 رائدةً فى مواكبة التغيرات العالمية ذات تصنيف دولي متقدم
               </p>
@@ -76,9 +76,9 @@ function About() {
 
             {/* Mission Card */}
             <div className="about-edu-card about-edu-mission-card" ref={missionRef}>
-              <div className="about-edu-card-icon">🚀</div>
-              <h3>الرسالة</h3>
-              <p>
+              
+              <h3 className="!text-right !text-lg !leading-relaxed md:!text-2xl">الرسالة</h3>
+              <p className="!text-right !text-sm !leading-relaxed md:!text-lg">
                 تسعى جامعة بورسعيد إلى تحقيق التنمية المستدامة والتميز في الأداء المؤسسي، 
                 عبر تقديم أطر تعليمية متطورة، وفقا لمعايير الجودة، ومتطلبات سوق العمل، 
                 وأبحاث علمية تسهم في بناء الاقتصاد المعرفي بشراكة مجتمعية وعالمية
@@ -87,32 +87,32 @@ function About() {
           </div>
 
           {/* Goals Section */}
-          <div className="about-edu-goals" ref={historyRef}>
-            <h3>الأهداف</h3>
-            <div className="about-edu-goals-grid">
-              <div className="about-edu-goal-item">
+          <div className="about-edu-goals !p-2 !mt-2" ref={historyRef}>
+            <h3 className="!text-lg !leading-relaxed md:!text-2xl mt-2 !mb-2">الأهداف</h3>
+            <div className="about-edu-goals-grid grid !grid-cols-2 md:!grid-cols-3 md:!p-2  !gap-4">
+              <div className="about-edu-goal-item !flex flex-col !items-center !gap-2">
                 <span className="about-edu-goal-number">01</span>
-                <p>التطوير المستمر لبرامج التعليم والدراسات العليا لضمان جودة الخريجين</p>
+                <p className="!text-center !text-sm !leading-relaxed md:!text-lg">التطوير المستمر لبرامج التعليم والدراسات العليا لضمان جودة الخريجين</p>
               </div>
-              <div className="about-edu-goal-item">
+              <div className="about-edu-goal-item !flex flex-col !items-center !gap-2">
                 <span className="about-edu-goal-number">02</span>
-                <p>تطوير برامج متعددة التخصصات تلبي متطلبات سوق العمل المحلي والإقليمي</p>
+                <p className="!text-center !text-sm !leading-relaxed md:!text-lg">تطوير برامج متعددة التخصصات تلبي متطلبات سوق العمل المحلي والإقليمي</p>
               </div>
-              <div className="about-edu-goal-item">
+              <div className="about-edu-goal-item !flex flex-col !items-center !gap-2">
                 <span className="about-edu-goal-number">03</span>
-                <p>زيادة التصنيف العالمي للجامعة</p>
+                <p className="!text-center !text-sm !leading-relaxed md:!text-lg">زيادة التصنيف العالمي للجامعة</p>
               </div>
-              <div className="about-edu-goal-item">
+              <div className="about-edu-goal-item !flex flex-col !items-center !gap-2">
                 <span className="about-edu-goal-number">04</span>
-                <p>تطوير الخدمات الإلكترونية لتصبح جامعة ذكية</p>
+                <p className="!text-center !text-sm !leading-relaxed md:!text-lg">تطوير الخدمات الإلكترونية لتصبح جامعة ذكية</p>
               </div>
-              <div className="about-edu-goal-item">
+              <div className="about-edu-goal-item !flex flex-col !items-center !gap-2">
                 <span className="about-edu-goal-number">05</span>
-                <p>تطوير وزيادة الخدمات المجتمعية من خلال الاستخدام الفعال للإمكانيات المتوفرة</p>
+                <p className="!text-center !text-sm !leading-relaxed md:!text-lg">تطوير وزيادة الخدمات المجتمعية من خلال الاستخدام الفعال للإمكانيات المتوفرة</p>
               </div>
-              <div className="about-edu-goal-item">
-                <span className="about-edu-goal-number">06</span>
-                <p>دعم ريادة الأعمال والابتكار والأنشطة الطلابية التي تحقق التميز للجامعة</p>
+              <div className="about-edu-goal-item !flex flex-col !items-center !gap-2">
+                <span className="about-edu-goal-number !text-center !text-sm !leading-relaxed md:!text-lg">06</span>
+                <p className="!text-center !text-sm !leading-relaxed md:!text-lg ">دعم ريادة الأعمال والابتكار والأنشطة الطلابية التي تحقق التميز للجامعة</p>
               </div>
             </div>
           </div>
@@ -120,25 +120,25 @@ function About() {
       </section>
 
       {/* History Section */}
-      <section className="about-edu-history">
+      <section className="about-edu-history !p-1 md:!p-5 md:!mt-0 ">
         <div className="about-edu-container">
-          <div className="about-edu-section-header">
+          <div className="about-edu-section-header md:!my-5  md:!py-5 !mb-0">
             <h2>تاريخ الجامعة</h2>
           </div>
           
           <div className="about-edu-history-content">
-            <div className="about-edu-history-text">
-              <p>
+            <div className="about-edu-history-text !w-full !p-0 md:!p-5 md:flex md:flex-col !items-center md:!gap-5">
+              <p className="!text-center !text-sm !leading-relaxed md:!text-2xl ">
                 أنشأت جامعة بورسعيد عام ۲۰۱۰ بعد ان كانت فرع من جامعة قناة السويس بمدينة بورسعيد 
                 وتم انفصال الفرع بكلياته القائمة حينذاك ليصبح جامعة بورسعيد. وتاريخياً تم إنشاء أول 
                 مؤسسات تعليمية عليا بالمدينة تمنح درجة البكالوريوس في عام ١٩٦١.
               </p>
-              <p>
+              <p className="!text-center !text-sm !leading-relaxed md:!text-2xl ">
                 في عام ١٩٧٦ عندما صدر القرار الجمهوري بإنشاء جامعة قناة السويس انضم المعهدين 
                 لجامعة قناة السويس، وتغير أسم كل منهم ليصبح كلية، وهم كلية الهندسة ببورسعيد 
                 وكلية التجارة ببورسعيد.
               </p>
-              <p>
+              <p className="!text-center !text-sm !leading-relaxed md:!text-2xl ">
                 وفي ٢٤ فبراير ۲۰۱۰م صدر قرار جمهوري بتحويل فرع جامعة قناة السويس ببورسعيد 
                 إلى جامعة مستقلة، جامعة بورسعيد، وتزامن مع ميلاد الجامعة ميلاد كلية جديدة هي 
                 كلية الآداب، حيث أنشئت في يوليو ۲۰۱۱م.
@@ -149,9 +149,9 @@ function About() {
       </section>
 
       {/* Timeline Section */}
-      <section className="about-edu-timeline" ref={timelineRef}>
-        <div className="about-edu-container">
-          <div className="about-edu-section-header">
+      <section className="about-edu-timeline !p-1 md:!p-5 !mb-0 md:!mt-0 " ref={timelineRef}>
+        <div className="about-edu-container !p-1 md:!p-5 md:!mt-0 !mb-0 ">
+          <div className="about-edu-section-header md:!my-0  md:!py-5 !mb-5">
             <h2>الخط الزمني للجامعة</h2>
           </div>
           
@@ -200,13 +200,13 @@ function About() {
       </section>
 
       {/* Centers Section */}
-      <section className="about-edu-centers">
-        <div className="about-edu-container">
-          <div className="about-edu-section-header">
+      <section className="about-edu-centers !p-1 md:!p-5 md:!mb-5 md:!mt-0 ">
+        <div className="about-edu-container  md:!mt-0 !mb-0 ">
+          <div className="about-edu-section-header md:!my-0  md:!py-5 !mb-5">
             <h2>المراكز والوحدات</h2>
           </div>
           
-          <div className="about-edu-centers-grid">
+          <div className="about-edu-centers-grid !grid !grid-cols-2 !gap-4 md:!grid-cols-3 !md:gap-6 !p-1">
             <div className="about-edu-center-item">
               <h4>مركز نظم وتكنولوجيا المعلومات</h4>
             </div>
@@ -225,14 +225,14 @@ function About() {
             <div className="about-edu-center-item">
               <h4>مركز ريادة الأعمال والابتكار</h4>
             </div>
-            <div className="about-edu-center-item">
+            <div className="about-edu-center-item ">
               <h4>مركز محو الأمية وتعليم الكبار</h4>
             </div>
             <div className="about-edu-center-item">
-              <h4>مكتب دعم الابتكار ونقل وتسويق التكنولوجيا</h4>
-            </div>
-            <div className="about-edu-center-item">
               <h4>نادى ريادة الأعمال</h4>
+            </div>
+            <div className="about-edu-center-item col-span-2 md:col-span-1">
+              <h4>مكتب دعم الابتكار ونقل وتسويق التكنولوجيا</h4>
             </div>
           </div>
         </div>

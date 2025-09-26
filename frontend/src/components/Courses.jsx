@@ -240,7 +240,7 @@ function Courses() {
             <div className="course-card" style={{ textAlign: 'center', color: 'red' }}>خطأ: {combinedError}</div>
           )}
           {!combinedLoading && !combinedError && enrolledCourseCards.length === 0 && (
-            <div className="course-card" style={{ textAlign: 'center' }}>لا توجد مقررات مسجلة</div>
+            <div className="course-card  text-gray-800 " style={{ textAlign: 'center' }}>لا توجد مقررات مسجلة</div>
           )}
           {!combinedLoading && !combinedError && enrolledCourseCards.map(course => (
             <div key={course.id} className="course-card">
