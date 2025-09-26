@@ -7,6 +7,8 @@ import { fetchLectures } from '../services/lectureApi';
 import { fetchCourses } from '../services/courseApi';
 import { fetchLocations } from '../services/locationApi';
 import { fetchUserPermissions, fetchUsers } from '../services/userApi';
+import { AttendanceAPI } from '../services/attendanceApi';
+import toast from '../utils/toast';
 import Spinner from './Spinner';
 
 function Schedule() {
@@ -237,6 +239,37 @@ function Schedule() {
     return cards;
   }, [userLectures, normalizeDay, getCourseTitle, getRoomName, getInstructorNames, daysOrder]);
 
+  // Open attendance session for a lecture
+  const openAttendanceSession = useCallback(async (lectureId) => {
+    try {
+      // Check if there's already an active session for this lecture
+      const existingSessions = await AttendanceAPI.getAttendanceByLecture(lectureId);
+      
+      if (existingSessions.length > 0) {
+        toast.info('جلسة حضور مفتوحة بالفعل لهذه المحاضرة');
+        // Navigate to the existing session
+        navigate(`/attendance/${lectureId}`);
+        return;
+      }
+
+      // Create new attendance session
+      await AttendanceAPI.createAttendance({
+        lecture: Number(lectureId)
+      });
+
+      toast.success('تم فتح جلسة الحضور بنجاح');
+      // Navigate to the attendance page
+      navigate(`/attendance/${lectureId}`);
+
+    } catch (error) {
+      console.error('Failed to open attendance session:', error);
+      const errorMessage = error.response?.data?.detail || 
+                          error.response?.data?.message || 
+                          'فشل في فتح جلسة الحضور';
+      toast.error(errorMessage);
+    }
+  }, [navigate]);
+
   // Export weekly schedule to Excel (xlsx if available, otherwise CSV fallback)
   const handleExportWeekExcel = async () => {
     // Build tabular data: header + rows
@@ -360,9 +393,17 @@ function Schedule() {
                 {
                   permissions.includes('Can add student attendance') && (
                 <div className="class-actions">
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => openAttendanceSession(class_.id)}
+                    title="فتح جلسة حضور جديدة"
+                    style={{ marginLeft: '8px' }}
+                  >
+                    فتح جلسة
+                  </button>
                   <Link
                     to={`/attendance/${class_.id}`}
-                    className="btn"
+                    className="btn btn-secondary"
                     title="عرض الحضور لهذه المحاضرة"
                   >
                     الحضور

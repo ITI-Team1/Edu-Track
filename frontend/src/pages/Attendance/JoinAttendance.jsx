@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -35,6 +35,72 @@ export default function JoinAttendance() {
     }
   });
 
+  // Fetch additional data to resolve course and instructor names
+  const { data: courses } = useQuery({
+    queryKey: ['courses'],
+    queryFn: async () => {
+      const { fetchCourses } = await import('../../services/courseApi');
+      return fetchCourses();
+    },
+    enabled: !!lecture,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+  });
+
+  const { data: users } = useQuery({
+    queryKey: ['users'],
+    queryFn: async () => {
+      const { fetchUsers } = await import('../../services/userApi');
+      return fetchUsers();
+    },
+    enabled: !!lecture,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+  });
+
+  // Enhanced lecture info with resolved course and instructor names
+  const enhancedLectureInfo = useMemo(() => {
+    if (!lecture) return null;
+
+    let courseName = 'غير محدد';
+    let instructorName = 'غير محدد';
+
+    // Resolve course name
+    if (lecture.course) {
+      if (typeof lecture.course === 'object' && lecture.course.title) {
+        courseName = lecture.course.title;
+      } else if (typeof lecture.course === 'string') {
+        courseName = lecture.course;
+      } else if (typeof lecture.course === 'number' && courses) {
+        const course = courses.find(c => c.id === lecture.course);
+        if (course) courseName = course.title;
+      }
+    }
+
+    // Resolve instructor name
+    if (lecture.instructor) {
+      if (typeof lecture.instructor === 'object' && lecture.instructor.first_name) {
+        instructorName = `${lecture.instructor.first_name} ${lecture.instructor.last_name || ''}`.trim();
+      } else if (typeof lecture.instructor === 'string') {
+        instructorName = lecture.instructor;
+      } else if (Array.isArray(lecture.instructor) && users) {
+        const instructorNames = lecture.instructor.map(inst => {
+          const instructorId = typeof inst === 'object' ? inst.id : inst;
+          const user = users.find(u => u.id === instructorId);
+          return user ? `${user.first_name} ${user.last_name || ''}`.trim() : instructorId;
+        }).filter(name => name && name !== 'غير محدد');
+        instructorName = instructorNames.length > 0 ? instructorNames.join('، ') : 'غير محدد';
+      } else if (typeof lecture.instructor === 'number' && users) {
+        const user = users.find(u => u.id === lecture.instructor);
+        if (user) instructorName = `${user.first_name} ${user.last_name || ''}`.trim();
+      }
+    }
+
+    return {
+      ...lecture,
+      courseName,
+      instructorName
+    };
+  }, [lecture, courses, users]);
+
   // Function to handle attendance marking
   const markAttendance = useCallback(async () => {
     if (!lectureId || !token || !user) return;
@@ -47,8 +113,8 @@ export default function JoinAttendance() {
         throw new Error('Invalid user ID');
       }
 
-      // Debug: Log lecture data to help diagnose the "غير محدد" issue
-      console.log('Lecture data for debugging:', {
+      // Debug: Log lecture data to help diagnose issues
+      console.error('Lecture data for debugging:', {
         lectureId,
         lecture,
         course: lecture?.course,
@@ -61,7 +127,7 @@ export default function JoinAttendance() {
       let sessionsMeta = { lectureId, foundCount: 0 };
       try {
         const attendances = await AttendanceAPI.getAttendanceByLecture(lectureId);
-        console.log('Existing attendance sessions for lecture', lectureId, attendances);
+        console.error('Existing attendance sessions for lecture', lectureId, attendances);
         sessionsMeta.foundCount = Array.isArray(attendances) ? attendances.length : 0;
 
         if (attendances.length === 0) {
@@ -207,7 +273,7 @@ export default function JoinAttendance() {
       setStatus(`❌ ${msgCore}`);
       toast.error(pieces.join(' | '));
     }
-  }, [lectureId, token, user, navigate, queryClient]);
+  }, [lectureId, token, user, navigate, queryClient, lecture]);
 
   useEffect(() => {
     // Validation checks
@@ -227,11 +293,11 @@ export default function JoinAttendance() {
 
     // Set lecture info when available and auto-mark attendance
     if (lecture && user) {
-      setLectureInfo(lecture);
+      setLectureInfo(enhancedLectureInfo || lecture);
       // Auto-mark attendance after lecture info is loaded
       markAttendance();
     }
-  }, [lecture, lectureId, token, user, navigate, loc.pathname, loc.search, markAttendance, lectureLoading]);
+  }, [lecture, enhancedLectureInfo, lectureId, token, user, navigate, loc.pathname, loc.search, markAttendance, lectureLoading]);
 
   // Loading state
   if (lectureLoading) {
@@ -269,7 +335,8 @@ export default function JoinAttendance() {
               <div className="info-item">
                 <span className="label">المقرر:</span>
                 <span className="value">
-                  {lectureInfo.course?.title || 
+                  {lectureInfo.courseName || 
+                   lectureInfo.course?.title || 
                    lectureInfo.course?.name || 
                    (typeof lectureInfo.course === 'string' ? lectureInfo.course : 'غير محدد')}
                 </span>
@@ -277,7 +344,8 @@ export default function JoinAttendance() {
               <div className="info-item">
                 <span className="label">المحاضر:</span>
                 <span className="value">
-                  {lectureInfo.instructor?.first_name || 
+                  {lectureInfo.instructorName ||
+                   lectureInfo.instructor?.first_name || 
                    lectureInfo.instructor?.username ||
                    (typeof lectureInfo.instructor === 'string' ? lectureInfo.instructor : 'غير محدد')}
                 </span>

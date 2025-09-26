@@ -77,11 +77,36 @@
   border: 1px solid rgba(226, 232, 240, 0.8);
 }
 
-.lecture-info h3 {
+.lecture-error {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.lecture-info h3,
+.lecture-error h3 {
   color: #1e293b;
   font-size: 1.3rem;
   font-weight: 800;
   margin: 0 0 1rem 0;
+}
+
+.lecture-error .error-message {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+  padding: 0.75rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.lecture-error .value.error {
+  color: #dc2626;
+  font-weight: 700;
 }
 
 .info-grid {
