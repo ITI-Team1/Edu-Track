@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import '../../styles/schedule.css';
 import { fetchLectures } from '../../services/lectureApi';
@@ -9,6 +8,8 @@ import { fetchLocations } from '../../services/locationApi';
 import { fetchUsers } from '../../services/userApi';
 import { fetchUserPermissions } from '../../services/userApi';
 import { fetchPortSaidWeather, describeWeatherCode } from '../../services/weatherApi';
+import { AttendanceAPI } from '../../services/attendanceApi';
+import toast from '../../utils/toast';
 
 export default function Overview() {
   const [viewDate, setViewDate] = useState(new Date()); 
@@ -260,6 +261,37 @@ export default function Overview() {
     return list;
   }, [userLectures, todayName, getCourseTitle, getInstructorNames, getRoomName]);
 
+  // Open attendance session for a lecture
+  const openAttendanceSession = useCallback(async (lectureId) => {
+    try {
+      // Check if there's already an active session for this lecture
+      const existingSessions = await AttendanceAPI.getAttendanceByLecture(lectureId);
+      
+      if (existingSessions.length > 0) {
+        toast.info('جلسة حضور مفتوحة بالفعل لهذه المحاضرة');
+        // Navigate to the existing session
+        navigate(`/attendance/${lectureId}`);
+        return;
+      }
+
+      // Create new attendance session
+      await AttendanceAPI.createAttendance({
+        lecture: Number(lectureId)
+      });
+
+      toast.success('تم فتح جلسة الحضور بنجاح');
+      // Navigate to the attendance page
+      navigate(`/attendance/${lectureId}`);
+
+    } catch (error) {
+      console.error('Failed to open attendance session:', error);
+      const errorMessage = error.response?.data?.detail || 
+                          error.response?.data?.message || 
+                          'فشل في فتح جلسة الحضور';
+      toast.error(errorMessage);
+    }
+  }, [navigate]);
+
   return (
     <div className="flex flex-col">
     <div className=" !h-1/2 grid grid-cols-1 md:grid-cols-3 gap-4 !mb-2 ">
@@ -371,13 +403,13 @@ export default function Overview() {
                 </div>
                 {(isDoctor || permissions.includes('Can add student attendance')) && (
                   <div className="class-actions">
-                    <Link
-                      to={`/attendance/${class_.id}`}
-                      className="btn"
-                      title="عرض الحضور لهذه المحاضرة"
+                    <button
+                      className="btn btn-primary"
+                      onClick={() => openAttendanceSession(class_.id)}
+                      title="فتح جلسة الحضور"
                     >
                       الحضور
-                    </Link>
+                    </button>
                   </div>
                 )}
               </div>

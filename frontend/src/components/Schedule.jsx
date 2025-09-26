@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import '../styles/schedule.css';
 import { fetchLectures } from '../services/lectureApi';
@@ -396,18 +395,10 @@ function Schedule() {
                   <button
                     className="btn btn-primary"
                     onClick={() => openAttendanceSession(class_.id)}
-                    title="فتح جلسة حضور جديدة"
-                    style={{ marginLeft: '8px' }}
-                  >
-                    فتح جلسة
-                  </button>
-                  <Link
-                    to={`/attendance/${class_.id}`}
-                    className="btn btn-secondary"
-                    title="عرض الحضور لهذه المحاضرة"
+                    title="فتح جلسة الحضور"
                   >
                     الحضور
-                  </Link>
+                  </button>
                 </div>
                 )
                 } 
