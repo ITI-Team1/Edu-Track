@@ -327,10 +327,7 @@ export default function JoinAttendance() {
         {/* Header */}
         <div className="attendance-header">
           <div className="university-logo">
-            <svg viewBox="0 0 100 100" className="logo-svg">
-              <circle cx="50" cy="50" r="45" fill="#1a365d" />
-              <text x="50" y="58" textAnchor="middle" fill="white" fontSize="24" fontWeight="bold">PSU</text>
-            </svg>
+            <img src="/src/assets/psu-logo.svg" alt="PSU Logo" className="logo-svg" />
           </div>
           <h1>جامعة بورسعيد</h1>
           <p>نظام تسجيل الحضور</p>
