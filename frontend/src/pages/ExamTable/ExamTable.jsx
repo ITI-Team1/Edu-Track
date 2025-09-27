@@ -30,6 +30,7 @@ export default function ExamTable() {
     university: "",
     faculty: "",
     program: "",
+    level: "",
     image: null,
   });
 
@@ -78,6 +79,7 @@ export default function ExamTable() {
       university: "1",
       faculty: "",
       program: "",
+      level: "",
       image: null,
     });
     setEditingExam(null);
@@ -90,6 +92,7 @@ export default function ExamTable() {
     data.append("university", formData.university);
     data.append("faculty", formData.faculty);
     data.append("program", formData.program);
+    data.append("level", formData.level);
     if (formData.image) {
       data.append("image", formData.image);
     }
@@ -138,6 +141,7 @@ export default function ExamTable() {
         university: exam.university || exam.university_data?.id,
         faculty: exam.faculty || exam.faculty_data?.id,
         program: exam.program || exam.program_data?.id,
+        level: exam.level || "",
         image: null,
       });
       setEditingExam(exam);
@@ -193,7 +197,7 @@ export default function ExamTable() {
         </div>
         )}
       </div>
-    <div className="  content-card  relative">
+    <div className="h-[80vh] overflow-y-auto">
       {loading && createPortal(
         <div className="fixed inset-0 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm z-[999999]" aria-live="polite" aria-label="يتم معالجة الطلب، الرجاء الانتظار">
           <div className="flex flex-col items-center gap-3">
@@ -217,7 +221,7 @@ export default function ExamTable() {
         {/* Exam Tables List */}
         
           {examTables.length === 0 && !loading ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-gray-800 text-3xl">
               <p>لا توجد جداول امتحانات متاحة</p>
             </div>
           ) : (
@@ -229,6 +233,9 @@ export default function ExamTable() {
                     
                     <p className='text-lg opacity-90'><span className='font-semibold'>الكلية:</span> {examTable.faculty_data?.name || examTable.faculty?.name}</p>
                     <p className='text-lg opacity-90'><span className='font-semibold'>القسم:</span> {examTable.program_data?.name || examTable.program?.name}</p>
+                    {examTable.level && (
+                      <p className='text-lg opacity-90'><span className='font-semibold'>المستوى:</span> {examTable.level}</p>
+                    )}
                   </div>
                <div className="flex  justify-center">
                   
@@ -275,8 +282,9 @@ export default function ExamTable() {
           resetForm();
         }}
         title={editingExam ? "تعديل جدول الامتحانات" : "اضافة جدول الامتحانات"}
+        containerStyle={{ minWidth: '400px', minHeight: '500px' }}
       >
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-80 mx-auto p-4 rounded">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full max-w-md mx-auto p-6 rounded bg-white">
           {/* University Dropdown */}
           {/* <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">الجامعة</label>
@@ -337,6 +345,27 @@ export default function ExamTable() {
                   </option>
                 ));
               })()}
+            </select>
+          </div>
+
+          {/* Level Selection */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">المستوى الدراسي</label>
+            <select
+              name="level"
+              value={formData.level}
+              onChange={handleChange}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              required
+            >
+              <option value="">اختر المستوى</option>
+              <option value="المستوى الأول">المستوى الأول</option>
+              <option value="المستوى الثاني">المستوى الثاني</option>
+              <option value="المستوى الثالث">المستوى الثالث</option>
+              <option value="المستوى الرابع">المستوى الرابع</option>
+              <option value="المستوى الخامس">المستوى الخامس</option>
+              <option value="المستوى السادس">المستوى السادس</option>
+              <option value="المستوى السابع">المستوى السابع</option>
             </select>
           </div>
 

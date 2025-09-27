@@ -239,21 +239,21 @@ export default function Contact() {
                 <li>
                   <div className="info">
                     <i className="fas fa-mobile-alt"></i>
-                    <h4>+11223344550</h4>
+                    <h4>3402344 066</h4>
                   </div>
                 </li>
                 <li>
                   <div className="info">
                     <i className="fas fa-at"></i>
-                    <h4>info@example.com</h4>
+                    <h4>info@psu.edu.eg</h4>
                   </div>
                 </li>
                 <li>
                   <div className="info">
                     <i className="fas fa-map-marker-alt"></i>
                     <h4>
-                      Port Said University, University Administration، Port
-                      Fouad City, Port Said Governorate 42526
+                      محافظة بورسعيد - بورفؤاد - رقم بريدى : 42526
+ 
                     </h4>
                   </div>
                 </li>

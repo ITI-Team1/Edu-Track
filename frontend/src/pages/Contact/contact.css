@@ -407,10 +407,6 @@
 
 /* Responsive adjustments */
 @media (max-width: 1200px) {
-  .contact {
-    padding-block: 80px !important;
-  }
-  
   .contact-form,
   .contact-info {
     padding: 30px;
@@ -554,7 +550,12 @@
   margin: 3rem;
 }
 
-.contact-header p { font-size:1.05rem; opacity:.9; max-width:600px; margin:0 auto; color:#333; font-weight:700; }
+.contact-header p {font-size: 1.1rem;
+	opacity: 0.9;
+	max-width: 600px;
+	margin: 0 auto;
+	color: #333;
+}
 
 .contact-header h1 {
   font-size: 3rem;
