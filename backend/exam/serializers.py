@@ -11,7 +11,7 @@ class ExamTableSerializer(ModelSerializer):
     
     class Meta:
         model = ExamTable
-        fields = ['id', 'university', 'faculty', 'program', 'image', 'university_data', 'faculty_data', 'program_data']
+        fields = ['id', 'university', 'faculty', 'program', 'image', 'university_data', 'faculty_data', 'program_data', 'level']
         extra_kwargs = {
             'university': {'write_only': True},
             'faculty': {'write_only': True},
