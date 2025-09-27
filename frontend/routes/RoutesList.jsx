@@ -136,7 +136,7 @@ const RoutesList = () => {
       <Route
         path="/student-degrees"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedGroups={[2]}>
             <Page title="درجاتي"><StudentDegree /></Page>
           </ProtectedRoute>
         }

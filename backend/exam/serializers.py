@@ -17,5 +17,5 @@ class ExamTableSerializer(ModelSerializer):
             'university': {'write_only': True},
             'faculty': {'write_only': True},
             'program': {'write_only': True},
-            'level': {'write_only': True},
+            # level should be readable to clients, so don't mark it write_only
         }

@@ -257,7 +257,7 @@ function Dashboard() {
             </button>
             )}
  
-            {hasAnyGroup([1]) && (
+            {hasAnyGroup([2, 1]) && (
           <button
             className={`sidebar-tabs ${activeTab === "student-degrees" ? 'sidebar-active' : ""}`}
             onClick={() => setActiveTab("student-degrees")}

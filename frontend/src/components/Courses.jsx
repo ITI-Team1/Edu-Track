@@ -257,13 +257,13 @@ function Courses() {
               
               <div className="course-actions">
                 <button type="button" className="btn btn-primary" onClick={() => openCourseModal(course.id)}>عرض التفاصيل</button>
-                <button
+                {/* <button
                   type="button"
                   className="btn btn-primary"
                   onClick={goToDegreesPage}
                 >
                   الدرجات
-                </button>
+                </button> */}
                 <button
                   type="button"
                   className={`btn btn-secondary ${!course.hasDegree ? 'is-disabled' : ''}`}
