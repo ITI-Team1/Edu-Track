@@ -191,11 +191,11 @@ export default function StepsVideo({
       {/* Background grid & glow */}
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,rgba(99,102,241,0.15),transparent_60%)]" />
 
-      <div className="mb-6 md:mb-8 text-center">
-        <h2 className="text-4xl md:text-5xl font-extrabold !text-blue-900 drop-shadow-sm">
+      <div className="mb-6 md:mb-8 text-center ">
+        <h1 className="text-5xl  md:text-6xl font-extrabold !text-blue-900 drop-shadow-sm ">
           {title}
-        </h2>
-        <p className="mt-2 text-blue-800/80 font-semibold">{subtitle}</p>
+        </h1>
+        <p className="text-xl mt-2 text-blue-800/80 font-semibold">{subtitle}</p>
       </div>
 
      
@@ -203,7 +203,7 @@ export default function StepsVideo({
       <div className="-mx-4 sm:-mx-10 md:-mx-16 lg:-mx-24 xl:-mx-40 mb-5">
         <div className="rounded-2xl shadow-[0_18px_60px_rgba(0,0,0,.12)] bg-white/70 backdrop-blur-sm">
           <div className="relative rounded-[18px] overflow-hidden">
-            <div className="relative z-10 grid grid-cols-5 gap-3 sm:gap-4 p-1.5 sm:p-2 md:p-3">
+            <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 p-1.5 sm:p-2 md:p-3">
               {dataSteps.map((s, i) => {
                 const isActive = i === active;
                 return (
