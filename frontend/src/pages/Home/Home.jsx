@@ -207,8 +207,7 @@ function Home() {
       {/* Feature tiles */}
       <StepsVideo
   title="خطواتك للعمل"
-  subtitle="من الربط إلى السجلات"
-   
+   subtitle="ابدأ رحلتك التعليمية بخطوات بسيطة"
 />
       {/* Slider for featured partners */}
       <section className="featured-partners">
