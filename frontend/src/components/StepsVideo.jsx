@@ -95,8 +95,8 @@ export default function StepsVideo({
   const [active, setActive] = useState(0);
   const videoRef = useRef(null);
   const [progress, setProgress] = useState(0); // 0 -> 1 for current video
-  const [isVideoLoading, setIsVideoLoading] = useState(false);
   const [isVideoReady, setIsVideoReady] = useState(false);
+  const [showPoster, setShowPoster] = useState(true); // keep poster briefly for crossfade
   const rafRef = useRef(0);
   const progressUpdateRef = useRef(0);
 
@@ -112,32 +112,29 @@ export default function StepsVideo({
     progressUpdateRef.current = requestAnimationFrame(updateProgress);
   };
 
-  const handleVideoLoadStart = () => {
-    setIsVideoLoading(true);
-    setIsVideoReady(false);
-  };
+  // When source changes, we'll flip readiness via loadeddata/error events
 
-  const handleVideoCanPlay = () => {
-    setIsVideoLoading(false);
+  const handleVideoLoadedData = () => {
+    // First frame is available; fade video in and then poster out
     setIsVideoReady(true);
+    // Delay poster removal to ensure a clean crossfade
+    setTimeout(() => setShowPoster(false), 250);
   };
 
   const handleVideoError = () => {
-    setIsVideoLoading(false);
     setIsVideoReady(false);
   };
 
   useEffect(() => {
     // When active changes, reset progress and attempt autoplay muted
     setProgress(0);
-    setIsVideoLoading(true);
     setIsVideoReady(false);
+    setShowPoster(true);
     
     const v = videoRef.current;
     if (!v) return;
     
     v.pause();
-    v.load();
     
     const play = async () => {
       try {
@@ -168,10 +165,12 @@ export default function StepsVideo({
   };
 
   const handleEnded = () => {
+    // Ensure progress shows complete, stop RAF, and switch immediately
     setProgress(1);
-    setTimeout(() => {
-      setActive((prev) => (prev + 1) % dataSteps.length);
-    }, 150); // subtle delay for UX
+    cancelAnimationFrame(progressUpdateRef.current);
+    setIsVideoReady(false);
+    setShowPoster(true); // ensure poster is shown while next source prepares
+    setActive((prev) => (prev + 1) % dataSteps.length);
   };
 
   // Cleanup on unmount
@@ -266,29 +265,33 @@ export default function StepsVideo({
       </div>
 
       {/* Video panel */}
-      <div className="relative rounded-xl md:rounded-2xl overflow-hidden border border-white/5 bg-black/60 backdrop-blur-xl shadow-[0_12px_45px_rgba(0,0,0,.55)] -mx-4 sm:-mx-10 md:-mx-16 lg:-mx-24 xl:-mx-40">
-        <div className="absolute -inset-6 -z-10 opacity-40 blur-3xl bg-[conic-gradient(from_120deg_at_50%_50%,#6366f1_0%,#22d3ee_30%,transparent_60%)]" />
+      <div className="relative rounded-xl md:rounded-2xl overflow-hidden border border-white/5 bg-black/60 shadow-[0_12px_45px_rgba(0,0,0,.55)] -mx-4 sm:-mx-10 md:-mx-16 lg:-mx-24 xl:-mx-40">
 
-        {/* Subtle overlay only (spinner removed for smoother feel) */}
-        {isVideoLoading && (
-          <div className="absolute inset-0 z-10 bg-black/20 transition-opacity duration-300" />
-        )}
+        {/* Remove overlays so the poster is clearly visible during transitions */}
 
-        {/* Video transition overlay */}
-        <div className={`absolute inset-0 z-10 bg-gradient-to-r from-transparent via-white/5 to-transparent transition-opacity duration-500 ${isVideoReady ? 'opacity-0' : 'opacity-100'}`} />
-
-        <div className="w-full aspect-video md:aspect-[21/9]">
+        <div className="relative w-full aspect-video md:aspect-[21/9]">
+          {/* Show poster and crossfade it out after the video decodes first frame */}
+          <img
+            key={`poster-${active}`}
+            src={dataVideos[active % dataVideos.length]?.poster}
+            alt="video poster"
+            loading="eager"
+            fetchPriority="high"
+            decoding="sync"
+            className={`absolute inset-0 z-10 h-full w-full object-cover object-top transition-opacity duration-200 filter-none ${showPoster ? 'opacity-100' : 'opacity-0'}`}
+            aria-hidden={!showPoster}
+          />
           <video
+            key={active}
             ref={videoRef}
-            className={`h-full w-full object-cover object-top transition-all duration-500 ${isVideoReady ? 'opacity-100 scale-100' : 'opacity-90 scale-105'}`}
+            className={`h-full w-full object-cover object-top transition-opacity duration-300 filter-none ${isVideoReady ? 'opacity-100' : 'opacity-0'}`}
             playsInline
             muted
             autoPlay
             preload="auto"
             poster={dataVideos[active % dataVideos.length]?.poster}
             src={dataVideos[active % dataVideos.length]?.src}
-            onLoadStart={handleVideoLoadStart}
-            onCanPlay={handleVideoCanPlay}
+            onLoadedData={handleVideoLoadedData}
             onError={handleVideoError}
             onPlay={handlePlay}
             onPause={handlePause}
