@@ -1,0 +1,125 @@
+/* StepsVideo extra visuals
+   Keep this small; Tailwind handles most styling. */
+
+/* Subtle inner glow on the steps card */
+.steps-video-glow {
+  pointer-events: none;
+  background: radial-gradient(1200px 300px at -10% 0%, rgba(124, 58, 237, 0.10), transparent 60%),
+              radial-gradient(1000px 260px at 120% 10%, rgba(34, 211, 238, 0.10), transparent 60%);
+  filter: saturate(110%);
+  inset: 0;
+  position: absolute;
+}
+
+/* Smooth focus ring for keyboard users */
+button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.45), 0 0 0 6px rgba(99, 102, 241, 0.15);
+  border-radius: 12px;
+}
+
+/* Hide scrollbars for the horizontal steps list */
+.no-scrollbar {
+  scrollbar-width: none; /* Firefox */
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none; /* WebKit */
+}
+
+/* Enhanced progress bar animations */
+.progress-bar {
+  will-change: width, transform;
+  transform-origin: left center;
+}
+
+/* Smooth video transitions */
+.video-transition {
+  will-change: opacity, transform;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+/* Loading spinner animation */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Smooth card hover effects */
+.step-card {
+  will-change: transform, box-shadow;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+.step-card:hover {
+  transform: translateZ(0) scale(1.01);
+}
+
+.step-card.active {
+  transform: translateZ(0) scale(1.02);
+}
+
+/* Enhanced text rendering */
+.step-title {
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Smooth progress bar updates */
+.progress-smooth {
+  transition: width 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Video loading states */
+.video-loading {
+  filter: blur(1px);
+  opacity: 0.7;
+}
+
+.video-ready {
+  filter: blur(0);
+  opacity: 1;
+  transition: filter 0.3s ease-out, opacity 0.3s ease-out;
+}
+
+/* RTL support improvements */
+[dir="rtl"] .step-content {
+  text-align: right;
+}
+
+[dir="rtl"] .step-number {
+  margin-left: 0.75rem;
+  margin-right: 0;
+}
+
+/* Responsive text scaling */
+@media (max-width: 640px) {
+  .step-title {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 768px) {
+  .step-title {
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+}
+
+@media (min-width: 769px) {
+  .step-title {
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+  }
+}

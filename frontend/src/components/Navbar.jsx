@@ -116,9 +116,7 @@ export default function Navbar() {
                 ...(hasLogPermission ? [{ to: "/logs", label: "السجلات" }] : []),
               ]
             : [
-                { to: "/", label: "الرئيسية" },
-                { to: "/features", label: "المميزات" },
-                { to: "/about", label: "حول" },
+                { to: "/", label: "الرئيسية" },                { to: "/about", label: "حول" },
                 { to: "/help", label: "مركز المساعدة" },
                 { to: "/contact", label: "اتصل بنا" },
               ]

@@ -19,6 +19,7 @@ import engLogo from '../../assets/facuilites/eng.jpg';
 import edunaw3Logo from '../../assets/facuilites/edunaw3.jpg';
 import edukidsLogo from '../../assets/facuilites/edukids.jpg';
 import phytherLogo from '../../assets/facuilites/phytherapy.jpg';
+import StepsVideo from '../../components/StepsVideo.jsx';
 
 function Home() {
   const { isAuthenticated, user } = useAuth();
@@ -203,99 +204,12 @@ function Home() {
         </div>
       </section>
 
-      {/* Quick stats strip for extra visual appeal */}
-  <section ref={statsRef} className="grid !gap-4 !max-w-[1200px] !mx-auto !mt-6 !mb-8 !px-4
-           md:[grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]
-           md:!gap-3 md:!mt-4 md:!mb-6 
-           [grid-template-columns:repeat(2,1fr)]" aria-label="إحصائيات سريعة">
-        <div className="flex items-center !bg-[#2d3648] !text-white !rounded-[14px] 
-           md:!px-6 md:!py-[1.15rem] md:!gap-3 border border-[rgba(100,108,255,0.25)]
-           shadow-[0_8px_26px_rgba(0,0,0,0.28)]
-           sm:!px-[1.2rem] sm:!py-4 sm:!gap-2.5
-           !px-4 !py-3.5 !gap-2">
-          <span className="md:text-[1.8rem] sm:text-[1.6rem] text-[1.4rem];">🎓</span>
-          <div className="grid leading-[1.2] ">
-            <strong className='md:text-[1.35rem] font-extrabold sm:text-[1.2rem] text-[1.1rem]'>+{stats.programs}</strong>
-            <span className='md:text-[1rem] text-white/80 sm:text-[0.9rem] text-[0.8rem]'>برنامج أكاديمي</span>
-          </div>
-        </div>
-        <div className="flex items-center !bg-[#2d3648] !text-white !rounded-[14px] 
-           md:!px-6 md:!py-[1.15rem] md:!gap-3 border border-[rgba(100,108,255,0.25)]
-           shadow-[0_8px_26px_rgba(0,0,0,0.28)]
-           sm:!px-[1.2rem] sm:!py-4 sm:!gap-2.5
-           !px-4 !py-3.5 !gap-2">
-          <span className="md:text-[1.8rem] sm:text-[1.6rem] text-[1.4rem];">👩‍🏫</span>
-          <div className="grid leading-[1.2] ">
-            <strong className='md:text-[1.35rem] font-extrabold sm:text-[1.2rem] text-[1.1rem]'>+{stats.staff}</strong>
-            <span className='md:text-[1rem] text-white/80 sm:text-[0.9rem] text-[0.8rem]'>عضو هيئة تدريس</span>
-          </div>
-        </div>
-        <div className="flex items-center !bg-[#2d3648] !text-white !rounded-[14px] 
-           md:!px-6 md:!py-[1.15rem] md:!gap-3 border border-[rgba(100,108,255,0.25)]
-           shadow-[0_8px_26px_rgba(0,0,0,0.28)]
-           sm:!px-[1.2rem] sm:!py-4 sm:!gap-2.5
-           !px-4 !py-3.5 !gap-2">
-          <span className="md:text-[1.8rem] sm:text-[1.6rem] text-[1.4rem];">🏛️</span>
-          <div className="grid leading-[1.2] ">
-            <strong className='md:text-[1.35rem] font-extrabold sm:text-[1.2rem] text-[1.1rem]'>+{stats.halls}</strong>
-            <span className='md:text-[1rem] text-white/80 sm:text-[0.9rem] text-[0.8rem]'>قاعة ومحاضرة</span>
-          </div>
-        </div>
-        <div className="flex items-center !bg-[#2d3648] !text-white !rounded-[14px] 
-           md:!px-6 md:!py-[1.15rem] md:!gap-3 border border-[rgba(100,108,255,0.25)]
-           shadow-[0_8px_26px_rgba(0,0,0,0.28)]
-           sm:!px-[1.2rem] sm:!py-4 sm:!gap-2.5
-           !px-4 !py-3.5 !gap-2">
-          <span className="md:text-[1.8rem] sm:text-[1.6rem] text-[1.4rem];">📈</span>
-          <div className="grid leading-[1.2] ">
-            <strong className='md:text-[1.35rem] font-extrabold sm:text-[1.2rem] text-[1.1rem]'>{stats.realtime}%</strong>
-            <span className='md:text-[1rem] text-white/80 sm:text-[0.9rem] text-[0.8rem]'>متابعة آنية</span>
-          </div>
-        </div>
-      </section>
-
       {/* Feature tiles */}
-      <section className="grid-cols-2 gap-3 !px-2 !mb-6 !sm:[grid-template-columns:repeat(auto-fit,minmax(300px,1fr))] 
-      !grid !md:[grid-template-columns:repeat(auto-fit,minmax(300px,1fr))]
-           !md:gap-6 md:max-w-[1200px] md:!mx-auto md:!mb-16 md:!px-4
-      " aria-label="مزايا المنصة">
-        <article className="feature-card">
-          <div className="feature-card-icon">📚</div>
-          <h3>إدارة المقررات</h3>
-          <p>تنظيم شامل للوحدات والواجبات والتسليمات مع تنبيهات ذكية.</p>
-          <Link to="/features" className="feature-link">تعرف أكثر</Link>
-        </article>
-        <article className="feature-card">
-          <div className="feature-card-icon">📊</div>
-          <h3>تتبع التقدم</h3>
-          <p>لوحات تفاعلية ورسوم بيانية لمتابعة الأداء لحظة بلحظة.</p>
-          <Link to="/dashboard" className="feature-link">افتح اللوحة</Link>
-        </article>
-        <article className="feature-card">
-          <div className="feature-card-icon">🎯</div>
-          <h3>تحديد الأهداف</h3>
-          <p>حدد أهدافًا قابلة للقياس وتابع إنجازها بخط زمني واضح.</p>
-          <Link to="/features" className="feature-link">ابدأ الآن</Link>
-        </article>
-        <article className="feature-card">
-          <div className="feature-card-icon">📅</div>
-          <h3>إدارة الجدول</h3>
-          <p>مزامنة تلقائية للمحاضرات والامتحانات مع تقويمك الشخصي.</p>
-          <Link to="/dashboard" className="feature-link">اعرض الجدول</Link>
-        </article>
-        <article className="feature-card">
-          <div className="feature-card-icon">📈</div>
-          <h3>لوحة التحكم</h3>
-          <p>رؤية موحدة لكل بياناتك الأكاديمية واتخاذ قرارات سريعة.</p>
-          <Link to="/dashboard" className="feature-link">إلى اللوحة</Link>
-        </article>
-        <article className="feature-card">
-          <div className="feature-card-icon">👨‍🏫</div>
-          <h3>محاضرات الأساتذة</h3>
-          <p>أدوات لهيئة التدريس لإدارة المحاضرات والتواصل مع الطلاب.</p>
-          <Link to="/universities/psu/faculties" className="feature-link">إدارة</Link>
-        </article>
-      </section>
+      <StepsVideo
+  title="خطواتك للعمل"
+  subtitle="من الربط إلى السجلات"
+   
+/>
       {/* Slider for featured partners */}
       <section className="featured-partners">
         <Slider />

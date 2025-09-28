@@ -6,7 +6,6 @@ import Register from "../src/pages/Register/Register";
 import Dashboard from "../src/pages/Dashboard/Dashboard";
 import Profile from "../src/pages/Profile/Profile";
 import ProtectedRoute from "../src/components/ProtectedRoute";
-import Features from "../src/pages/Features/Features";
 import Contact from "../src/pages/Contact/Contact";
 import FacultyManage from "../src/pages/FacultyManage/FacultyManage";
 import PageNotFound from "../src/pages/PageNotFound/PageNotFound";
@@ -79,7 +78,6 @@ const RoutesList = () => {
           </ProtectedRoute>
         }
       />
-      <Route path="/features" element={<Page title="المميزات"><Features /></Page>} />
       <Route path="/contact" element={<Page title="اتصل بنا"><Contact /></Page>} />
   
       <Route
