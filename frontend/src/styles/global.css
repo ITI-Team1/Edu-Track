@@ -32,7 +32,7 @@ body {
   font-family: 'Cairo', sans-serif;
   background: #ffffff;
   position: relative;
-  min-height: 100vh;
+  min-height:   70vh;
   overflow-x: hidden;
   margin: 0;
   min-width: 320px;
@@ -93,7 +93,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* App Layout */
 .App {
-  min-height: 100vh;
+  min-height: 70vh;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -102,6 +102,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .main-content {
   flex: 1;
+  min-height: 70vh;
   position: relative;
   z-index: 2;
 }

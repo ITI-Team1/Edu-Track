@@ -262,11 +262,13 @@
 @media (max-width: 768px) {
   .login-split-page {
     flex-direction: column;
+    min-height: 60vh;
   }
   
   .login-form-section {
     flex: none;
-    min-height: 100vh;
+    min-height: 60vh;
+    
     padding: 1rem;
     order: 1;
     display: flex;

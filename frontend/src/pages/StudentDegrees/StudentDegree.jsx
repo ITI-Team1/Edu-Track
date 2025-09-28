@@ -5,7 +5,7 @@ import { fetchCourses } from '../../services/courseApi';
 import { fetchLocations } from '../../services/locationApi';
 import { fetchUsers } from '../../services/userApi';
 import { AttendanceAPI } from '../../services/attendanceApi';
-import '../Attendance/attendance.css';
+import './StudentDegree.css';
 export default function StudentDegree() {
     const [lectures, setLectures] = useState([]);
     const [courses, setCourses] = useState([]);
@@ -55,58 +55,55 @@ export default function StudentDegree() {
         load();
       }, [isAuthenticated, user.id]);
   return (
-    <div className='attendance-page'>
-            {/* Header with title and safety alert under it */}
-            
-
-            {/* Two-column content: students left, QR right */}
-            <div className='attendance-wrapper container !my-10'>
-            <div className='students-section'>
-                <div className='students-toolbar'>
-                    <h3 style={{ color: '#2c3649' }}>درجات المواد</h3>
-                    
-                </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>الكود</th>
-                            <th>اسم المادة</th>
-                            
-                            <th>درجه الحضور</th>
-                            <th>درجة اعمال السنة</th>
-                            
-                            
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {(filteredCourses || []).map((course) => {
-                            // Find all lectures for this course, restricted to lectures the student is enrolled in
-                            const courseLectures = enrolledLectures.filter(lec => 
-                                (typeof lec.course === 'object' ? lec.course.id : lec.course) === course.id
-                            );
-                            
-                            // Find all marks for this course's lectures
-                            const courseMarks = studentMarks.filter(mark => 
-                                courseLectures.some(lec => lec.id === mark.lecture)
-                            );
-                            
-                            // Calculate total attendance and instructor marks
-                            const totalAttendanceMark = courseMarks.reduce((sum, mark) => sum + (mark.attendance_mark || 0), 0);
-                            const totalInstructorMark = courseMarks.reduce((sum, mark) => sum + (mark.instructor_mark || 0), 0);
-                            
-                            return (
-                                <tr key={course.id}>
-                                    <td>{course.id}</td>
-                                    <td>{course.title}</td>
-                                    <td>{totalAttendanceMark.toFixed(1)}</td>
-                                    <td>{totalInstructorMark.toFixed(1)}</td>
-                                </tr>
-                            );
-                        })}
-                    </tbody>
-                </table>
+    <div className='student-degrees-page'>
+            {/* Header with title */}
+            <div className='student-degrees-header'>
+                <h2 className='student-degrees-title'>درجات المواد</h2>
             </div>
-            
+
+            {/* Content wrapper optimized for mobile */}
+            <div className='student-degrees-wrapper'>
+                <div className='student-degrees-content'>
+                    
+                    <div className='student-degrees-table-container '>
+                        <table className='student-degrees-table'>
+                            <thead>
+                                <tr>
+                                    <th className='col-code'>الكود</th>
+                                    <th className='col-name'>اسم المادة</th>
+                                    <th className='col-attendance'>درجة الحضور</th>
+                                    <th className='col-year'>درجة أعمال السنة</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {(filteredCourses || []).map((course) => {
+                                    // Find all lectures for this course, restricted to lectures the student is enrolled in
+                                    const courseLectures = enrolledLectures.filter(lec => 
+                                        (typeof lec.course === 'object' ? lec.course.id : lec.course) === course.id
+                                    );
+                                    
+                                    // Find all marks for this course's lectures
+                                    const courseMarks = studentMarks.filter(mark => 
+                                        courseLectures.some(lec => lec.id === mark.lecture)
+                                    );
+                                    
+                                    // Calculate total attendance and instructor marks
+                                    const totalAttendanceMark = courseMarks.reduce((sum, mark) => sum + (mark.attendance_mark || 0), 0);
+                                    const totalInstructorMark = courseMarks.reduce((sum, mark) => sum + (mark.instructor_mark || 0), 0);
+                                    
+                                    return (
+                                        <tr key={course.id} className='student-degrees-row'>
+                                            <td className='col-code'>{course.id}</td>
+                                            <td className='col-name'>{course.title}</td>
+                                            <td className='col-attendance'>{totalAttendanceMark.toFixed(1)}</td>
+                                            <td className='col-year'>{totalInstructorMark.toFixed(1)}</td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
             
         </div>

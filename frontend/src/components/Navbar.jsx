@@ -148,8 +148,8 @@ export default function Navbar() {
           <Link
             to="/login"
             onClick={closeMenu}
-            className="!px-3 !py-1 md:!px-5 md:!py-2 !rounded-md !bg-slate-600 !text-white  !shadow-md 
-              !transition-all !duration-200 hover:!bg-slate-500 hover:!-translate-y-0.5 !text-sm md:!text-base"
+            className="!px-2 !py-1 md:!px-5 md:!py-2 !rounded-md !bg-slate-600 !text-white  !shadow-md 
+              !transition-all !duration-200 hover:!bg-slate-500 hover:!-translate-y-0.5 !text-[0.64rem] md:!text-base"
           >
             تسجيل الدخول
           </Link>

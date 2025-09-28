@@ -297,20 +297,20 @@ export default function Overview() {
     <div className=" !h-1/2 grid grid-cols-1 md:grid-cols-3 gap-4 !mb-2 ">
       {/* Calendar */}
       <div className="col-span-2 bg-white rounded-lg feature-card">
-        <div className="flex justify-between !p-1 border-b-2 !mb-2 !border-gray-200">
-          <button aria-label="الشهر السابق" onClick={prevMonth} className="btn-main !px-2 text-2xl">‹</button>
-          <h3 className="text-lg font-medium">{monthNames[viewDate.getMonth()]} {viewDate.getFullYear()}</h3>
-          <button aria-label="الشهر التالي" onClick={nextMonth} className="btn-main !px-2 text-2xl">›</button>
+        <div className="calendar-navigation">
+          <button aria-label="الشهر السابق" onClick={prevMonth} className="calendar-nav-btn calendar-nav-prev">‹</button>
+          <h3 className="calendar-month-title">{monthNames[viewDate.getMonth()]} {viewDate.getFullYear()}</h3>
+          <button aria-label="الشهر التالي" onClick={nextMonth} className="calendar-nav-btn calendar-nav-next">›</button>
         </div>
 
-        <div className="p-4">
-          <div className="grid grid-cols-7">
+        <div className="calendar-container">
+          <div className="calendar-header">
             {weekdayShort.map((d) => (
-              <div key={d} className="!text-center  !w-20 !h-7 font-medium text-gray-500">{d}</div>
+              <div key={d} className="calendar-day-header">{d}</div>
             ))}
           </div>
 
-          <div className="grid grid-cols-7 gap-1">
+          <div className="calendar-grid">
             {calendarCells.map((day, idx) => {
               const isToday =
                 day !== null &&
@@ -322,9 +322,7 @@ export default function Overview() {
                 <div
                   key={idx}
                   title={day ? `${day} ${monthNames[viewDate.getMonth()]} ${viewDate.getFullYear()}` : ""}
-                  className={`h-10 !text-center w-20 border border-gray-200 rounded-lg !p-2 flex !items-end !justify-center font-medium ${
-                    isToday ? "!bg-[#1976d2] text-white font-bold" : "bg-white text-gray-700"
-                  }`}
+                  className={`calendar-day-cell ${isToday ? "calendar-today" : ""}`}
                 >
                   {day ?? ""}
                 </div>
@@ -332,8 +330,8 @@ export default function Overview() {
             })}
           </div>
 
-          <div style={{ marginTop: 12, textAlign: "center" }}>
-            <button onClick={goToToday} className="btn btn-secondary-calender">اليوم</button>
+          <div className="calendar-today-container">
+            <button onClick={goToToday} className="calendar-today-btn">اليوم</button>
           </div>
         </div>
       </div>
