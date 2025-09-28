@@ -95,8 +95,8 @@ export default function StepsVideo({
   const [active, setActive] = useState(0);
   const videoRef = useRef(null);
   const [progress, setProgress] = useState(0); // 0 -> 1 for current video
+  const [isVideoLoading, setIsVideoLoading] = useState(false);
   const [isVideoReady, setIsVideoReady] = useState(false);
-  const [showPoster, setShowPoster] = useState(true); // keep poster briefly for crossfade
   const rafRef = useRef(0);
   const progressUpdateRef = useRef(0);
 
@@ -112,29 +112,32 @@ export default function StepsVideo({
     progressUpdateRef.current = requestAnimationFrame(updateProgress);
   };
 
-  // When source changes, we'll flip readiness via loadeddata/error events
+  const handleVideoLoadStart = () => {
+    setIsVideoLoading(true);
+    setIsVideoReady(false);
+  };
 
-  const handleVideoLoadedData = () => {
-    // First frame is available; fade video in and then poster out
+  const handleVideoCanPlay = () => {
+    setIsVideoLoading(false);
     setIsVideoReady(true);
-    // Delay poster removal to ensure a clean crossfade
-    setTimeout(() => setShowPoster(false), 250);
   };
 
   const handleVideoError = () => {
+    setIsVideoLoading(false);
     setIsVideoReady(false);
   };
 
   useEffect(() => {
     // When active changes, reset progress and attempt autoplay muted
     setProgress(0);
+    setIsVideoLoading(true);
     setIsVideoReady(false);
-    setShowPoster(true);
     
     const v = videoRef.current;
     if (!v) return;
     
     v.pause();
+    v.load();
     
     const play = async () => {
       try {
@@ -169,7 +172,6 @@ export default function StepsVideo({
     setProgress(1);
     cancelAnimationFrame(progressUpdateRef.current);
     setIsVideoReady(false);
-    setShowPoster(true); // ensure poster is shown while next source prepares
     setActive((prev) => (prev + 1) % dataSteps.length);
   };
 
@@ -191,10 +193,10 @@ export default function StepsVideo({
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,rgba(99,102,241,0.15),transparent_60%)]" />
 
       <div className="mb-6 md:mb-8 text-center ">
-        <h1 className="text-5xl  md:text-6xl font-extrabold !text-[#3271b1] drop-shadow-sm ">
+        <h1 className="text-5xl  md:text-6xl font-extrabold !text-blue-900 drop-shadow-sm ">
           {title}
         </h1>
-        <p className="text-xl mt-2 text-[#3271b1] font-semibold">{subtitle}</p>
+        <p className="text-xl mt-2 text-blue-800/80 font-semibold">{subtitle}</p>
       </div>
 
      
@@ -205,14 +207,12 @@ export default function StepsVideo({
             <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 p-1.5 sm:p-2 md:p-3">
               {dataSteps.map((s, i) => {
                 const isActive = i === active;
-                const mobileVisibility = isActive ? "block" : "hidden sm:block"; // show only active card on mobile
                 return (
                   <button
                     key={i}
                     type="button"
                     onClick={() => setActive(i)}
                     className={[
-                      mobileVisibility,
                       "group relative text-right px-3 py-3 sm:px-4 sm:py-4 transition-all duration-300 rounded-xl bg-white border-2 border-transparent shadow-[0_10px_24px_rgba(59,130,246,0.14)]",
                       isActive ? "ring-1 ring-[#3b82f6]/40 scale-[1.02]" : "hover:border-[#3b82f6] hover:scale-[1.01]",
                     ].join(" ")}
@@ -265,33 +265,29 @@ export default function StepsVideo({
       </div>
 
       {/* Video panel */}
-      <div className="relative rounded-xl md:rounded-2xl overflow-hidden border border-white/5 bg-black/60 shadow-[0_12px_45px_rgba(0,0,0,.55)] -mx-4 sm:-mx-10 md:-mx-16 lg:-mx-24 xl:-mx-40">
+      <div className="relative rounded-xl md:rounded-2xl overflow-hidden border border-white/5 bg-black/60 backdrop-blur-xl shadow-[0_12px_45px_rgba(0,0,0,.55)] -mx-4 sm:-mx-10 md:-mx-16 lg:-mx-24 xl:-mx-40">
+        <div className="absolute -inset-6 -z-10 opacity-40 blur-3xl bg-[conic-gradient(from_120deg_at_50%_50%,#6366f1_0%,#22d3ee_30%,transparent_60%)]" />
 
-        {/* Remove overlays so the poster is clearly visible during transitions */}
+        {/* Subtle overlay only (spinner removed for smoother feel) */}
+        {isVideoLoading && (
+          <div className="absolute inset-0 z-10 bg-black/20 transition-opacity duration-300" />
+        )}
 
-        <div className="relative w-full aspect-video md:aspect-[21/9]">
-          {/* Show poster and crossfade it out after the video decodes first frame */}
-          <img
-            key={`poster-${active}`}
-            src={dataVideos[active % dataVideos.length]?.poster}
-            alt="video poster"
-            loading="eager"
-            fetchPriority="high"
-            decoding="sync"
-            className={`absolute inset-0 z-10 h-full w-full object-cover object-top transition-opacity duration-200 filter-none ${showPoster ? 'opacity-100' : 'opacity-0'}`}
-            aria-hidden={!showPoster}
-          />
+        {/* Video transition overlay */}
+        <div className={`absolute inset-0 z-10 bg-gradient-to-r from-transparent via-white/5 to-transparent transition-opacity duration-500 ${isVideoReady ? 'opacity-0' : 'opacity-100'}`} />
+
+        <div className="w-full aspect-video md:aspect-[21/9]">
           <video
-            key={active}
             ref={videoRef}
-            className={`h-full w-full object-cover object-top transition-opacity duration-300 filter-none ${isVideoReady ? 'opacity-100' : 'opacity-0'}`}
+            className={`h-full w-full object-cover object-top transition-all duration-500 ${isVideoReady ? 'opacity-100 scale-100' : 'opacity-90 scale-105'}`}
             playsInline
             muted
             autoPlay
             preload="auto"
             poster={dataVideos[active % dataVideos.length]?.poster}
             src={dataVideos[active % dataVideos.length]?.src}
-            onLoadedData={handleVideoLoadedData}
+            onLoadStart={handleVideoLoadStart}
+            onCanPlay={handleVideoCanPlay}
             onError={handleVideoError}
             onPlay={handlePlay}
             onPause={handlePause}
