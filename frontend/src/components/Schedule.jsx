@@ -218,8 +218,8 @@ function Schedule() {
     const cards = [];
     daysOrder.forEach(day => {
       const classes = grouped[day] || [];
+      // Skip empty days - don't add them to cards
       if (classes.length === 0) {
-        cards.push({ day, classes: [] });
         return;
       }
       const timeCounts = classes.reduce((m, c) => { m[c.time24] = (m[c.time24]||0)+1; return m; }, {});
@@ -329,12 +329,12 @@ function Schedule() {
         {!!error && (
           <div className="content-card" style={{ marginBottom: '12px', color: 'red' }}>خطأ: {error}</div>
         )}
-        <header className='schedule-head'>
-          <h1>جدول المحاضرات</h1>
+        <header className='schedule-head flex flex-col md:flex-row'>
+          <h1 className=' md:text-2xl'>جدول المحاضرات</h1>
           {/* Course filter (optional) */}
-          <div className="schedule-filter-box">
+          <div className="schedusle-filter-box flex ">
             <label className="schedule-filter-label">تصفية بالمقرر:</label>
-            <select className="schedule-filter-select" value={selectedCourse} onChange={(e)=>setSelectedCourse(e.target.value)}>
+            <select className="schedule-filter-selesct !w-full" value={selectedCourse} onChange={(e)=>setSelectedCourse(e.target.value)}>
               <option value="">الكل</option>
               {courses.map(c => (
                 <option key={c.id} value={c.id}>{c.title}</option>
@@ -368,6 +368,8 @@ function Schedule() {
       </div>
 
       <main className="schedule-content schedule-columns">
+
+        
         <section className="today-schedule content-card">
           <h2>جدول اليوم</h2>
           <div className="schedule-list">
@@ -379,14 +381,29 @@ function Schedule() {
             {todaySchedule.map(class_ => (
               <div key={class_.id} className="schedule-item content-card">
                 <div className="time-section">
-                  <div className="time">🕒{class_.time}</div>
-                  <div className="duration">{class_.duration}</div>
+                <div className="flex items-center gap-2 md:gap-4 flex-col my-2">
+                  <div>
+                    <span>🕒</span>
+                          <span className=" font-semibold text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
+                          {class_.time}
+                          </span>
+                    </div>
+                          
+                        <span className="text-ssm font-semibold text-blue-600 bg-gray-100 px-2 py-1 rounded-full">
+              
+              {class_.duration}
+              </span>
+                        </div>
+                  <div className="duration flex flex-col md:flex-row items-center gap-2">
+            
+                    
+                  </div>
                 </div>
                 <div className="class-info">
                   <h4>{class_.course}</h4>
                   <p><strong>المحاضر:</strong> {class_.instructor}</p>
                   <p><strong>القاعة:</strong> {class_.room}</p>
-                  <span className="class-type">{class_.type}</span>
+                  
                 </div>
                {/* check if the user has the permission to add student attendance */}
                 {
@@ -407,34 +424,58 @@ function Schedule() {
           </div>
         </section>
 
-        <section className="week-schedule">
-          <h2>جدول الأسبوع</h2>
-          <div className="week-grid" style={{ alignItems: 'flex-start' }}>
-            {weekCards.map((card, idx) => (
-              <div key={`${card.day}-${idx}`} className="day-card" style={{ alignSelf: 'flex-start' }}>
-                <h3>{card.day}</h3>
-                <div className="day-classes">
-                  {card.classes.map((class_, index) => (
-                    <div key={index} className="day-class">
-                      <span className="class-time">{class_.time12}</span>
-                      <span className="class-name">{class_.course}</span>
-                      {class_.instructor ? (
-                        <span className="class-instructor">{class_.instructor}</span>
-                      ) : null}
-                      <span className="class-room">{class_.room}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-          {permissions.includes('Can export week schedule') && (
-          <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'flex-end' }}>
-            <button className="btn" onClick={handleExportWeekExcel}>
-              تصدير جدول الأسبوع إلى Excel
-            </button>
-          </div>
+        <section className="week-schedule bg-gradient-to-br from-white to-slate-50 border border-slate-200 rounded-2xl p-6 shadow-lg">
+          <div className='flex justify-between'>
+          <h2 className="text-2xl font-bold text-slate-800 mb-6 text-center">جدول الأسبوع</h2>
+          {!permissions.includes('Can export week schedule') && weekCards.length > 0 && (
+            <div className="mb-6 flex justify-end">
+              <button 
+                className="bg-gradient-to-r from-blue-700 to-blue-800 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                onClick={handleExportWeekExcel}
+              >
+                تصدير جدول الأسبوع إلى Excel
+              </button>
+            </div>
           )}
+          </div>
+          {weekCards.length === 0 ? (
+            <div className="text-center py-12 text-slate-500 text-lg">
+              لا توجد محاضرات هذا الأسبوع
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+              {weekCards.map((card, idx) => (
+                <div key={`${card.day}-${idx}`} className="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden hover:shadow-lg transition-shadow duration-200">
+                  <div className="bg-gradient-to-r from-blue-800 to-blue-900 text-white p-3 text-center">
+                    <h3 className="font-bold text-lg">{card.day}</h3>
+                  </div>
+                  <div className="p-3 space-y-2">
+                    {card.classes.map((class_, index) => (
+                      <div key={index} className="bg-slate-50 rounded-lg p-3 border border-slate-100 hover:bg-slate-100 transition-colors duration-150">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-semibold text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
+                            {class_.time12}
+                          </span>
+                        </div>
+                        <div className="space-y-1">
+                          <h4 className="font-medium !text-slate-800 text-sm leading-tight">{class_.course}</h4>
+                          {class_.instructor && (
+                            <p className="text-xs text-slate-600">
+                              <span className="font-medium">المحاضر:</span> {class_.instructor}
+                            </p>
+                          )}
+                          <p className="text-xs text-slate-600">
+                            <span className="font-medium">القاعة:</span> {class_.room}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          
         </section>
       </main>
     </div>

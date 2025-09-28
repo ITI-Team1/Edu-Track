@@ -8,11 +8,11 @@
 }
 
 .student-degrees-header {
-  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
-  color: white;
+  
+  /* color: white; */
   padding: 1rem;
   text-align: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  /* box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); */
 }
 
 .student-degrees-title {

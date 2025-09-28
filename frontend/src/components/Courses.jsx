@@ -218,7 +218,7 @@ function Courses() {
       
       </header>
 
-      <div className="courses-stats">
+      <div className="courses-stats !grid !grid-cols-2 !gap-4  ">
         <div className="stat-card-contact">
           <h3>إجمالي المقررات</h3>
           <div className="stat-number-contact">{enrolledCourseCards.length}</div>

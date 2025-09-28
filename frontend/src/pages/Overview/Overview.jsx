@@ -337,7 +337,7 @@ export default function Overview() {
       </div>
 
       {/* Live Clock */}
-      <div className="flex flex-col items-center justify-center bg-white rounded-lg feature-card">
+      <div className="md:flex flex-col items-center justify-center bg-white rounded-lg feature-card hidden">
         <h3 style={{ marginBottom: 8 }}>الوقت الآن</h3>
         <div className="stat-number-dashboard" style={{ fontFamily: "monospace", fontSize: 28, marginBottom: 8 }}>
           {now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
