@@ -192,10 +192,10 @@ export default function StepsVideo({
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,rgba(99,102,241,0.15),transparent_60%)]" />
 
       <div className="mb-6 md:mb-8 text-center ">
-        <h1 className="text-5xl  md:text-6xl font-extrabold !text-blue-900 drop-shadow-sm ">
+        <h1 className="text-5xl  md:text-6xl font-extrabold !text-[#3271b1] drop-shadow-sm ">
           {title}
         </h1>
-        <p className="text-xl mt-2 text-blue-800/80 font-semibold">{subtitle}</p>
+        <p className="text-xl mt-2 text-[#3271b1] font-semibold">{subtitle}</p>
       </div>
 
      

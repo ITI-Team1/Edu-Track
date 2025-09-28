@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import '../styles/schedule.css';
@@ -9,8 +9,9 @@ import { fetchUserPermissions, fetchUsers } from '../services/userApi';
 import { AttendanceAPI } from '../services/attendanceApi';
 import toast from '../utils/toast';
 import Spinner from './Spinner';
+import ErrorBoundary from './ErrorBoundary';
 
-function Schedule() {
+function ScheduleInner() {
   const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
 
@@ -158,6 +159,9 @@ function Schedule() {
     return filtered;
   }, [lectures, user?.id, selectedCourse, isDoctor, isStudent]);
 
+  // Ref to weekly schedule section for PDF capture
+  const weekRef = useRef(null);
+
   // Build "today" and "week" schedules
   const daysOrder = canonicalDays; // use canonical ordering starting with Saturday per backend choices
   const jsToArabic = ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت']; // 0..6
@@ -203,6 +207,8 @@ function Schedule() {
     const grouped = daysOrder.reduce((acc, d) => { acc[d] = []; return acc; }, {});
     userLectures.forEach(lec => {
       const d = normalizeDay(lec.day);
+      // Skip days that are not in our canonical list (e.g., الجمعة)
+      if (!daysOrder.includes(d)) return;
       if (!grouped[d]) grouped[d] = [];
       grouped[d].push({
         time24: formatTime24(lec.starttime),
@@ -316,6 +322,171 @@ function Schedule() {
       URL.revokeObjectURL(url);
     }
   };
+  
+  // Export weekly schedule to PDF, preserving on-screen styles
+  async function handleExportWeekPDF() {
+    if (!weekRef.current) return;
+    try {
+      const html2canvas = (await import('html2canvas')).default || (await import('html2canvas'));
+      const { jsPDF } = await import('jspdf');
+
+      const element = weekRef.current;
+      const canvas = await html2canvas(element, {
+        scale: 2, // higher scale for sharper text
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        windowWidth: element.scrollWidth,
+        onclone: (doc) => {
+          // 1) Remove external styles that may include oklch() (Tailwind, etc.) from the cloned document
+          try {
+            const head = doc.head;
+            const nodes = Array.from(head.querySelectorAll('link[rel="stylesheet"], style'));
+            nodes.forEach(n => n.parentNode && n.parentNode.removeChild(n));
+          } catch {}
+
+          // 2) Add a compatibility class and inject safe CSS fallbacks
+          const target = doc.getElementById('week-schedule');
+          if (target) target.classList.add('pdf-compat');
+          const style = doc.createElement('style');
+          style.textContent = `
+            /* Base container */
+            #week-schedule.pdf-compat { 
+              background: #ffffff !important; 
+              color: #1f2937 !important; 
+              font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+            }
+            #week-schedule.pdf-compat h2, 
+            #week-schedule.pdf-compat h3, 
+            #week-schedule.pdf-compat h4 { color: #0f172a !important; }
+
+            /* Buttons gradient (top actions) */
+            #week-schedule.pdf-compat .bg-gradient-to-r.from-blue-700.to-blue-800 { 
+              background-image: linear-gradient(90deg, #1d4ed8, #1e40af) !important; 
+              color: #ffffff !important;
+              cursor: pointer !important;
+              display: none !important;
+            }
+
+            /* Section soft gradient background */
+            #week-schedule.pdf-compat.bg-gradient-to-br.from-white.to-slate-50 {
+              background-image: linear-gradient(135deg, #ffffff, #f8fafc) !important;
+            }
+
+            /* Grid layout for day cards (5 columns like the screenshot on wide pages) */
+            #week-schedule.pdf-compat .grid { 
+              display: grid !important; 
+              grid-template-columns: repeat(5, minmax(0, 1fr)) !important; 
+              gap: 16px !important; 
+            }
+
+            /* Day card visual */
+            #week-schedule.pdf-compat .grid > div { 
+              background: #ffffff !important; 
+              border: 1px solid #e2e8f0 !important; 
+              border-radius: 12px !important; 
+              box-shadow: 0 8px 20px rgba(0,0,0,0.08) !important; 
+              overflow: hidden !important; 
+              display: flex !important; 
+              flex-direction: column !important; 
+            }
+
+            /* Day header bar (deep blue gradient) */
+            #week-schedule.pdf-compat .grid > div > div:first-child { 
+              background-image: linear-gradient(90deg, #1e40af, #1e3a8a) !important; 
+              color: #ffffff !important; 
+              padding: 12px !important; 
+              text-align: center !important; 
+            }
+
+            /* List area inside each day card */
+            #week-schedule.pdf-compat .grid > div > div:nth-child(2) { 
+              padding: 12px !important; 
+            }
+
+            /* Individual class card */
+            #week-schedule.pdf-compat .grid > div > div:nth-child(2) > div { 
+              background: #f8fafc !important; 
+              border: 1px solid #f1f5f9 !important; 
+              border-radius: 8px !important; 
+              padding: 12px !important; 
+            }
+
+            /* Badges and text utility fallbacks */
+            #week-schedule.pdf-compat .text-blue-600 { color: #2563eb !important; }
+            #week-schedule.pdf-compat .bg-blue-100 { background-color: #dbeafe !important; }
+            #week-schedule.pdf-compat .bg-slate-50 { background-color: #f8fafc !important; }
+            #week-schedule.pdf-compat .text-slate-800 { color: #1e293b !important; }
+            #week-schedule.pdf-compat .text-slate-600 { color: #475569 !important; }
+            #week-schedule.pdf-compat .border-slate-100 { border-color: #f1f5f9 !important; }
+            #week-schedule.pdf-compat .border-slate-200 { border-color: #e2e8f0 !important; }
+
+            /* Hide pseudo elements that might rely on unsupported color functions */
+            #week-schedule.pdf-compat *::before, #week-schedule.pdf-compat *::after { display: none !important; }
+          `;
+          doc.head.appendChild(style);
+
+          // 3) Inline computed RGB colors to the clone to ensure stable rendering
+          try {
+            const root = doc.getElementById('week-schedule');
+            if (root) {
+              // Ensure no unsupported backgrounds leak in
+              root.style.backgroundImage = 'none';
+              const walker = doc.createTreeWalker(root, NodeFilter.SHOW_ELEMENT);
+              let el = root;
+              const isTransparent = (v) => !v || v === 'transparent' || v === 'rgba(0, 0, 0, 0)';
+              while (el) {
+                // Clear unknown gradient images; allow box-shadows we defined above
+                el.style.backgroundImage = el.style.backgroundImage || 'none';
+                const cs = doc.defaultView.getComputedStyle(el);
+                const color = cs.color;
+                const bg = cs.backgroundColor;
+                const bcTop = cs.borderTopColor;
+                const bcRight = cs.borderRightColor;
+                const bcBottom = cs.borderBottomColor;
+                const bcLeft = cs.borderLeftColor;
+                if (!isTransparent(color)) el.style.color = color;
+                if (!isTransparent(bg)) el.style.backgroundColor = bg;
+                if (!isTransparent(bcTop)) el.style.borderTopColor = bcTop;
+                if (!isTransparent(bcRight)) el.style.borderRightColor = bcRight;
+                if (!isTransparent(bcBottom)) el.style.borderBottomColor = bcBottom;
+                if (!isTransparent(bcLeft)) el.style.borderLeftColor = bcLeft;
+                el = walker.nextNode();
+              }
+            }
+          } catch {}
+        },
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+
+      // Fit image to page width with small margins
+      const margin = 24; // pts
+      const imgWidth = pageWidth - margin * 2;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      // If the rendered image is taller than the page height, paginate
+      let heightLeft = imgHeight;
+      let position = margin; // y start
+
+      pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight, undefined, 'FAST');
+      heightLeft -= (pageHeight - margin * 2);
+
+      while (heightLeft > 0) {
+        pdf.addPage('a4', 'landscape');
+        position = margin - (imgHeight - heightLeft);
+        pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight, undefined, 'FAST');
+        heightLeft -= (pageHeight - margin * 2);
+      }
+
+      pdf.save('جدول-الأسبوع.pdf');
+    } catch (e) {
+      console.error('PDF export failed', e);
+      toast.error('تعذر تصدير الجدول إلى PDF');
+    }
+  }
 
   if (!isAuthenticated) {
     return null; // Don't render anything while redirecting
@@ -424,16 +595,22 @@ function Schedule() {
           </div>
         </section>
 
-        <section className="week-schedule bg-gradient-to-br from-white to-slate-50 border border-slate-200 rounded-2xl p-6 shadow-lg">
+        <section id="week-schedule" ref={weekRef} className="week-schedule w-full bg-gradient-to-br from-white to-slate-50 border border-slate-200 rounded-2xl p-6 shadow-lg">
           <div className='flex justify-between'>
-          <h2 className="text-2xl font-bold text-slate-800 mb-6 text-center">جدول الأسبوع</h2>
+            <h2 className="text-2xl font-bold text-slate-800 mb-6 text-center">جدول الأسبوع</h2>
           {!permissions.includes('Can export week schedule') && weekCards.length > 0 && (
-            <div className="mb-6 flex justify-end">
+            <div className="mb-6 flex gap-3 justify-end">
               <button 
-                className="bg-gradient-to-r from-blue-700 to-blue-800 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                className="bg-gradient-to-r from-blue-700 to-blue-800 hover:from-blue-600 hover:to-blue-700 text-white px-4 md:px-6 py-3 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 cursor-pointer"
                 onClick={handleExportWeekExcel}
               >
-                تصدير جدول الأسبوع إلى Excel
+                تصدير إلى Excel
+              </button>
+              <button 
+                className="bg-gradient-to-r from-blue-700 to-blue-800 hover:from-blue-600 hover:to-blue-700 text-white px-4 md:px-6 py-3 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 cursor-pointer"
+                onClick={handleExportWeekPDF}
+              >
+                تنزيل PDF
               </button>
             </div>
           )}
@@ -443,9 +620,9 @@ function Schedule() {
               لا توجد محاضرات هذا الأسبوع
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 items-stretch">
               {weekCards.map((card, idx) => (
-                <div key={`${card.day}-${idx}`} className="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden hover:shadow-lg transition-shadow duration-200">
+                <div key={`${card.day}-${idx}`} className="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden hover:shadow-lg transition-shadow duration-200 h-full flex flex-col">
                   <div className="bg-gradient-to-r from-blue-800 to-blue-900 text-white p-3 text-center">
                     <h3 className="font-bold text-lg">{card.day}</h3>
                   </div>
@@ -482,4 +659,23 @@ function Schedule() {
   );
 }
 
-export default Schedule; 
+// Default export wrapped with ErrorBoundary
+export default function Schedule() {
+  const fallback = (
+    <div className="content-card" style={{ padding: '16px', direction: 'rtl' }}>
+      <h3 style={{ marginBottom: '8px' }}>حدث خطأ أثناء عرض الجدول</h3>
+      <p style={{ marginBottom: '12px' }}>حاول إعادة تحميل الصفحة أو المحاولة لاحقًا.</p>
+      <button
+        onClick={() => window.location.reload()}
+        className="bg-blue-700 hover:bg-blue-600 text-white px-4 py-2 rounded"
+      >
+        إعادة التحميل
+      </button>
+    </div>
+  );
+  return (
+    <ErrorBoundary fallback={fallback}>
+      <ScheduleInner />
+    </ErrorBoundary>
+  );
+}

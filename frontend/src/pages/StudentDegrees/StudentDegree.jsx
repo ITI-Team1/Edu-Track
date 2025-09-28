@@ -55,9 +55,9 @@ export default function StudentDegree() {
         load();
       }, [isAuthenticated, user.id]);
   return (
-    <div className='student-degrees-page relative '>
+    <div className=' relative '>
             {/* Header with title */}
-            <div className='student-degrees-hseader before:block  before:!content-[""] rounded-3xl before:rounded-t-3xl before:bg-blue-900 before:top-0 before:left-0 before:right-0 before:!h-1 '>
+            <div className='student-degrees-header before:block  before:!content-[""] rounded-3xl before:rounded-t-3xl  before:top-0 before:left-0 before:right-0 before:!h-1 '>
                 <h2 className='student-degrees-title !text-gray-800 md:!text-3xl !mt-2 md:!mt-4 !text-center '>درجات المواد</h2>
             </div>
 

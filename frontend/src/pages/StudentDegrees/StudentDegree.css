@@ -1,17 +1,10 @@
-/* Student Degrees Page Styles */
-.student-degrees-page {
-  width: 100%;
-  min-height: 100vh;
-  background: #f8fafc;
-  direction: rtl;
-  text-align: right;
-}
+
 
 .student-degrees-header {
   
   /* color: white; */
   padding: 1rem;
-  text-align: center;
+  text-align: right !important;
   /* box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); */
 }
 
