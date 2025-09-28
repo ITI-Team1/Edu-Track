@@ -206,12 +206,14 @@ export default function StepsVideo({
             <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 p-1.5 sm:p-2 md:p-3">
               {dataSteps.map((s, i) => {
                 const isActive = i === active;
+                const mobileVisibility = isActive ? "block" : "hidden sm:block"; // show only active card on mobile
                 return (
                   <button
                     key={i}
                     type="button"
                     onClick={() => setActive(i)}
                     className={[
+                      mobileVisibility,
                       "group relative text-right px-3 py-3 sm:px-4 sm:py-4 transition-all duration-300 rounded-xl bg-white border-2 border-transparent shadow-[0_10px_24px_rgba(59,130,246,0.14)]",
                       isActive ? "ring-1 ring-[#3b82f6]/40 scale-[1.02]" : "hover:border-[#3b82f6] hover:scale-[1.01]",
                     ].join(" ")}
