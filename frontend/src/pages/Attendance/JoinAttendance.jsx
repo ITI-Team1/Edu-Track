@@ -340,7 +340,7 @@ export default function JoinAttendance() {
         {lectureInfo && (
           <div className="lecture-info">
             <h3>معلومات المحاضرة</h3>
-            <div className="info-grid">
+            <div className="info-grid-attendance">
               <div className="info-item">
                 <span className="label">المقرر:</span>
                 <span className="value">
@@ -372,7 +372,7 @@ export default function JoinAttendance() {
         {lectureError && (
           <div className="lecture-error">
             <h3>معلومات المحاضرة</h3>
-            <div className="info-grid">
+            <div className="info-grid-attendance">
               <div className="info-item">
                 <span className="label">المقرر:</span>
                 <span className="value error">غير محدد</span>

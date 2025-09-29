@@ -109,7 +109,7 @@
   font-weight: 700;
 }
 
-.info-grid {
+.info-grid-attendance {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -422,7 +422,7 @@
     font-size: 1.6rem;
   }
   
-  .info-grid {
+  .info-grid-attendance {
     gap: 0.5rem;
   }
   
