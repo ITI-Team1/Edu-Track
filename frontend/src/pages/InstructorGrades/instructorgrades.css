@@ -9,7 +9,7 @@
 .instructor-grades h2,
 .instructor-grades h3,
 .instructor-grades .attendance-title {
-  color: #2c3649 !important;
+  color: #2c5282 !important;
 }
 
 /* Ensure native select shows readable value regardless of global overrides */

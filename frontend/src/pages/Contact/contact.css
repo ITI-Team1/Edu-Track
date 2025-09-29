@@ -551,8 +551,8 @@
 }
 
 .contact-header p {font-size: 1.1rem;
+  font-weight: 600;
 	opacity: 0.9;
-	max-width: 600px;
 	margin: 0 auto;
 	color: #333;
 }
@@ -567,7 +567,6 @@
 /* Header when placed inside form */
 .contact-header.inside-form { margin: 0 0 2rem; }
 .contact-header.inside-form h1 { font-size: 2.4rem; margin-bottom: .75rem; }
-.contact-header.inside-form p { max-width: none; }
 
 /* Progress bar removed */
 

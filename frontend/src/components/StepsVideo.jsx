@@ -261,7 +261,7 @@ export default function StepsVideo({
         <h1 className="text-5xl  md:text-6xl font-extrabold !text-[#3271b1] drop-shadow-sm ">
           {title}
         </h1>
-        <p className="text-xl !mt-8 text-[#3271b1] font-semibold">{subtitle}</p>
+        <p className="text-xl !mt-8 text-[#515151] font-semibold">{subtitle}</p>
       </div>
 
       {/* View mode toggle */}
