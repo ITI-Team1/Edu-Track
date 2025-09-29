@@ -67,35 +67,37 @@ export default function StepsVideo({
       ],
       videos: [
         {
-          // Short, public domain test video
-          src:
-            logVid,
-          poster:
-            poster1,
+          // Prefer multiple sources so Safari/iOS can pick supported codec
+          // Provide MP4 (H.264) alongside WebM when available
+          sources: [
+            { src: logVid, type: "video/webm" },
+            // { src: loginVidMp4, type: "video/mp4" }, // optional if provided later
+          ],
+          poster: poster1,
         },
         {
-          src:
-            courseVid,
-          poster:
-          poster2,
+          sources: [
+            { src: courseVid, type: "video/webm" },
+          ],
+          poster: poster2,
         },
         {
-          src:
-            schedualeVid,
-          poster:
-          poster3,
+          sources: [
+            { src: schedualeVid, type: "video/webm" },
+          ],
+          poster: poster3,
         },
         {
-          src:
-          examVid ,
-          poster:
-          poster4,
+          sources: [
+            { src: examVid, type: "video/webm" },
+          ],
+          poster: poster4,
         },
         {
-          src:
-            helpVid, 
-          poster:
-          poster5,
+          sources: [
+            { src: helpVid, type: "video/webm" },
+          ],
+          poster: poster5,
         },
       ],
     }),
@@ -110,6 +112,7 @@ export default function StepsVideo({
   const [progress, setProgress] = useState(0); // 0 -> 1 for current video
   const [isVideoLoading, setIsVideoLoading] = useState(false);
   const [isVideoReady, setIsVideoReady] = useState(false);
+  const [showControls, setShowControls] = useState(false); // show controls if autoplay fails
   const rafRef = useRef(0);
   const progressUpdateRef = useRef(0);
 
@@ -120,24 +123,35 @@ export default function StepsVideo({
   const mobileVideos = useMemo(
     () => [
       {
-        src: mopVid1,
+        sources: [
+          { src: mopVid1, type: "video/webm" },
+          // { src: mopVid1Mp4, type: "video/mp4" }, // optional if provided later
+        ],
         poster: mopPoster1,
       },
       {
-        src: mopVid2,
+        sources: [
+          { src: mopVid2, type: "video/webm" },
+        ],
         poster: mopPoster2,
       },
       {
-        src: mopVid3,
+        sources: [
+          { src: mopVid3, type: "video/webm" },
+        ],
         poster: mopPoster3,
       },
       {
-        src: mopVid4,  // Using mopVid5 as a fallback for the 4th video
+        sources: [
+          { src: mopVid4, type: "video/webm" },
+        ],
         poster: mopPoster4,
       },
       {
-        src: mopVid5,  // Using mopVid5 as a fallback for the 5th video
-        poster: mopPoster5,  // Using mopPoster4 as a fallback for the 5th poster
+        sources: [
+          { src: mopVid5, type: "video/webm" },
+        ],
+        poster: mopPoster5,
       },
     ],
     []
@@ -160,6 +174,7 @@ export default function StepsVideo({
   const handleVideoLoadStart = () => {
     setIsVideoLoading(true);
     setIsVideoReady(false);
+    setShowControls(false);
   };
 
   const handleVideoCanPlay = () => {
@@ -170,6 +185,8 @@ export default function StepsVideo({
   const handleVideoError = () => {
     setIsVideoLoading(false);
     setIsVideoReady(false);
+    // If the first source fails (e.g., WebM on old Safari), show controls
+    setShowControls(true);
   };
 
   useEffect(() => {
@@ -177,6 +194,7 @@ export default function StepsVideo({
     setProgress(0);
     setIsVideoLoading(true);
     setIsVideoReady(false);
+    setShowControls(false);
     
     const v = videoRef.current;
     if (!v) return;
@@ -188,7 +206,9 @@ export default function StepsVideo({
       try {
         await v.play();
       } catch (_) {
-        // Autoplay might fail on some browsers; it's fine.
+        // Autoplay may fail on iOS Safari when not user-initiated
+        // Show controls so user can tap to play
+        setShowControls(true);
       }
     };
     play();
@@ -354,14 +374,15 @@ export default function StepsVideo({
 
           <div className="w-full aspect-video md:aspect-[21/9]">
             <video
+              key={`${mode}-${active}`}
               ref={videoRef}
               className={`h-full w-full object-cover object-top transition-all duration-500 ${isVideoReady ? 'opacity-100 scale-100' : 'opacity-90 scale-105'}`}
               playsInline
               muted
               autoPlay
-              preload="auto"
+              controls={showControls}
+              preload="metadata"
               poster={selectedVideos[active % selectedVideos.length]?.poster}
-              src={selectedVideos[active % selectedVideos.length]?.src}
               onLoadStart={handleVideoLoadStart}
               onCanPlay={handleVideoCanPlay}
               onError={handleVideoError}
@@ -370,6 +391,13 @@ export default function StepsVideo({
               onTimeUpdate={handleTimeUpdate}
               onEnded={handleEnded}
             >
+              {(selectedVideos[active % selectedVideos.length]?.sources || []).map((s, idx) => (
+                <source key={idx} src={s.src} type={s.type} />
+              ))}
+              {/* Fallback for older structure using single src */}
+              {selectedVideos[active % selectedVideos.length]?.src && (
+                <source src={selectedVideos[active % selectedVideos.length]?.src} />
+              )}
               Your browser does not support the video tag.
             </video>
           </div>
@@ -378,14 +406,15 @@ export default function StepsVideo({
         <div className="relative flex justify-center">
           <Iphone>
             <video
+              key={`${mode}-${active}`}
               ref={videoRef}
               className={`h-full w-full object-cover object-top transition-all duration-500 ${isVideoReady ? 'opacity-100 scale-100' : 'opacity-90 scale-105'}`}
               playsInline
               muted
               autoPlay
-              preload="auto"
+              controls={showControls}
+              preload="metadata"
               poster={selectedVideos[active % selectedVideos.length]?.poster}
-              src={selectedVideos[active % selectedVideos.length]?.src}
               onLoadStart={handleVideoLoadStart}
               onCanPlay={handleVideoCanPlay}
               onError={handleVideoError}
@@ -394,6 +423,12 @@ export default function StepsVideo({
               onTimeUpdate={handleTimeUpdate}
               onEnded={handleEnded}
             >
+              {(selectedVideos[active % selectedVideos.length]?.sources || []).map((s, idx) => (
+                <source key={idx} src={s.src} type={s.type} />
+              ))}
+              {selectedVideos[active % selectedVideos.length]?.src && (
+                <source src={selectedVideos[active % selectedVideos.length]?.src} />
+              )}
               Your browser does not support the video tag.
             </video>
           </Iphone>
@@ -403,12 +438,22 @@ export default function StepsVideo({
       {/* Hidden preloader videos to warm up cache for smooth switching */}
       <div aria-hidden="true" className="hidden">
         {dataVideos.map((v, idx) => (
-          <video key={idx} src={v.src} preload="auto" muted playsInline />
+          <video key={idx} preload="metadata" muted playsInline poster={v.poster}>
+            {(v.sources || []).map((s, si) => (
+              <source key={si} src={s.src} type={s.type} />
+            ))}
+            {v.src && <source src={v.src} />}
+          </video>
         ))}
       </div>
       <div aria-hidden="true" className="hidden">
         {mobileVideos.map((v, idx) => (
-          <video key={idx} src={v.src} preload="auto" muted playsInline />
+          <video key={idx} preload="metadata" muted playsInline poster={v.poster}>
+            {(v.sources || []).map((s, si) => (
+              <source key={si} src={s.src} type={s.type} />
+            ))}
+            {v.src && <source src={v.src} />}
+          </video>
         ))}
       </div>
     </section>
