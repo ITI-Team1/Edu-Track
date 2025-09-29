@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
@@ -13,19 +13,23 @@ import { fetchUsers } from "../../services/userApi"
 import './AttendanceRecords.css';
 import '../../styles/tableScroll.css'; // shared table scrollbar
 import toast from '../../utils/toast';
+import { AttendanceAPI } from '../../services/attendanceApi';
 export default function AttendanceRecords() {
   const { _isAuthenticated, user } = useAuth();
   const [lectures, setLectures] = useState([]);
   const [locations, setLocations] = useState([]);
   const [courses, setCourses] = useState([])
   const [users, setUsers] = useState([])
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [_loading, setLoading] = useState(false);
+  const [_error, setError] = useState(null);
   const [_showModal, setShowModal] = useState(false);
   const [_showDeleteModal, setShowDeleteModal] = useState(false);
   const [_lectureToDelete, setLectureToDelete] = useState(null);
   const [modalType, setModalType] = useState("create");
   const [selectedLecture, setSelectedLecture] = useState(null);
+  const [sessions, setSessions] = useState([]);
+  const [sessionsLoading, setSessionsLoading] = useState(false);
+  const [sessionsError, setSessionsError] = useState(null);
 
   // Loaders and CRUD handlers (restored)
   useEffect(() => {
@@ -33,22 +37,66 @@ export default function AttendanceRecords() {
     loadLocations();
     loadCourses();
     loadUsers();
+    loadAttendances();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
 
-  const hasGroup = (groupId) => {
+  const hasGroup = useCallback((groupId) => {
     if (!user?.groups) return false;
     return user.groups.some(group => {
       const id = typeof group === 'object' ? group.id : group;
       return id === groupId;
     });
+  }, [user?.groups]);
+
+  // Define hasAnyGroup BEFORE any usage
+  const hasAnyGroup = useCallback((groupIds) => {
+    return groupIds.some(groupId => hasGroup(groupId));
+  }, [hasGroup]);
+
+  // Fetch all attendance sessions and keep only those for instructor's lectures
+  const loadAttendances = async () => {
+    setSessionsLoading(true);
+    setSessionsError(null);
+    try {
+      const data = await AttendanceAPI.listAttendances().then(r => r.data);
+      // If doctor, filter by their lectures; else keep empty or all as needed
+      if (hasAnyGroup([3])) {
+        // Use currently known lectures set if available
+        const lectureIds = new Set(
+          lectures && lectures.length
+            ? lectures.map(l => Number(l.id))
+            : []
+        );
+        // If lectures not loaded yet, we still set raw; another effect below will re-filter
+        const filtered = lectureIds.size > 0
+          ? data.filter(a => lectureIds.has(Number(a.lecture)))
+          : data;
+        setSessions(filtered);
+      } else {
+        setSessions(data);
+      }
+    } catch (err) {
+      const msg = err?.message || 'فشل تحميل جلسات الحضور';
+      setSessionsError(msg);
+      toast.error(msg);
+      setSessions([]);
+    } finally {
+      setSessionsLoading(false);
+    }
   };
 
-  // Helper function to check if user has any of the specified groups
-  const hasAnyGroup = (groupIds) => {
-    return groupIds.some(groupId => hasGroup(groupId));
-  };
+  // Re-filter sessions whenever lectures list updates (ensures instructor scoping)
+  useEffect(() => {
+    if (!sessions.length) return;
+    if (hasAnyGroup([3]) && lectures.length) {
+      const lectureIds = new Set(lectures.map(l => Number(l.id)));
+      setSessions(prev => prev.filter(a => lectureIds.has(Number(a.lecture))));
+    }
+  }, [lectures, sessions.length, hasAnyGroup]);
+
+  // hasAnyGroup already defined above
 
   const loadLectures = async () => {
     setLoading(true);
@@ -251,7 +299,7 @@ export default function AttendanceRecords() {
     setLoading(false);
   };
 
-  const getLocationName = (lec) => {
+  const _getLocationName = (lec) => {
     // If backend provides nested object
     if (lec.location && typeof lec.location === "object")
       return lec.location.name || lec.location.title || lec.location.slug;
@@ -301,60 +349,58 @@ export default function AttendanceRecords() {
         <h1>سجل الحضور</h1>
       </div>
       {/* Keep minimal inline error, but primary channel is toast */}
-      {error && (
-        <div
-          style={{ color: "#ef4444", textAlign: "center", marginBottom: "1rem" }}
-        >
-          {error}
+      {sessionsError && (
+        <div style={{ color: "#ef4444", textAlign: "center", marginBottom: "1rem" }}>
+          {sessionsError}
         </div>
       )}
 
+      {/* Sessions list for the instructor's lectures only */}
       <div className="lecture-table-wrapper">
-        {loading ? (
-          <div style={{ textAlign: "center", color: "#646cff" }}>
-            جاري التحميل...
-          </div>
+        {sessionsLoading ? (
+          <div style={{ textAlign: "center", color: "#646cff" }}>جاري التحميل...</div>
         ) : (
-          <div className="students-table-scroll !h-[480px] !overflow-y-auto">
-          <table className="lecture-table">
-            <thead>
-              <tr>
-                <th>المقرر</th>
-                
-                <th>القاعة</th>
-                <th>اليوم</th>
-                <th>الوقت</th>
-                <th>الحضور</th>
-                
-              </tr>
-            </thead>
-            <tbody>
-              {lectures.map((lec) => (
-                <tr key={lec.id} className="lecture-row">
-                  <td data-label="المقرر">{getCourseName(lec)}</td>
-                
-                  <td data-label="القاعة">{getLocationName(lec)}</td>
-                  <td data-label="اليوم">{lec.day}</td>
-                  <td data-label="الوقت">
-                    {formatTimeArabic(lec.starttime)} - {formatTimeArabic(lec.endtime)}
-                  </td>
-                  <td data-label="الحضور">
-                  <div className="class-actions justify-center">
-                 <Link
-                    to={`/attendance/${lec.id}`}
-                    state={{ fromAttendanceRecords: true }}
-                    className="btn-main !px-4 !py-2 "
-                    title="عرض الحضور لهذه المحاضرة"
-                  >
-                    تقرير الغياب
-                  </Link> 
-                </div>
-                  </td>
-                  
+          <div>
+            <table className="lecture-table">
+              <thead>
+                <tr>
+                  <th>المقرر</th>
+                  <th>المحاضرة</th>
+                  <th>تاريخ الجلسة</th>
+                  <th>الانتقال</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {sessions.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} style={{ textAlign: 'center', padding: '12px' }}>لا توجد جلسات متاحة</td>
+                  </tr>
+                ) : (
+                  sessions
+                    .slice()
+                    .sort((a, b) => new Date(b.time) - new Date(a.time))
+                    .map((att) => {
+                      const lec = lectures.find(l => Number(l.id) === Number(att.lecture));
+                      return (
+                        <tr key={att.id}>
+                          <td>{lec ? getCourseName(lec) : att.lecture}</td>
+                          <td>{lec ? `${lec.day} (${formatTimeArabic(lec.starttime)} - ${formatTimeArabic(lec.endtime)})` : '-'}</td>
+                          <td>{new Date(att.time).toLocaleString('ar-EG')}</td>
+                          <td>
+                            <Link
+                              to={`/attendance/${att.lecture}`}
+                              state={{ fromAttendanceRecords: true }}
+                              className="btn-main !px-4 !py-2"
+                            >
+                               تقرير الغياب
+                            </Link>
+                          </td>
+                        </tr>
+                      );
+                    })
+                )}
+              </tbody>
+            </table>
           </div>
         )}
       </div>

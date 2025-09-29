@@ -305,6 +305,30 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
         }
     }, [qrToken, lectureId, joinLink]);
 
+    // Determine if we are within the lecture's allowed time window
+    const withinAllowedWindow = (() => {
+        try {
+            const lec = _lectureData;
+            if (!lec) return true; // don't block before data arrives
+            const now = new Date();
+            const jsToArabic = ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+            const todayName = jsToArabic[now.getDay()];
+            const withinDay = String(lec.day || '').trim() === todayName;
+            const toMin = (t) => {
+                if (!t) return null;
+                const [h, m] = String(t).split(':').map(Number);
+                return Number.isFinite(h) && Number.isFinite(m) ? h*60+m : null;
+            };
+            const nowMin = now.getHours()*60 + now.getMinutes();
+            const s = toMin(lec.starttime);
+            const e = toMin(lec.endtime);
+            const withinTime = Number.isFinite(s) && Number.isFinite(e) && nowMin >= s && nowMin <= e;
+            return withinDay && withinTime;
+        } catch {
+            return true;
+        }
+    })();
+
     // Handle setting attendance grade for the lecture
     const handleSetAttendanceGrade = async () => {
         if (!attendanceGrade || attendanceGrade <= 0) {
@@ -552,12 +576,20 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
               </div>
             </div>
             <div className='qr-section'>
-              <div className='qr-inline-bar'>
-                <h3 className='qr-inline-heading'><span className='attendance-countdown-large'>يتجدد خلال {secondsLeft} ث</span></h3>
-                <button className='btn btn-secondary-attendance' onClick={rotateNow}>تحديث فوري</button>
-              </div>
-              {!lectureId && <p>لم يتم تحديد محاضرة.</p>}
-              {lectureId && (qrSvg ? <div className='qr-box' dangerouslySetInnerHTML={{ __html: qrSvg }} /> : <p>جاري التحميل...</p>)}
+              {withinAllowedWindow ? (
+                <>
+                  <div className='qr-inline-bar'>
+                    <h3 className='qr-inline-heading'><span className='attendance-countdown-large'>يتجدد خلال {secondsLeft} ث</span></h3>
+                    <button className='btn btn-secondary-attendance' onClick={rotateNow}>تحديث فوري</button>
+                  </div>
+                  {!lectureId && <p>لم يتم تحديد محاضرة.</p>}
+                  {lectureId && (qrSvg ? <div className='qr-box' dangerouslySetInnerHTML={{ __html: qrSvg }} /> : <p>جاري التحميل...</p>)}
+                </>
+              ) : (
+                <div className='content-card text-base text-gray-900'>
+                  انتهى وقت الجلسة لهذه المحاضرة. لا يتوفر رمز QR خارج الوقت المسموح.
+                </div>
+              )}
             </div>
           </div>
         </div>

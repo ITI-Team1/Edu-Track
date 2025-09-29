@@ -247,33 +247,60 @@ function ScheduleInner() {
   // Open attendance session for a lecture
   const openAttendanceSession = useCallback(async (lectureId) => {
     try {
-      // Check if there's already an active session for this lecture
+      const lec = lectures.find((l) => Number(l.id) === Number(lectureId));
+      if (!lec) {
+        toast.error('تعذر تحديد بيانات المحاضرة');
+        return;
+      }
+
+      const now = new Date();
+      const jsToArabic = ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+      const todayName = jsToArabic[now.getDay()];
+      const withinDay = (lec.day || '').trim() === todayName;
+      const toMinutes = (t) => {
+        if (!t) return null;
+        const [h, m] = String(t).split(':').map(Number);
+        return Number.isFinite(h) && Number.isFinite(m) ? h * 60 + m : null;
+      };
+      const nowMin = now.getHours() * 60 + now.getMinutes();
+      const startMin = toMinutes(lec.starttime);
+      const endMin = toMinutes(lec.endtime);
+      const withinTime = Number.isFinite(startMin) && Number.isFinite(endMin) && nowMin >= startMin && nowMin <= endMin;
+      const withinWindow = withinDay && withinTime;
+
+      // Fetch and sort existing sessions for this lecture (newest last)
       const existingSessions = await AttendanceAPI.getAttendanceByLecture(lectureId);
-      
-      if (existingSessions.length > 0) {
-        toast.info('جلسة حضور مفتوحة بالفعل لهذه المحاضرة');
-        // Navigate to the existing session
+      const sessionsSorted = [...existingSessions].sort((a, b) => new Date(a.time) - new Date(b.time));
+      const last = sessionsSorted.length ? sessionsSorted[sessionsSorted.length - 1] : null;
+
+      // Any session created today? (backend ensures valid time window)
+      const hasTodaySession = sessionsSorted.some(s => new Date(s.time).toDateString() === now.toDateString());
+
+      if (withinWindow) {
+        if (!hasTodaySession) {
+          // Create a fresh session for the current allowed window
+          await AttendanceAPI.createAttendance({ lecture: Number(lectureId) });
+          toast.success('تم فتح جلسة الحضور ضمن الوقت المسموح');
+        } else {
+          toast.info('تم فتح جلسة لليوم مسبقًا، تم نقلك إليها');
+        }
         navigate(`/attendance/${lectureId}`);
         return;
       }
 
-      // Create new attendance session
-      await AttendanceAPI.createAttendance({
-        lecture: Number(lectureId)
-      });
-
-      toast.success('تم فتح جلسة الحضور بنجاح');
-      // Navigate to the attendance page
-      navigate(`/attendance/${lectureId}`);
-
+      // Outside allowed window: route to last session if available, otherwise inform user
+      if (last) {
+        toast.info('خارج وقت المحاضرة. تم فتح آخر جلسة متاحة');
+        navigate(`/attendance/${lectureId}`);
+      } else {
+        toast.error('لا يمكن فتح جلسة خارج الوقت المسموح ولا توجد جلسات سابقة');
+      }
     } catch (error) {
       console.error('Failed to open attendance session:', error);
-      const errorMessage = error.response?.data?.detail || 
-                          error.response?.data?.message || 
-                          'فشل في فتح جلسة الحضور';
+      const errorMessage = error.response?.data?.detail || error.response?.data?.message || 'فشل في فتح جلسة الحضور';
       toast.error(errorMessage);
     }
-  }, [navigate]);
+  }, [navigate, lectures]);
 
   // Export weekly schedule to Excel (xlsx if available, otherwise CSV fallback)
   const handleExportWeekExcel = async () => {
