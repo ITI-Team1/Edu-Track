@@ -250,27 +250,27 @@ export default function StepsVideo({
           type="button"
           onClick={() => setMode("web")}
           className={[
-            "inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-bold transition-all",
+            "inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-bold transition-all cursor-pointer",
             mode === "web"
               ? "bg-blue-600 text-white border-blue-700 shadow"
               : "bg-white text-blue-900 border-blue-200 hover:bg-blue-50",
           ].join(" ")}
         >
           <FaDesktop />
-          Web
+          حاسب
         </button>
         <button
           type="button"
           onClick={() => setMode("mobile")}
           className={[
-            "inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-bold transition-all",
+            "inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-bold transition-all cursor-pointer",
             mode === "mobile"
               ? "bg-blue-600 text-white border-blue-700 shadow"
               : "bg-white text-blue-900 border-blue-200 hover:bg-blue-50",
           ].join(" ")}
         >
           <FaMobileAlt />
-          Mobile
+         محمول
         </button>
       </div>
 
