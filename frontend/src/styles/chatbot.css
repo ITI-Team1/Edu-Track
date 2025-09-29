@@ -5,6 +5,7 @@ input, textarea, select, button {
   font-feature-settings: "liga" 1, "kern" 1;
   font-variant-ligatures: common-ligatures;
   font-kerning: normal;
+  font-family: 'Cairo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 .chatbot {
   display: flex;

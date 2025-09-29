@@ -84,7 +84,7 @@ function Chatbot() {
 
   return (
     <div className="chatbot">
-      <div className="chatbot-header">Chat</div>
+      <div className="chatbot-header">محادثة</div>
       <div className="chat-window" ref={chatWindowRef}>
         {messages.map((msg, index) => {
           if (msg.role === 'system') return null; // Don't render system messages
