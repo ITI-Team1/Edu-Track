@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import PropTypes from 'prop-types';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import QRCode from 'qrcode';
 import logoRaw from '../../assets/psu-logo.svg?raw';
 import jsPDF from 'jspdf';
@@ -20,6 +20,7 @@ import { useAuth } from '../../context/AuthContext';
 const AttendancePage = ({ attendanceId: propAttendanceId }) => {
     const params = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
     const { user } = useAuth();
     const lectureId = propAttendanceId || params.attendanceId;
     const queryClient = useQueryClient();
@@ -33,9 +34,11 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
     const [showAttendanceGradeModal, setShowAttendanceGradeModal] = useState(false);
     const [loading, setLoading] = useState(false);
     const [search, setSearch] = useState('');
+    // If navigated from AttendanceRecords, modify layout: hide QR and use full-width students pane
+    const fromAttendanceRecords = Boolean(location?.state?.fromAttendanceRecords);
 
     // React Query for students data with automatic refresh
-    const { data: studentsData, refetch: refetchStudents, isLoading: studentsLoading } = useQuery({
+    const { data: studentsData, refetch: refetchStudents, isLoading: _studentsLoading } = useQuery({
         queryKey: ['students', lectureId],
         queryFn: () => fetchStudentsData(),
         enabled: !!lectureId,
@@ -266,7 +269,7 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
                 toast.error('فشل في تعديل حضور الطالب');
             }
         },
-        [lectureId, queryClient]
+        [lectureId, queryClient, refetchStudents]
     );
 
     // Removed markAllAbsent functionality per request to simplify UI and improve responsiveness
@@ -416,187 +419,169 @@ const AttendancePage = ({ attendanceId: propAttendanceId }) => {
             document.removeEventListener('visibilitychange', onVisibility);
         };
     }, [lectureId, queryClient, refetchStudents]);
-
-    return (
-        <div className='attendance-page'>
-            {/* Header with title and safety alert under it */}
-            <div className='attendance-header'>
-                <h2 className='attendance-title'>
-                    {headingText || `المحاضرة رقم ${lectureId}`}
-                </h2>
-                <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
-                    <div className='safety-alert'>
-                        تنبيه: يُمنع مشاركة هذه الشاشة أو رمز الاستجابة السريعة خارج قاعة المحاضرة. هذا الرمز مُخصص فقط للحضور الفعلي داخل القاعة.
-                    </div>
-                </div>
+  
+  return (
+    <>
+      {fromAttendanceRecords ? (
+        <div className="flex min-h-screen flex-col md:flex-row">
+          <aside className="flex flex-col w-full h-auto relative top-0 left-0 border-b border-[rgba(100,108,255,0.2)] bg-[linear-gradient(180deg,#1e1e2e_0%,#282c4e_50%,#2d3748_100%)] overflow-visible z-[100] shadow-[4px_0_20px_rgba(0,0,0,0.1)] md:fixed md:h-screen md:w-[240px] md:border-b-0 md:border-r lg:w-[280px]">
+            <nav className="flex flex-row !w-full !order-2 !gap-[0.4rem] !p-[0.4rem] !overflow-x-auto !overflow-y-visible !min-h-0 [scrollbar-width:thin] [scrollbar-color:rgba(100,108,255,0.3)_transparent] sm:!gap-[0.5rem] sm:!p-[0.5rem] md:flex-col md:overflow-y-auto md:overflow-x-hidden md:!gap-[0.75rem] md:!p-3 md:!mt-14 md:!order-none md:[scrollbar-width:none]">
+              <h3 className='hidden md:block !m-4 text-xl font-bold text-white'>لوحة التحكم</h3>
+              <button className="sidebar-tabs sidebar-active">
+                <span className="text-center text-lg md:text-2xl min-w-7">✅</span>
+                <span className="text-sm md:text-lg font-medium">تقرير الغياب</span>
+              </button>
+            </nav>
+            <div className="!p-6 hidden md:block border-gray-500 border-t-2">
+              <button onClick={() => window.history.back()} className="btn-main !w-full !p-[0.75rem_1rem] text-center !block">رجوع</button>
             </div>
+          </aside>
 
-            {/* Two-column content: students left, QR right */}
-            <div className='attendance-wrapper'>
-            <div className='students-section'>
-                    <h3 style={{ color: '#2c3649' }}>الطلاب</h3>
-                <div className='students-toolbar'>
-                    <div>
-        {/* display number of students */}
-        <span style={{ color: '#2c3649', fontSize: '14px' }}>({students.length})طالب</span>
-                        {/* display number of students who are present */}
-        <div style={{ color: '#2c3649', fontSize: '14px' }}>عدد الطلاب الحاضرين: {students.filter(s => s.present).length}</div>
-                    </div>
-
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        {/* search for students by name */}
-                        <input onChange={(e) => setSearch(e.target.value)} type="text" placeholder='ابحث عن طالب' style={{ width: '100%', padding: '8px 12px', border: '1px solid #2c3649', borderRadius: '5px' }} />
-                        
-                    </div>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <button
-                            className='btn btn-secondary-attendance'
-                            onClick={() => setShowAttendanceGradeModal(true)}
-                            disabled={loading}
-                            style={{ fontSize: '14px', padding: '8px 12px' }}
-                        >
-                            تعيين درجة الحضور
-                        </button>
-                        <button
-                        className='btn btn-secondary-attendance'
-                        onClick={async () => {
-                            // Build a temporary DOM node for rendering via html2canvas (ensures Arabic order preserved)
-                            const container = document.createElement('div');
-                            container.style.direction = 'rtl';
-                            container.style.fontFamily = "'Tahoma','Segoe UI',sans-serif";
-                            container.style.padding = '16px';
-                            container.style.width = '1000px';
-                            container.innerHTML = `
-                                <div style="display:flex;align-items:center;gap:16px;border-bottom:2px solid #2c3649;padding-bottom:12px;margin-bottom:16px;">
-                                    <div style="width:74px;height:74px;">${logoRaw}</div>
-                                    <div>
-                                        <div style="font-size:26px;font-weight:700;color:#2c3649;">جامعة بورسعيد</div>
-                                        <div style="font-size:18px;margin-top:4px;color:#2c3649;">${headingText || `تقرير حضور المحاضرة رقم ${lectureId}`}</div>
-                                        <div style="font-size:12px;color:#555;margin-top:4px;">تاريخ التوليد: ${new Date().toLocaleString('ar-EG')}</div>
-                                        <div style="font-size:12px;color:#555;margin-top:4px;">عدد الطلاب: ${students.length}</div>
-                                        <div style="font-size:12px;color:#555;margin-top:4px;">عدد الطلاب الحاضرين: ${students.filter(s => s.present).length}</div>
-                                    </div>
-                                </div>
-                                <table style="border-collapse:collapse;width:100%;font-size:13px;">
-                                    <thead>
-                                        <tr style="background:#2c3649;color:#fff;">
-                                            <th style='border:1px solid #fff;padding:6px 8px;'>#</th>
-                                            <th style='border:1px solid #fff;padding:6px 8px;'>الكود</th>
-                                            <th style='border:1px solid #fff;padding:6px 8px;'>الاسم</th>
-                                            <th style='border:1px solid #fff;padding:6px 8px;'>الحالة</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        ${students
-                                            .map(
-                                                (s, i) => `<tr ${i % 2 ? "style='background:#f5f5f5;'" : ''}>
-                                                    <td style='border:1px solid #fff;padding:6px 8px;text-align:center; color: #2c3649;'>${i + 1}</td>
-                                                    <td style='border:1px solid #fff;padding:6px 8px;text-align:center; color: #2c3649;'>${s.student_id}</td>
-                                                    <td style='border:1px solid #fff;padding:6px 8px;text-align:center; color: #2c3649;'>${s.username}</td>
-                                                    <td style='border:1px solid #fff;padding:6px 8px;text-align:center;font-weight:600;color:#fff;background:${s.present ? '#16a34a' : '#dc2626'}'>${
-                                                        s.present ? 'حضور' : 'غياب'
-                                                    }</td>
-                                                </tr>`
-                                            )
-                                            .join('')}
-                                    </tbody>
-                                </table>`;
-                            document.body.appendChild(container);
-                            try {
-                                const canvas = await html2canvas(container, { scale: 2, useCORS: true });
-                                const imgData = canvas.toDataURL('image/png');
-                                const pdf = new jsPDF('p', 'pt', 'a4');
-                                const pageWidth = pdf.internal.pageSize.getWidth();
-                                const pageHeight = pdf.internal.pageSize.getHeight();
-                                const imgWidth = pageWidth - 40; // margins
-                                const ratio = canvas.height / canvas.width;
-                                const imgHeight = imgWidth * ratio;
-                                pdf.addImage(imgData, 'PNG', 20, 20, imgWidth, Math.min(imgHeight, pageHeight - 40));
-                                pdf.save(`attendance_${lectureId}.pdf`);
-                            } finally {
-                                document.body.removeChild(container);
-                            }
-                        }}
-                        >
-                        تنزيل PDF
-                    </button>
-                    </div>
+          <main className="dashboard-main">
+            <div className="dashboard-content">
+              <div className='attendance-page'>
+                <div className='attendance-header'>
+                  <h2 className='attendance-title'>{headingText || `المحاضرة رقم ${lectureId}`}</h2>
+                  <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+                    <div className='safety-alert'>تنبيه: يُمنع مشاركة هذه الشاشة أو رمز الاستجابة السريعة خارج قاعة المحاضرة. هذا الرمز مُخصص فقط للحضور الفعلي داخل القاعة.</div>
+                  </div>
                 </div>
-                <div className='students-table-scroll !h-[448px] !overflow-y-auto'>
-                    <table>
+                <div className='attendance-wrapper' style={{ display: 'block' }}>
+                  <div className='students-section' style={{ width: '100%' }}>
+                    <h3 style={{ color: '#2c3649' }}>الطلاب</h3>
+                    <div className='students-toolbar'>
+                      <div>
+                        <span style={{ color: '#2c3649', fontSize: '14px' }}>({students.length})طالب</span>
+                        <div style={{ color: '#2c3649', fontSize: '14px' }}>عدد الطلاب الحاضرين: {students.filter(s => s.present).length}</div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <input onChange={(e) => setSearch(e.target.value)} type="text" placeholder='ابحث عن طالب' style={{ width: '100%', padding: '8px 12px', border: '1px solid #2c3649', borderRadius: '5px' }} />
+                      </div>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button className='btn btn-secondary-attendance' onClick={() => setShowAttendanceGradeModal(true)} disabled={loading} style={{ fontSize: '14px', padding: '8px 12px' }}>تعيين درجة الحضور</button>
+                        <button className='btn btn-secondary-attendance' onClick={async () => {
+                          const container = document.createElement('div');
+                          container.style.direction = 'rtl';
+                          container.style.fontFamily = "'Tahoma','Segoe UI',sans-serif";
+                          container.style.padding = '16px';
+                          container.style.width = '1000px';
+                          container.innerHTML = `...`;
+                          document.body.appendChild(container);
+                          try {
+                            const canvas = await html2canvas(container, { scale: 2, useCORS: true });
+                            const imgData = canvas.toDataURL('image/png');
+                            const pdf = new jsPDF('p', 'pt', 'a4');
+                            const pageWidth = pdf.internal.pageSize.getWidth();
+                            const pageHeight = pdf.internal.pageSize.getHeight();
+                            const imgWidth = pageWidth - 40;
+                            const ratio = canvas.height / canvas.width;
+                            const imgHeight = imgWidth * ratio;
+                            pdf.addImage(imgData, 'PNG', 20, 20, imgWidth, Math.min(imgHeight, pageHeight - 40));
+                            pdf.save(`attendance_${lectureId}.pdf`);
+                          } finally {
+                            document.body.removeChild(container);
+                          }
+                        }}>تنزيل PDF</button>
+                      </div>
+                    </div>
+                    <div className='students-table-scroll !h-[448px] !overflow-y-auto'>
+                      <table>
                         <thead>
-                            <tr>
-                                <th>الكود</th>
-                                <th>الاسم</th>
-                                <th>الحالة</th>
-                            </tr>
+                          <tr>
+                            <th>الكود</th>
+                            <th>الاسم</th>
+                            <th>الحالة</th>
+                          </tr>
                         </thead>
                         <tbody>
-                            {students.filter(s => s.username.toLowerCase().includes(search.toLowerCase())).map((s) => (
-                                <tr key={s.id}>
-                                    <td>{s.student_id}</td>
-                                    <td>{s.username}</td>
-                                    <td
-                                        className={`status ${s.present ? 'present' : 'absent'}`}
-                                        onClick={() => toggleStudent(s.student_id)}
-                                        title="تبديل الحالة (محلي فقط)"
-                                    >
-                                        {s.present ? 'حضور' : 'غياب'}
-                                    </td>
-                                </tr>
-                            ))}
+                          {students.filter(s => s.username.toLowerCase().includes(search.toLowerCase())).map((s) => (
+                            <tr key={s.id}>
+                              <td>{s.student_id}</td>
+                              <td>{s.username}</td>
+                              <td className={`status ${s.present ? 'present' : 'absent'}`} onClick={() => toggleStudent(s.student_id)} title="تبديل الحالة (محلي فقط)">{s.present ? 'حضور' : 'غياب'}</td>
+                            </tr>
+                          ))}
                         </tbody>
-                    </table>
+                      </table>
+                    </div>
+                  </div>
                 </div>
+              </div>
+            </div>
+          </main>
+        </div>
+      ) : (
+        <div className='attendance-page'>
+          <div className='attendance-header'>
+            <h2 className='attendance-title'>{headingText || `المحاضرة رقم ${lectureId}`}</h2>
+            <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+              <div className='safety-alert'>تنبيه: يُمنع مشاركة هذه الشاشة أو رمز الاستجابة السريعة خارج قاعة المحاضرة. هذا الرمز مُخصص فقط للحضور الفعلي داخل القاعة.</div>
+            </div>
+          </div>
+          <div className='attendance-wrapper'>
+            <div className='students-section'>
+              <h3 style={{ color: '#2c3649' }}>الطلاب</h3>
+              <div className='students-toolbar'>
+                <div>
+                  <span style={{ color: '#2c3649', fontSize: '14px' }}>({students.length})طالب</span>
+                  <div style={{ color: '#2c3649', fontSize: '14px' }}>عدد الطلاب الحاضرين: {students.filter(s => s.present).length}</div>
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <input onChange={(e) => setSearch(e.target.value)} type="text" placeholder='ابحث عن طالب' style={{ width: '100%', padding: '8px 12px', border: '1px solid #2c3649', borderRadius: '5px' }} />
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button className='btn btn-secondary-attendance' onClick={() => setShowAttendanceGradeModal(true)} disabled={loading} style={{ fontSize: '14px', padding: '8px 12px' }}>تعيين درجة الحضور</button>
+                  <button className='btn btn-secondary-attendance'>تنزيل PDF</button>
+                </div>
+              </div>
+              <div className='students-table-scroll !h-[448px] !overflow-y-auto'>
+                <table>
+                  <thead>
+                    <tr><th>الكود</th><th>الاسم</th><th>الحالة</th></tr>
+                  </thead>
+                  <tbody>
+                    {students.filter(s => s.username.toLowerCase().includes(search.toLowerCase())).map((s) => (
+                      <tr key={s.id}>
+                        <td>{s.student_id}</td>
+                        <td>{s.username}</td>
+                        <td className={`status ${s.present ? 'present' : 'absent'}`} onClick={() => toggleStudent(s.student_id)} title="تبديل الحالة (محلي فقط)">{s.present ? 'حضور' : 'غياب'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
             <div className='qr-section'>
-                <div className='qr-inline-bar'>
-                    <h3 className='qr-inline-heading'>
-                        <span className='attendance-countdown-large'>يتجدد خلال {secondsLeft} ث</span>
-                    </h3>
-                    <button className='btn btn-secondary-attendance' onClick={rotateNow}>
-                        تحديث فوري
-                    </button>
-                </div>
-                {!lectureId && <p>لم يتم تحديد محاضرة.</p>}
-                {lectureId && (qrSvg ? <div className='qr-box' dangerouslySetInnerHTML={{ __html: qrSvg }} /> : <p>جاري التحميل...</p>)}
+              <div className='qr-inline-bar'>
+                <h3 className='qr-inline-heading'><span className='attendance-countdown-large'>يتجدد خلال {secondsLeft} ث</span></h3>
+                <button className='btn btn-secondary-attendance' onClick={rotateNow}>تحديث فوري</button>
+              </div>
+              {!lectureId && <p>لم يتم تحديد محاضرة.</p>}
+              {lectureId && (qrSvg ? <div className='qr-box' dangerouslySetInnerHTML={{ __html: qrSvg }} /> : <p>جاري التحميل...</p>)}
             </div>
-            </div>
-            
-            {showAttendanceGradeModal && (
-                <Modal isOpen={showAttendanceGradeModal} onClose={() => setShowAttendanceGradeModal(false)} title='تعيين درجة الحضور'>
-                    <div className='flex flex-col gap-2 !h-fit !w-fit'>
-                        <div className='flex flex-col gap-5 !mb-5'>
-                            <p className='text-lg'>المحاضرة: {headingText || `المحاضرة رقم ${lectureId}`}</p>
-                            <p className='text-sm text-gray-600'>
-                                سيتم تعيين هذه الدرجة للطلاب الحاضرين فقط
-                            </p>
-                        </div>
-                        <div className='flex gap-2 text-xl items-center'>
-                            <p className='!w-40'>درجة الحضور:</p>
-                            <input 
-                                type='number' 
-                                className='h-10 w-32 !p-2 border border-gray-300 rounded'
-                                value={attendanceGrade}
-                                onChange={(e) => setAttendanceGrade(parseFloat(e.target.value) || 0)}
-                                step="0.1"
-                                min="0"
-                                max="100"
-                                placeholder="0.0"
-                            />
-                        </div>
-                        <button 
-                            className='btn btn-secondary-attendance !w-full'
-                            onClick={handleSetAttendanceGrade}
-                            disabled={loading}
-                        >
-                            {loading ? 'جاري التطبيق...' : 'تطبيق الدرجة'}
-                        </button>
-                    </div>
-                </Modal>
-            )}
+          </div>
         </div>
-    );
+      )}
+
+      {showAttendanceGradeModal && (
+        <Modal isOpen={showAttendanceGradeModal} onClose={() => setShowAttendanceGradeModal(false)} title='تعيين درجة الحضور'>
+          <div className='flex flex-col gap-2 !h-fit !w-fit'>
+            <div className='flex flex-col gap-5 !mb-5'>
+              <p className='text-lg'>المحاضرة: {headingText || `المحاضرة رقم ${lectureId}`}</p>
+              <p className='text-sm text-gray-600'>سيتم تعيين هذه الدرجة للطلاب الحاضرين فقط</p>
+            </div>
+            <div className='flex gap-2 text-xl items-center'>
+              <p className='!w-40'>درجة الحضور:</p>
+              <input type='number' className='h-10 w-32 !p-2 border border-gray-300 rounded' value={attendanceGrade} onChange={(e) => setAttendanceGrade(parseFloat(e.target.value) || 0)} step="0.1" min="0" max="100" placeholder="0.0" />
+            </div>
+            <button className='btn btn-secondary-attendance !w-full' onClick={handleSetAttendanceGrade} disabled={loading}>
+              {loading ? 'جاري التطبيق...' : 'تطبيق الدرجة'}
+            </button>
+          </div>
+        </Modal>
+      )}
+    </>
+  );
 };
 
 export default AttendancePage;

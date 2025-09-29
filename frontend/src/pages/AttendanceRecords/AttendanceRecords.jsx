@@ -340,13 +340,14 @@ export default function AttendanceRecords() {
                   </td>
                   <td data-label="الحضور">
                   <div className="class-actions justify-center">
-                  <Link
+                 <Link
                     to={`/attendance/${lec.id}`}
+                    state={{ fromAttendanceRecords: true }}
                     className="btn-main !px-4 !py-2 "
                     title="عرض الحضور لهذه المحاضرة"
                   >
                     تقرير الغياب
-                  </Link>
+                  </Link> 
                 </div>
                   </td>
                   
