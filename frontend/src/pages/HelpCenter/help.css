@@ -944,6 +944,7 @@ input, textarea, select, button {
   .category-pill { min-width: 70px; min-height: 70px; border-radius: 14px; }
   .category-pill-icon { font-size: 24px; }
   .category-pill-label { font-size: 11px; }
+  
 }
 
 @media (min-width: 640px) {

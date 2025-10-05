@@ -20,7 +20,7 @@ import Spinner from './Spinner';
 const ITEM_HEIGHT = 80;
 const OVERSCAN = 6;
 const DEFAULT_CONTAINER_HEIGHT = 380;
-const DEBOUNCE_DELAY = 500;
+const DEBOUNCE_DELAY = 800; // Debounce name filter by 1.5s
 const AUTO_DISMISS_DELAY = 4000;
 
 // User permission constants
@@ -49,6 +49,7 @@ const Enrollment = () => {
   const [filterName, setFilterName] = useState('');
   const [debouncedName, setDebouncedName] = useState('');
   const [courseSearch, setCourseSearch] = useState('');
+  const [nameRefetching, setNameRefetching] = useState(false);
 
   // Virtualization states
   const scrollRef = useRef(null);
@@ -165,6 +166,7 @@ const Enrollment = () => {
       level: filterLevel,
       name: debouncedName
     }),
+    keepPreviousData: true,
     staleTime: 1000 * 60,
     gcTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
@@ -454,6 +456,23 @@ const Enrollment = () => {
     return () => clearTimeout(timer);
   }, [filterName]);
 
+  // Track when a refetch is triggered by name changes only
+  const prevDebouncedNameRef = useRef(debouncedName);
+  useEffect(() => {
+    if (prevDebouncedNameRef.current !== debouncedName) {
+      // Only mark nameRefetching when the debouncedName actually changes
+      setNameRefetching(true);
+      prevDebouncedNameRef.current = debouncedName;
+    }
+  }, [debouncedName]);
+
+  // Clear the nameRefetching flag when the query loading finishes
+  useEffect(() => {
+    if (!usersLoading && nameRefetching) {
+      setNameRefetching(false);
+    }
+  }, [usersLoading, nameRefetching]);
+
   // Handle program filter changes when faculty changes
   useEffect(() => {
     if (filterFaculty && filterProgram) {
@@ -557,7 +576,8 @@ const Enrollment = () => {
 
   // ===== LOADING STATE =====
   
-  const combinedLoading = loading || usersLoading;
+  // Do not show the global spinner for name-only refetches
+  const combinedLoading = loading || (usersLoading && !nameRefetching);
   const _combinedError = error || usersError?.message;
 
   if (combinedLoading) {
